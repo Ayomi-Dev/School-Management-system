@@ -1,4 +1,4 @@
-import { prisma } from "@/src/lib/prisma";
+import { prisma } from "@/src/lib/prisma/client";
 
 const testDb = async() => {
     try {

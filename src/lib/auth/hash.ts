@@ -8,7 +8,7 @@ const SALT_ROUNDS = 12; //controls how many times bcrypt processes user's passwo
 
 export const hashPassword = async(password: string): Promise<string> => {
     //Takes the plain-text password and runs it through bcrypt's hashing algorithm 2¹² (4,096) times
-    //adding the salt) automatically to make it unique and resistant to rainbow table attacks.
+    //adding the salt automatically to make it unique and resistant to rainbow table attacks.
     //  The resulting hash is what gets stored in the database, not the original password.
     return bcrypt.hash(password, SALT_ROUNDS) 
 }

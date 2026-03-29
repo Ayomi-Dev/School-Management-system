@@ -1,4 +1,4 @@
-import { generateOTP, generateReceiptNumber } from "@/src/lib/hash";
+import { generateOTP, generateReceiptNumber } from "@/src/lib/auth/hash";
 import testDb from "@/src/utils/test";
 import Image from "next/image";
 
