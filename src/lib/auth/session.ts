@@ -32,7 +32,7 @@ export const signRefreshToken = async(payload: sessionPayload): Promise<string> 
     return new SignJWT({ ...payload })  //Creates a new JWT builder from the jose library and spreads your payload into it as the JWT's claims body — the data embedded inside the token.
     .setProtectedHeader({ alg: "HS256"})  //Sets the JWT header, declaring that the token will be signed using HMAC-SHA256 — a symmetric algorithm where the same secret is used to both sign and verify.
     .setIssuedAt()  //Stamps the token with the current time as the iat (issued-at) claim. Useful for auditing and calculating token age.
-    .setExpirationTime("7d")  //Sets the exp claim — the time the token expires. After this, the token is rejected automatically during verification. Short-lived by design for security.
+    .setExpirationTime("7d")  //Sets the exp claim — the time the token expires. After this, the token is rejected automatically during verification.  
     .sign(REFRESH_SECRET) // Performs the actual signing operation using the refresh token secret, producing a compact JWT string that can be sent to clients and stored securely.
 }
 
