@@ -28,6 +28,12 @@ enum Role {
   BURSAR
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
 enum TokenType {
   REFRESH
   EMAIL_VERIFICATION
@@ -152,21 +158,26 @@ model School {
 // ============================================================
 
 model User {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  schoolId         String    @map("school_id") @db.ObjectId
-  role             Role      @default(STUDENT)
-  email            String?
-  passwordHash     String?   @map("password_hash")
-  phone            String?
-  isActive         Boolean   @default(true) @map("is_active")
-  isEmailVerified  Boolean   @default(false) @map("is_email_verified")
-  lastLoginAt      DateTime? @map("last_login_at")
-  failedLoginCount Int       @default(0) @map("failed_login_count")
-  lockedUntil      DateTime? @map("locked_until")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  schoolId            String?    @map("school_id") @db.ObjectId
+  role                Role      @default(STUDENT)
+  email               String?
+  passwordHash        String?   @map("password_hash")
+  phone               String?
+  firstName           String?   @map("first_name")
+  lastName            String?   @map("last_name")
+  userCode            String?   @unique @map("user_code")
+  status              UserStatus   @default(ACTIVE)
+  isActive            Boolean   @default(true) @map("is_active")
+  isEmailVerified     Boolean   @default(false) @map("is_email_verified")
+  mustChangePassword  Boolean   @default(false) @map("must_change_password")
+  lastLoginAt         DateTime? @map("last_login_at")
+  failedLoginCount    Int       @default(0) @map("failed_login_count")
+  lockedUntil         DateTime? @map("locked_until")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  school                School             @relation(fields: [schoolId], references: [id])
+  school                School?             @relation(fields: [schoolId], references: [id])
   tokens                Token[]
   otpCodes              OtpCode[]
   auditLogs             AuditLog[]
@@ -315,6 +326,17 @@ model Subject {
 
   @@unique([schoolId, name])
   @@map("subjects")
+}
+
+model CodeCounter {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  schoolId String  @map("school_id") @db.ObjectId
+  type      String // STUDENT, STAFF
+  year      Int?
+  term      TermPeriod?
+  value     Int    @default(0)
+
+  @@unique([schoolId, type, year, term])
 }
 
 // ============================================================
