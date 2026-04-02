@@ -3,7 +3,7 @@ import { z } from "zod";
 export const RoleEnum = z.enum(["STUDENT", "TEACHER", "PARENT"])
 export const GenderEnum = z.enum(["MALE", "FEMALE"]);
 
-export const baseSchema = z.object({
+export const baseSchema = z.object({  //
     firstName: z
     .string({ error: "First name is required" })
     .min(1, "First name is required")
@@ -42,7 +42,7 @@ export const baseSchema = z.object({
     }, "Date of birth must be in the past")
     .optional(),
  
-    gender: GenderEnum.optional(),
+    gender: GenderEnum.optional(),  
  
     address: z
     .string()
@@ -50,3 +50,5 @@ export const baseSchema = z.object({
     .optional(),
  
 })
+
+
