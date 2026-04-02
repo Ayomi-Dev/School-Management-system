@@ -25,15 +25,6 @@ async function main() {
 
   const passwordHash = await hashPassword(password);
 
-  // Bootstrap admin gets userCode ADM-YYYY-001
-//   const year    = new Date().getFullYear();
-//   const counter = await prisma.userCodeCounter.upsert({
-//     where:  { id: `ADMIN-${year}` },
-//     update: { sequence: { increment: 1 } },
-//     create: { id: `ADMIN-${year}`, sequence: 1 },
-//   });
-//   const userCode = `ADM-${year}-${String(counter.sequence).padStart(3, "0")}`;
-
   const super_Admin = await prisma.user.create({
     data: {
       email,
