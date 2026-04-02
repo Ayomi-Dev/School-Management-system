@@ -19,6 +19,7 @@ export const adminCreateUserSchema = z.discriminatedUnion("role", [
   studentSchema,
   teacherSchema,
   parentSchema,
+  bursarSchema,
   adminSchema,
 ]);
 
