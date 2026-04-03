@@ -5,7 +5,7 @@ import { prisma } from "../prisma/client";
 import { hashToken } from "./hash";
 
 export interface sessionPayload {
-    userId: string;
+    sub: string;
     schoolId: string;
     role: Role;
     iat?: number;
@@ -36,11 +36,11 @@ export const signRefreshToken = async(payload: sessionPayload): Promise<string> 
     .sign(REFRESH_SECRET) // Performs the actual signing operation using the refresh token secret, producing a compact JWT string that can be sent to clients and stored securely.
 }
 
-export const verifyAccessToken = async(token: string): Promise<sessionPayload> => {
+export const verifyAccessToken = async(token: string): Promise<sessionPayload | null> => {
     const { payload } = await jwtVerify(token, ACCESS_SECRET) //Uses jose's jwtVerify to do three things at once — verify the signature, check the token hasn't expired, and decode the payload. Throws an error if any check fails.
     return payload as unknown as  sessionPayload //Casts the decoded payload to your custom sessionPayload type since jose returns a generic object. as unknown is needed as an intermediate step because the types don't directly overlap.
 }
-
+    
 
 export const verifyRefreshToken = async(token: string): Promise<sessionPayload> => {
     const { payload } = await jwtVerify(token, REFRESH_SECRET);

@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { baseSchema } from "./baseSchema"
+import { baseSchemaForUserCreation } from "./baseSchema"
 
-export const bursarSchema = baseSchema.extend({
+export const bursarSchema = baseSchemaForUserCreation.extend({
     role: z.literal("BURSAR")
 })

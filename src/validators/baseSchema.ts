@@ -3,7 +3,7 @@ import { z } from "zod";
 export const RoleEnum = z.enum(["STUDENT", "TEACHER", "PARENT"])
 export const GenderEnum = z.enum(["MALE", "FEMALE"]);
 
-export const baseSchema = z.object({  //
+export const baseSchemaForUserCreation = z.object({  //
     firstName: z
     .string({ error: "First name is required" })
     .min(1, "First name is required")

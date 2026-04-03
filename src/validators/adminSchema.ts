@@ -1,12 +1,12 @@
 import { z } from "zod"
-import { baseSchema } from "./baseSchema"
+import { baseSchemaForUserCreation } from "./baseSchema"
 import { studentSchema } from "./studentSchema";
 import { teacherSchema } from "./teacherSchema";
 import { parentSchema } from "./parentSchema";
 import { bursarSchema } from "./bursarSchema";
 
 
-export const adminSchema = baseSchema.extend({
+export const adminSchema = baseSchemaForUserCreation.extend({
     role: z.literal("ADMIN")
 })
 

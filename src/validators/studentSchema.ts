@@ -1,12 +1,27 @@
 import { z } from "zod";
-import { baseSchema } from "./baseSchema";
+import { baseSchemaForUserCreation } from "./baseSchema";
+import { ClassLevel } from "@/app/generated/prisma/enums";
 
-export const studentSchema = baseSchema.extend({
+
+const ClassLevelEnum = z.enum([
+  ClassLevel.CRECHE,
+  ClassLevel.NURSERY1,
+  ClassLevel.NURSERY2,
+  ClassLevel.PRIMARY3,
+  ClassLevel.PRIMARY4,
+  ClassLevel.PRIMARY5,
+  ClassLevel.PRIMARY6,
+  ClassLevel.JSS1,
+  ClassLevel.JSS2,
+  ClassLevel.JSS3,
+  ClassLevel.SS1,
+  ClassLevel.SS2,
+  ClassLevel.SS3,
+])
+export const studentSchema = baseSchemaForUserCreation.extend({
   role: z.literal("STUDENT"),
  
-  gradeLevel: z
-    .string({ error: "Grade level is required" })
-    .min(1, "Grade level is required"),
+  gradeLevel: ClassLevelEnum,
  
   section: z
     .string()
