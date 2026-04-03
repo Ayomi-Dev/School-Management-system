@@ -2,8 +2,8 @@ import { Role } from "@/app/generated/prisma/enums";
 import { PERMISSIONS, Resource, Action } from "@/src/types/permissionType";
 
 
-export const hasPermission = (role: Role, resource: Resource, action: Action): boolean => {
-    const rolePermissions = PERMISSIONS[role];  //Looks up the permission matrix for the user's role. For example, if role is "TUTOR", it retrieves the TUTOR permissions object.
+export const doesUserHavePermission = (role: Role, resource: Resource, action: Action): boolean => {
+    const rolePermissions = PERMISSIONS[role];  //Looks up the permission matrix for the user's role. For example, the "TEACHER" role retrieves the TEACHER permissions object.
     if (!rolePermissions) return false; //If the role doesn't exist in the PERMISSIONS object, it returns false immediately — no permissions granted.
     const resourcePermissions = rolePermissions[resource]; //Within that role's permissions, it looks up the specific resource (e.g., "scores") to get the array of allowed actions for that resource.
     if (!resourcePermissions) return false; //If the resource isn't defined for that role, it returns false — no permissions for that resource.
@@ -11,8 +11,8 @@ export const hasPermission = (role: Role, resource: Resource, action: Action): b
 }
 
 
-export const canPerformAction = (role: Role, resource: Resource, action: Action): void => {
-    if(!hasPermission(role, resource, action)){
+export const canUserPerformAction = (role: Role, resource: Resource, action: Action): void => {
+    if(!doesUserHavePermission(role, resource, action)){
         throw new PermissionError(`Role ${role} does not have permission to ${action} on ${resource}`)
     }
 }
