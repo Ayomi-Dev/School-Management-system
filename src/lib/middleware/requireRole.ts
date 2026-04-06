@@ -1,6 +1,6 @@
 import { Role } from "@/app/generated/prisma/enums";
 import { verifyAccessToken } from "../auth/session";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 interface AuthSuccess {
     success: true;
@@ -56,8 +56,8 @@ export const requireSuperAdmin = async(req: NextRequest): Promise<AuthResult> =>
 }
 
 
-export const requireAdmin = async(req:NextRequest): Promise<AuthResult> => {
-    return requireRole(req, [Role.SUPER_ADMIN, Role.ADMIN])
+export const requireSchoolAdmin = async(req:NextRequest): Promise<AuthResult> => {
+    return requireRole(req, [Role.ADMIN])
 }
 
 export const requireSchoolRoless = async(
@@ -65,8 +65,7 @@ export const requireSchoolRoless = async(
     ...requiredRoles: Exclude<Role, "SUPER_ADMIN">[]
 ): Promise<AuthResult & { schoolId: string }> => {
     //Calls the more general requireRole function, passing in the request and a combined list of
-    //  the specific school roles plus SUPER_ADMIN. This allows both school-specific roles and super admins 
-    // to access the resource.
+    //  the specific school roles minus SUPER_ADMIN. This allows both school-specific roles to access the resource.
     const result = await requireRole(req, [...requiredRoles]) 
     if(!result.success) return result as any
 
@@ -74,5 +73,5 @@ export const requireSchoolRoless = async(
         return { success: false, error: "Forbidden: School association required", status: 403 } as any
     }
 
-    return result as AuthResult & { schoolId: string}
+    return result as AuthResult & { schoolId: string }
 } 

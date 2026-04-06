@@ -21,10 +21,14 @@ export async function verifyPassword(
     return bcrypt.compare(password, hashedPassword) 
 }
 
-export const hashToken = async(token: string): Promise<string> => {
-    return crypto.createHash("sha256") //Creates a new hash object using the SHA-256 algorithm, which is a cryptographic hash function that produces a fixed-size 256-bit (32-byte) hash value.
-    .update(token)  //Feeds the token string into the hasher.
-    .digest("hex")  //Performs the hashing operation and outputs the result as a hexadecimal string, which is what gets stored in the database.
+
+export function generateSetupToken(): { rawToken: string; hashedToken: string } { //Generates a random token for account setup or password reset, and returns both the raw token (for sending to the user) and the hashed version (for securely storing in the database).
+  const rawToken = crypto.randomBytes(32).toString("hex"); // 64-char hex string
+  const hashedToken = crypto.createHash("sha256") ////Creates a new hash object using the SHA-256 algorithm, which is a cryptographic hash function that produces a fixed-size 256-bit (32-byte) hash value.
+    .update(rawToken) //Feeds the token string into the hasher.
+    .digest("hex");  //Performs the hashing operation and outputs the result as a hexadecimal string, which is what gets stored in the database.
+
+  return { rawToken, hashedToken };
 }
 
 export const generateOTP = (): string => {
@@ -39,3 +43,7 @@ export const generateReceiptNumber = (): string => {
   const suffix = crypto.randomBytes(3).toString("hex").toUpperCase(); //generates a random 6-character hexadecimal string as a suffix and converts it to uppercase
   return `${prefix}-${suffix}`; //combines both parts with a hyphen to create the final receipt number.
 }
+
+export const compareHashes = async(rawPassword: string, storedHashPassword: string ) => {
+  return bcrypt.compare(rawPassword, storedHashPassword) //Compares a raw password with a stored hash using bcrypt's compare function, which handles the hashing and salting internally to determine if they match.
+} 

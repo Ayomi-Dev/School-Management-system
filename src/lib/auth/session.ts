@@ -2,7 +2,10 @@ import { jwtVerify, SignJWT } from "jose";
 import { Role } from "@/app/generated/prisma/enums";
 import { cookies } from "next/headers";
 import { prisma } from "../prisma/client";
-import { hashToken } from "./hash";
+import { generateSetupToken } from "./hash";
+import { NextResponse } from "next/server";
+import crypto from "crypto"
+
 
 export interface sessionPayload {
     sub: string;
@@ -20,20 +23,48 @@ const REFRESH_SECRET = new TextEncoder().encode(
 )
 
 
-export const signAccessToken = async(payload: sessionPayload): Promise<string> => {
-    return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256"})
-    .setIssuedAt()
-    .setExpirationTime("15m")
-    .sign(ACCESS_SECRET)
+export function buildTokenCookies(
+  res: NextResponse,
+  accessToken: string,
+  rawRefresh: string
+) {
+  const isProd = process.env.NODE_ENV === "production";
+  res.cookies.set("access_token", accessToken, {
+    httpOnly: true,
+    secure:   isProd,
+    sameSite: "strict",
+    path:     "/",
+    maxAge:   15 * 60,
+  });
+  res.cookies.set("refresh_token", rawRefresh, {
+    httpOnly: true,
+    secure:   isProd,
+    sameSite: "strict",
+    path:     "/api/auth/refresh",
+    maxAge:   7 * 24 * 60 * 60,
+  });
 }
 
-export const signRefreshToken = async(payload: sessionPayload): Promise<string> => {
+export const signAccessToken = async(payload: sessionPayload): Promise<string> => {
     return new SignJWT({ ...payload })  //Creates a new JWT builder from the jose library and spreads your payload into it as the JWT's claims body — the data embedded inside the token.
     .setProtectedHeader({ alg: "HS256"})  //Sets the JWT header, declaring that the token will be signed using HMAC-SHA256 — a symmetric algorithm where the same secret is used to both sign and verify.
     .setIssuedAt()  //Stamps the token with the current time as the iat (issued-at) claim. Useful for auditing and calculating token age.
-    .setExpirationTime("7d")  //Sets the exp claim — the time the token expires. After this, the token is rejected automatically during verification.  
-    .sign(REFRESH_SECRET) // Performs the actual signing operation using the refresh token secret, producing a compact JWT string that can be sent to clients and stored securely.
+    .setExpirationTime("15m")  //Sets the exp claim — the time the token expires. After this, the token is rejected automatically during verification.  
+    .sign(ACCESS_SECRET) // Performs the actual signing operation using the access token secret, producing a compact JWT string that can be sent to clients and stored securely.
+}
+
+export const issueTokens = async(userId: string) => {
+    const rawRefresh  = crypto.randomBytes(32).toString("hex");
+  const refreshHash = crypto.createHash("sha256").update(rawRefresh).digest("hex");
+  await prisma.token.create({
+    data: {
+      userId,
+      tokenHash: refreshHash,
+      type:      "REFRESH",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+  return rawRefresh;
 }
 
 export const verifyAccessToken = async(token: string): Promise<sessionPayload | null> => {
@@ -77,7 +108,7 @@ export const persistRefreshToken = async(
     await prisma.token.create({ //Stores a hashed version of the token — never the raw token itself. If your DB is breached, attackers can't use the hashes directly.
         data: {
             userId,
-            tokenHash: await hashToken(rawToken),
+            tokenHash: generateSetupToken().hashedToken,
             type: "REFRESH", //Labels this record as a refresh token, since the same Token table may store other token types (e.g., "PASSWORD_RESET", "EMAIL_VERIFY").
             expiresAt,
             ...metadata  //Stores the expiry time and spreads in userAgent and ipAddress. Useful for showing users their active sessions and detecting suspicious logins.
@@ -87,7 +118,7 @@ export const persistRefreshToken = async(
 
 
 export const revokeRefreshToken = async(token: string) => { // deletes the corresponding record from your database based on the hashed token value. This ensures that the token can no longer be used to obtain new access tokens.
-    const tokenHash = await hashToken(token);
+    const tokenHash = generateSetupToken().hashedToken;
     await prisma.token.deleteMany({
         where: {
             tokenHash
@@ -103,10 +134,13 @@ export const revokeAllUserTokens = async(userId: string) => { // deletes all ref
 }
 
 export const isTokenRevoked = async(token: string): Promise<boolean> => { // checks if a given refresh token has been revoked by looking for its hashed value in the database. If the token is not found, it is considered revoked.
-    const tokenHash = await hashToken(token);
+    const tokenHash = generateSetupToken().hashedToken;
     const tokenRecord = await prisma.token.findUnique({
         where: { tokenHash }
     });
     return !tokenRecord; // If no record is found, the token is revoked
 }
+
+
+
 
