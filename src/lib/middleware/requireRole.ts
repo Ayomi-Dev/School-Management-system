@@ -1,5 +1,5 @@
 import { Role } from "@/app/generated/prisma/enums";
-import { verifyAccessToken } from "../auth/session";
+import { getSession, verifyAccessToken } from "../auth/session";
 import { NextRequest } from "next/server";
 
 interface AuthSuccess {
@@ -22,22 +22,20 @@ export const requireRole = async(
     req: NextRequest,
     requiiredRoles: Role[],
 ): Promise<AuthResult> => {
-    const token = req.cookies.get("access_token")?.value; //extracts the access token from the incoming request's cookies safely handling the case where the cookie might not exist.
-
-    if(!token){
-        return { success: false, error: "Unauthorized: No token provided", status: 401}
+    try {
+    const payload = await getSession(req)
+    if(!payload) {
+        return { success: false, error: "Unauthorized: No session found", status: 401 }
     }
 
-    try {
-        const payload = await verifyAccessToken(token); //Verifies the token's validity and decodes its payload. If the token is invalid or expired, this will throw an error that we catch below.
-        if(!payload){
-            return { success: false, error: "Unauthorized: payload cannot be decoded", status: 401}
-        }
+    if ('success' in payload && !payload.success) { //
+        return payload;
+    }
 
-        const role = payload.role as Role; //Extracts the user's role from the token payload, which is essential for determining if they have the necessary permissions to access the resource.
-        const userId = payload.sub as string; //extracys the sub claim from the token payload, which typically represents the user's unique identifier in the system. This is crucial for associating actions with specific users and enforcing user-specific permissions or data access.
-        const schoolId = payload.schoolId || null;  //Extracts the schoolId from the token payload, which can be used to scope access to resources related to a specific school. If the token doesn't include a schoolId, it defaults to null, allowing for flexibility in handling users that may not be associated with a school.
-
+        const { role, userId, schoolId } = payload as AuthSuccess; //Extracts the user's role from the token payload, which is essential for determining if they have the necessary permissions to access the resource.
+        //extracys the sub claim from the token payload, which typically represents the user's unique identifier in the system. This is crucial for associating actions with specific users and enforcing user-specific permissions or data access.
+        //Extracts the schoolId from the token payload, which can be used to scope access to resources related to a specific school. If the token doesn't include a schoolId, it defaults to null, allowing for flexibility in handling users that may not be associated with a school.
+    console.log("payload:,", payload)
         if(!requiiredRoles.includes(role)){
             return { success: false, error: "Forbidden: Insufficient permissions", status: 403}
         }

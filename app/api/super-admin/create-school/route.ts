@@ -7,6 +7,7 @@ import { createSchool } from "@/src/services/school/createSchool";
 export const POST = async(req: NextRequest) => {
     console.log("Received request to create school");
     const authResult = await requireSuperAdmin(req);
+    console.log(authResult)
 
     if(!authResult.success) {
         return NextResponse.json(

@@ -1,14 +1,14 @@
 import { jwtVerify, SignJWT } from "jose";
 import { Role } from "@/app/generated/prisma/enums";
-import { cookies } from "next/headers";
 import { prisma } from "../prisma/client";
 import { generateSetupToken } from "./hash";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto"
+import { AuthResult } from "../middleware/requireRole";
 
 
 export interface sessionPayload {
-    sub: string;
+    userId: string;
     schoolId: string;
     role: Role;
     iat?: number;
@@ -61,13 +61,13 @@ export const issueTokens = async(userId: string) => {
       userId,
       tokenHash: refreshHash,
       type:      "REFRESH",
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //expires 7 days from the time of creation
     },
   });
   return rawRefresh;
 }
 
-export const verifyAccessToken = async(token: string): Promise<sessionPayload | null> => {
+export const verifyAccessToken = async(token: string): Promise<sessionPayload | AuthResult> => {
     const { payload } = await jwtVerify(token, ACCESS_SECRET) //Uses jose's jwtVerify to do three things at once — verify the signature, check the token hasn't expired, and decode the payload. Throws an error if any check fails.
     return payload as unknown as  sessionPayload //Casts the decoded payload to your custom sessionPayload type since jose returns a generic object. as unknown is needed as an intermediate step because the types don't directly overlap.
 }
@@ -78,20 +78,21 @@ export const verifyRefreshToken = async(token: string): Promise<sessionPayload> 
     return payload as unknown as sessionPayload
 }
 
-export const getSession = async(token: string): Promise<sessionPayload | null> => {
+export const getSession = async(req: NextRequest): Promise<sessionPayload | AuthResult> => {
     try {
-        const cookieStoredToken = await cookies(); //Calls Next.js's cookies() function to access the incoming request's cookie jar — this only works in Server Components, Server Actions, or Route Handlers.
-        const tokenFromCookie = cookieStoredToken.get("access_token")?.value  //Looks for the cookie named "access_token". The ?.value safely returns undefined instead of crashing if the cookie doesn't exist.
+        const token = req.cookies.get("access_token")?.value  //Looks for the cookie named "access_token". The ?.value safely returns undefined instead of crashing if the cookie doesn't exist.
 
-        if(!tokenFromCookie) return null;
+        if(!token) {
+            return { success: false, error: "Unauthorized: No token provided", status: 401 } //If no token is found, it returns a JSON response with a 401 status code indicating that the user is not authorized to access the resource.
+        }
 
-        const payload = await verifyAccessToken(tokenFromCookie);
+        const payload = await verifyAccessToken(token);
         return payload;  //Passes the raw token to verifyAccessToken. If valid, returns the decoded user session data to the caller.
 
     } 
     catch (error) {
         console.log("Error verifying access token:", error)
-        return null //If verification throws (expired, tampered, malformed token), it's caught here and null is returned silently instead of crashing the app.
+        return { success: false, error: "Unauthorized: Invalid token", status: 401 } //If verification throws (expired, tampered, malformed token), it's caught here and a failure result is returned.
     }
 }
 

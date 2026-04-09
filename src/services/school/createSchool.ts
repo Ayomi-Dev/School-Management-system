@@ -1,3 +1,3 @@
 export const createSchool = () => {
-    console.log('create school');
+    console.log('Super admin wants to create school');
 }

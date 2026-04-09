@@ -161,7 +161,7 @@ model User {
   id                  String    @id @default(auto()) @map("_id") @db.ObjectId
   schoolId            String?    @map("school_id") @db.ObjectId
   role                Role      @default(STUDENT)
-  email               String?
+  email               String    @unique
   passwordHash        String?   @map("password_hash")
   phone               String?
   firstName           String?   @map("first_name")
