@@ -9,16 +9,18 @@ export const POST = async(req: NextRequest) => {
     const authResult = await requireSuperAdmin(req);
     console.log(authResult)
 
-    if(!authResult.success) {
+    if(!authResult.success && authResult.shouldRefresh) {
+
         return NextResponse.json(
             { error: authResult.error },
             { status: authResult.status }
         )
     }
+    
 
     const result = createSchool()
      
-    console.log(result)
+    console.log("this is result",result)
     return NextResponse.json({ message: "School created successfully" }, { status: 201 })
 
     
