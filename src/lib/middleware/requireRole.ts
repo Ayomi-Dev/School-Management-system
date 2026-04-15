@@ -22,30 +22,25 @@ export type AuthResult = AuthSuccess | AuthFailure;
 
 export const requireRole = async(
     req: NextRequest,
-    requiiredRoles: Role[],
+    requiredRoles: Role[],
 ): Promise<AuthResult> => {
     try {
         const session= await getSession(req); //Calls getSession to retrieve the user's session information from the request. This function checks for the presence of an access token, verifies it, and returns the decoded payload containing user details if the token is valid. If the token is missing or invalid, it returns an error response indicating that the user is unauthorized.
+        console.log("Session result in requireRole:", session)
         if(!session.success) {
             return { success: false, error: "Unauthorized: No session found", status: 401 }
         }
 
-        const { accessPayload, refreshPayload } = session //destructures the session result to get the access token payload, which contains the user's role and other details. This payload is essential for determining if the user has the necessary permissions to access the resource. The refresh payload can be used to trigger a token refresh if the access token has expired but the refresh token is still valid.
-        if(!accessPayload && refreshPayload){
-            return {
-                success: true,
-                userId: refreshPayload.userId,
-                schoolId: refreshPayload.schoolId,
-                role: refreshPayload.role,
-                shouldRefresh: true
-             } 
+        const { accessPayload } = session //destructures the session result to get the access token payload, which contains the user's role and other details. This payload is essential for determining if the user has the necessary permissions to access the resource. The refresh payload can be used to trigger a token refresh if the access token has expired but the refresh token is still valid.
+        if(!accessPayload ){
+            return { success: false, error: "Unauthorized: Access token expired", status: 401, shouldRefresh: true } 
         }
        
         const { role, userId, schoolId } = accessPayload; //Extracts the user's role from the token payload, which is essential for determining if they have the necessary permissions to access the resource.
         //extracts the sub claim from the token payload, which typically represents the user's unique identifier in the system. This is crucial for associating actions with specific users and enforcing user-specific permissions or data access.
         //Extracts the schoolId from the token payload, which can be used to scope access to resources related to a specific school. If the token doesn't include a schoolId, it defaults to null, allowing for flexibility in handling users that may not be associated with a school.
         console.log("payload:,", accessPayload)
-        if(!requiiredRoles.includes(role)){
+        if(!requiredRoles.includes(role)){
             return { success: false, error: "Forbidden: Insufficient permissions", status: 403}
         }
 
