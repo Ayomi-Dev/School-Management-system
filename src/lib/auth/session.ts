@@ -2,7 +2,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { Role } from "@/app/generated/prisma/enums";
 import { prisma } from "../prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import crypto, { sign } from "crypto"
+import crypto from "crypto"
 import { AuthFailure } from "../middleware/requireRole";
 
 export interface sessionPayload {
@@ -33,15 +33,15 @@ export const buildTokenCookies = ( // sets the access and refresh tokens as secu
   res.cookies.set("access_token", accessToken, {
     httpOnly: true,
     secure:   isProd,
-    sameSite: "strict",
+    sameSite: "lax",
     path:     "/",
     maxAge:   15 * 60,
   });
   res.cookies.set("refresh_token", rawRefresh, {
     httpOnly: true,
     secure:   isProd,
-    sameSite: "strict",
-    path:     "/api/auth/refresh",
+    sameSite: "lax",
+    path:     "/",
     maxAge:   7 * 24 * 60 * 60, //rate limiting refresh tokens to only be sent to the refresh endpoint and expire after 7 days. This reduces the attack surface for token theft and misuse.
   });
 }
@@ -101,7 +101,8 @@ export const verifyRefreshToken = async(token: string): Promise<sessionPayload |
 export const getSession = async(req: NextRequest): Promise<SessionResult> => {
     try {
         const accessToken =  req.cookies.get("access_token")?.value  //Looks for the cookie named "access_token". The ?.value safely returns undefined instead of crashing if the cookie doesn't exist.
-
+        console.log("Access token from cookie:", accessToken)
+        console.log("All cookies:", req.cookies.getAll())
         if(!accessToken) {
             return { success: false, error: "Unauthorized: No access token provided", status: 401 } //If no token is found, it returns a JSON response with a 401 status code indicating that the user is not authorized to access the resource.
         }
@@ -110,10 +111,7 @@ export const getSession = async(req: NextRequest): Promise<SessionResult> => {
         if(!accessPayload){
             return { success: false, error: "Unauthorized: Invalid access token", status: 401 }
         }
-
-
-        
-
+        console.log("Access token verified successfully. Payload:", accessPayload)
         return { success: true, accessPayload };  //Passes the raw token to verifyAccessToken. If valid, returns the decoded user session data to the caller.
 
     } 
@@ -167,10 +165,10 @@ export const isTokenRevoked = async(token: string): Promise<boolean> => { // che
     return !tokenRecord; // If no record is found, the token is revoked
 }
 
-export const refreshTokenHandler = async(req: NextRequest): Promise<{ success: boolean; accessPayload: sessionPayload } | AuthFailure> => {
+export const refreshTokenHandler = async(req: NextRequest) => {
     try {
         const refreshToken = req.cookies.get("refresh_token")?.value;
-
+         console.log("Refresh token from cookie:", refreshToken)
         if(!refreshToken){
             return { success: false, error: "Unauthorized: No refresh token found", status: 401 }
         }
@@ -183,10 +181,17 @@ export const refreshTokenHandler = async(req: NextRequest): Promise<{ success: b
             return { success: false, error: "Unauthorized: Invalid refresh token", status: 401 }
         }
         const newAccessToken = await signAccessToken(payload);
+        console.log("Generated new access token during refresh for user:", newAccessToken)
         const res = NextResponse.json({ message: "Token refreshed" }, { status: 200 });
 
-        buildTokenCookies(res, newAccessToken, refreshToken); //Reuses the same refresh token for simplicity, but you could also generate a new one and update the cookie and database record if you want to rotate refresh tokens on each use for enhanced security.
-        return { success: true, accessPayload: payload }; //Returns the new access token and the same payload for both access and refresh since they contain the same user info. The client can use this to update its session state.
+        res.cookies.set("access_token", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/api/auth/refresh",
+            maxAge:   15 * 60,
+        }); //Reuses the same refresh token for simplicity, but you could also generate a new one and update the cookie and database record if you want to rotate refresh tokens on each use for enhanced security.
+        return res; //Returns the new access token and the same payload for both access and refresh since they contain the same user info. The client can use this to update its session state.
     } 
     catch (error) {
         console.log("Error refreshing token:", error);

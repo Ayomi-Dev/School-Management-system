@@ -1,5 +1,5 @@
 import { Role } from "@/app/generated/prisma/enums";
-import { getSession, verifyAccessToken } from "../auth/session";
+import { getSession, refreshTokenHandler, verifyAccessToken } from "../auth/session";
 import { NextRequest } from "next/server";
 
 interface AuthSuccess {
@@ -25,10 +25,10 @@ export const requireRole = async(
     requiredRoles: Role[],
 ): Promise<AuthResult> => {
     try {
-        const session= await getSession(req); //Calls getSession to retrieve the user's session information from the request. This function checks for the presence of an access token, verifies it, and returns the decoded payload containing user details if the token is valid. If the token is missing or invalid, it returns an error response indicating that the user is unauthorized.
+        const session = await getSession(req); //Calls getSession to retrieve the user's session information from the request. This function checks for the presence of an access token, verifies it, and returns the decoded payload containing user details if the token is valid. If the token is missing or invalid, it returns an error response indicating that the user is unauthorized.
         console.log("Session result in requireRole:", session)
         if(!session.success) {
-            return { success: false, error: "Unauthorized: No session found", status: 401 }
+            return { success: false, error: "Unauthorized: No session found", status: 401, shouldRefresh: true } //If the session retrieval fails (e.g., due to a missing or invalid token), it returns a JSON response with a 401 status code indicating that the user is not authorized to access the resource. The shouldRefresh flag can be used by the client to trigger a token refresh flow if applicable.
         }
 
         const { accessPayload } = session //destructures the session result to get the access token payload, which contains the user's role and other details. This payload is essential for determining if the user has the necessary permissions to access the resource. The refresh payload can be used to trigger a token refresh if the access token has expired but the refresh token is still valid.
