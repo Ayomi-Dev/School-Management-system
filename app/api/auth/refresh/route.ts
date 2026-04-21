@@ -8,5 +8,5 @@ export const POST = async(req: NextRequest) => {
     const result = await refreshTokenHandler(req);
     console.log("Refresh token handler result:", result)
 
-    return NextResponse.json(result,);
+    return result;
 }

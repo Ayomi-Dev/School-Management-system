@@ -4,6 +4,7 @@ import { prisma } from "../prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto"
 import { AuthFailure } from "../middleware/requireRole";
+import { hashedRefreshToken } from "./hash";
 
 export interface sessionPayload {
     userId: string;
@@ -41,7 +42,7 @@ export const buildTokenCookies = ( // sets the access and refresh tokens as secu
     httpOnly: true,
     secure:   isProd,
     sameSite: "lax",
-    path:     "/",
+    path:     "/api/auth/refresh", //scopes the refresh token cookie to only be sent to the refresh endpoint, reducing the attack surface for CSRF attacks and ensuring it's only used where needed.
     maxAge:   7 * 24 * 60 * 60, //rate limiting refresh tokens to only be sent to the refresh endpoint and expire after 7 days. This reduces the attack surface for token theft and misuse.
   });
 }
@@ -88,7 +89,7 @@ export const verifyRefreshToken = async(token: string): Promise<sessionPayload |
     })
 
     if(!storedHashedToken){
-        throw new Error("Invalid or expired refresh token") //If no matching token record is found, it means the token is either invalid (not in DB) or expired (past its expiresAt), so we throw an error to indicate verification failure.
+        return null //If no matching token record is found, it means the token is either invalid (not in DB) or expired (past its expiresAt), so we throw an error to indicate verification failure.
     }
 
     return {
@@ -101,8 +102,6 @@ export const verifyRefreshToken = async(token: string): Promise<sessionPayload |
 export const getSession = async(req: NextRequest): Promise<SessionResult> => {
     try {
         const accessToken =  req.cookies.get("access_token")?.value  //Looks for the cookie named "access_token". The ?.value safely returns undefined instead of crashing if the cookie doesn't exist.
-        console.log("Access token from cookie:", accessToken)
-        console.log("All cookies:", req.cookies.getAll())
         if(!accessToken) {
             return { success: false, error: "Unauthorized: No access token provided", status: 401 } //If no token is found, it returns a JSON response with a 401 status code indicating that the user is not authorized to access the resource.
         }
@@ -111,7 +110,6 @@ export const getSession = async(req: NextRequest): Promise<SessionResult> => {
         if(!accessPayload){
             return { success: false, error: "Unauthorized: Invalid access token", status: 401 }
         }
-        console.log("Access token verified successfully. Payload:", accessPayload)
         return { success: true, accessPayload };  //Passes the raw token to verifyAccessToken. If valid, returns the decoded user session data to the caller.
 
     } 
@@ -159,43 +157,48 @@ export const revokeAllUserTokens = async(userId: string) => { // deletes all ref
 }
 
 export const isTokenRevoked = async(token: string): Promise<boolean> => { // checks if a given refresh token has been revoked by looking for its hashed value in the database. If the token is not found, it is considered revoked.
+    const hashedToken = hashedRefreshToken(token);
     const tokenRecord = await prisma.token.findUnique({
-        where: { tokenHash: token }
+        where: { tokenHash: hashedToken }
     });
+    if(!tokenRecord){
+        console.log("Token not found in database, considered revoked:", token)
+    }
     return !tokenRecord; // If no record is found, the token is revoked
 }
 
 export const refreshTokenHandler = async(req: NextRequest) => {
     try {
         const refreshToken = req.cookies.get("refresh_token")?.value;
-         console.log("Refresh token from cookie:", refreshToken)
         if(!refreshToken){
-            return { success: false, error: "Unauthorized: No refresh token found", status: 401 }
+            return NextResponse.json({ error: "Unauthorized: No refresh token found"}, {status: 401 });
         }
-
+        // Optionally, you could check if the token has been revoked in the database here before proceeding to generate a new access token.
+        
         // refresh token verification 
-        let payload: sessionPayload | null = null;
-        payload  = await verifyRefreshToken(refreshToken)
+        const payload  = await verifyRefreshToken(refreshToken)
+        console.log("Handling token refresh request", payload)
         
         if(!payload){
-            return { success: false, error: "Unauthorized: Invalid refresh token", status: 401 }
+            return NextResponse.json({ error: "Unauthorized: Invalid refresh token"}, {status: 401 });
         }
-        const newAccessToken = await signAccessToken(payload);
-        console.log("Generated new access token during refresh for user:", newAccessToken)
-        const res = NextResponse.json({ message: "Token refreshed" }, { status: 200 });
 
+        const {userId, role, schoolId } = payload //Extracts the user details from the refresh token's payload, which will be used to create a new access token with the same user information.
+        const newAccessToken = await signAccessToken({userId, role, schoolId}); //signs a new access token using the same user details from the refresh token. This allows the client to continue making authenticated requests without requiring the user to log in again, as long as they have a valid refresh token.
+
+        const res = NextResponse.json({ message: "Token refreshed" }, { status: 201 });
         res.cookies.set("access_token", newAccessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            path: "/api/auth/refresh",
+            path: "/",
             maxAge:   15 * 60,
-        }); //Reuses the same refresh token for simplicity, but you could also generate a new one and update the cookie and database record if you want to rotate refresh tokens on each use for enhanced security.
+        }); //Reuses the same refresh token for simplicity,
         return res; //Returns the new access token and the same payload for both access and refresh since they contain the same user info. The client can use this to update its session state.
     } 
     catch (error) {
         console.log("Error refreshing token:", error);
-        return { success: false, error: "Internal Server Error", status: 500 };
+        return NextResponse.json ({ error: "Internal Server Error", status: 500 });
     }
 }
 

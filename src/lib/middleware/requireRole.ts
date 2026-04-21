@@ -48,7 +48,7 @@ export const requireRole = async(
     } 
     catch (error) {
         console.log("Token verification failed:", error)
-        return { success: false, error: "Unauthorized: Invalid token", status: 401 }
+        return { success: false, error: "Internal Server Error", status: 500 }
     }
 }
 

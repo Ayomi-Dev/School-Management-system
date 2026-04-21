@@ -22,13 +22,12 @@ export async function verifyPassword(
 }
 
 
-export function generateSetupToken(): { rawToken: string; hashedToken: string } { //Generates a random token for account setup or password reset, and returns both the raw token (for sending to the user) and the hashed version (for securely storing in the database).
-  const rawToken = crypto.randomBytes(32).toString("hex"); // 64-char hex string
+export function hashedRefreshToken(rawToken: string) { //Generates a random token for account setup or password reset, and returns both the raw token (for sending to the user) and the hashed version (for securely storing in the database).
   const hashedToken = crypto.createHash("sha256") ////Creates a new hash object using the SHA-256 algorithm, which is a cryptographic hash function that produces a fixed-size 256-bit (32-byte) hash value.
     .update(rawToken) //Feeds the token string into the hasher.
     .digest("hex");  //Performs the hashing operation and outputs the result as a hexadecimal string, which is what gets stored in the database.
 
-  return { rawToken, hashedToken };
+  return hashedToken;
 }
 
 export const generateOTP = (): string => {
