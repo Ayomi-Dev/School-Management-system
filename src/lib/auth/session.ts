@@ -171,16 +171,29 @@ export const refreshTokenHandler = async(req: NextRequest) => {
     try {
         const refreshToken = req.cookies.get("refresh_token")?.value;
         if(!refreshToken){
-            return NextResponse.json({ error: "Unauthorized: No refresh token found"}, {status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized: No refresh token found"}, 
+                {status: 401 }
+            );
         }
-        // Optionally, you could check if the token has been revoked in the database here before proceeding to generate a new access token.
+        //checks if the token has been revoked in the database here before proceeding to generate a new access token.
+        const revoked = await isTokenRevoked(refreshToken)
+        if(revoked){
+            console.log("refresh token revoked")
+            return NextResponse.json(
+                { error: "Unauthorized: Refresh token revoked"}, 
+                { status: 401}
+            )
+        }
         
         // refresh token verification 
         const payload  = await verifyRefreshToken(refreshToken)
-        console.log("Handling token refresh request", payload)
         
         if(!payload){
-            return NextResponse.json({ error: "Unauthorized: Invalid refresh token"}, {status: 401 });
+            return NextResponse.json(
+                { error: "Unauthorized: Invalid refresh token"}, 
+                {status: 401 }
+            );
         }
 
         const {userId, role, schoolId } = payload //Extracts the user details from the refresh token's payload, which will be used to create a new access token with the same user information.
