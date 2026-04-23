@@ -18,7 +18,7 @@ export const POST = async(req: NextRequest) => {
         )
     }
     const { email, password } = parsed.data
-    const user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
         where: { email },
         select: USER_SELECT  //This ensures we get the passwordHash field along with other necessary user details, which is crucial for verifying the password and generating tokens.
     })
@@ -43,7 +43,6 @@ export const POST = async(req: NextRequest) => {
     }
     const accessToken = await signAccessToken(payload as sessionPayload); // Generates a signed JWT access token containing the user's ID and role, which will be used for authenticating subsequent requests.
     const rawRefreshToken = await persistRefreshToken(user.id); // Generates a secure random refresh token, hashes it, and stores the hash in the database associated with the user. The raw refresh token is returned to be sent to the client for future token refresh requests.
-    console.log("Generated access token and refresh token for user:", rawRefreshToken)
     const res = NextResponse.json(
       { message: "Login Successful" },
       { status: 200 }

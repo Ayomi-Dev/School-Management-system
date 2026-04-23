@@ -149,6 +149,8 @@ model School {
   feeStructures   FeeStructure[]
   announcements   Announcement[]
   notifications   Notification[]
+  createdById  String?            @map("created_by_id") @db.ObjectId
+  createdBy   SuperAdminProfile? @relation("SchoolCreatedBy", fields:   [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction )
 
   @@map("schools")
 }
@@ -156,6 +158,15 @@ model School {
 // ============================================================
 // AUTH & IDENTITY
 // ============================================================
+
+model SuperAdminProfile {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @map("user_id") @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolsCreated School[] @relation("SchoolCreatedBy")
+
+  @@map("super_admin_profiles")
+}
 
 model User {
   id                  String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -177,10 +188,11 @@ model User {
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  school                School?             @relation(fields: [schoolId], references: [id])
+  school                School?            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   tokens                Token[]
   otpCodes              OtpCode[]
   auditLogs             AuditLog[]
+  superAdminProfile SuperAdminProfile?
   studentProfile        StudentProfile?
   tutorProfile          TutorProfile?
   guardianProfile       Guardian?
