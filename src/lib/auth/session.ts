@@ -161,9 +161,6 @@ export const isTokenRevoked = async(token: string): Promise<boolean> => { // che
     const tokenRecord = await prisma.token.findUnique({
         where: { tokenHash: hashedToken }
     });
-    if(!tokenRecord){
-        console.log("Token not found in database, considered revoked:", token)
-    }
     return !tokenRecord; // If no record is found, the token is revoked
 }
 
@@ -185,7 +182,7 @@ export const refreshTokenHandler = async(req: NextRequest) => {
                 { status: 401}
             )
         }
-        
+
         // refresh token verification 
         const payload  = await verifyRefreshToken(refreshToken)
         

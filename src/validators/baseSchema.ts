@@ -25,7 +25,8 @@ export const baseSchemaForUserCreation = z.object({  //
     .string({ error: "Email is required" })
     .email("Must be a valid email address")
     .max(254, "Email is too long") // RFC 5321 max
-    .transform((val) => val.toLowerCase().trim()),
+    .transform((val) => val.toLowerCase().trim())
+    .optional(),
  
     phone: z
     .string()

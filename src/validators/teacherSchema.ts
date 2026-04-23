@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { baseSchema } from "./baseSchema";
+import { baseSchemaForUserCreation } from "./baseSchema";
 
 export const EmploymentType = z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"])  // a tuple of string literals, which z.enum can use to create a type-safe enum
 
 
-export const teacherSchema = baseSchema.extend({
+export const teacherSchema = baseSchemaForUserCreation.extend({
   role: z.literal("TEACHER"),
  
   subjects: z

@@ -7,7 +7,6 @@ interface AuthSuccess {
     userId: string;
     schoolId: string | null;
     role: Role;
-    shouldRefresh?: boolean; // Indicates whether the client should attempt to refresh the access token using the refresh token. This can be used to trigger a token refresh flow on the client side when an access token has expired but a valid refresh token is still available.
 }
 
 export interface AuthFailure {
@@ -26,7 +25,6 @@ export const requireRole = async(
 ): Promise<AuthResult> => {
     try {
         const session = await getSession(req); //Calls getSession to retrieve the user's session information from the request. This function checks for the presence of an access token, verifies it, and returns the decoded payload containing user details if the token is valid. If the token is missing or invalid, it returns an error response indicating that the user is unauthorized.
-        console.log("Session result in requireRole:", session)
         if(!session.success) {
             return { success: false, error: "Unauthorized: No session found", status: 401, shouldRefresh: true } //If the session retrieval fails (e.g., due to a missing or invalid token), it returns a JSON response with a 401 status code indicating that the user is not authorized to access the resource. The shouldRefresh flag can be used by the client to trigger a token refresh flow if applicable.
         }
@@ -39,12 +37,11 @@ export const requireRole = async(
         const { role, userId, schoolId } = accessPayload; //Extracts the user's role from the token payload, which is essential for determining if they have the necessary permissions to access the resource.
         //extracts the sub claim from the token payload, which typically represents the user's unique identifier in the system. This is crucial for associating actions with specific users and enforcing user-specific permissions or data access.
         //Extracts the schoolId from the token payload, which can be used to scope access to resources related to a specific school. If the token doesn't include a schoolId, it defaults to null, allowing for flexibility in handling users that may not be associated with a school.
-        console.log("payload:,", accessPayload)
         if(!requiredRoles.includes(role)){
             return { success: false, error: "Forbidden: Insufficient permissions", status: 403}
         }
 
-        return {success: true, userId, schoolId, role }
+        return { success: true, userId, schoolId, role }
     } 
     catch (error) {
         console.log("Token verification failed:", error)
