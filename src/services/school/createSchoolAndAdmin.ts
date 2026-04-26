@@ -1,6 +1,8 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { createSchoolAndAdminSchema } from "@/src/validators/schoolSchema";
 import { NextRequest, NextResponse } from "next/server";
+import { generateTempPassword, generateVerificationToken } from "../notification/services";
+import { hashPassword } from "@/src/lib/auth/hash";
 
 export const createSchoolAndAdmin = async(req: NextRequest, userId: string | undefined) => {
     console.log('Super admin wants to create school');
@@ -76,9 +78,37 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
             if(!adminData) {
                 return { school, admin: null }
             }
+
+            // admin creation if admin data is provided on school creation
+            let temporaryPassword: string | undefined;
+            let rawSetUpToken: string | undefined
+
+            temporaryPassword = generateTempPassword(); //generates a temporary password
+            const hashedTemporaryPassword = await hashPassword(temporaryPassword) //hashes thhe password with the bcrypt helper function
+            rawSetUpToken = generateVerificationToken().raw
+
+            const admin = await tx.user.create({
+                data: {
+                    email: adminData.email,
+                    firstName: adminData.firstName,
+                    lastName: adminData.lastName,
+                    role: "ADMIN",
+                    schoolId: school.id,
+                    password: hashedTemporaryPassword,
+                    status: "PENDING",
+                    mustChangePassword: true,
+                    isActive: true,
+                    passwordHash: hashedTemporaryPassword
+                },
+                select: {
+                    id: true, email: true, firstName: true, lastName: true,
+                    status: true, schoolId: true, createdAt: true
+                }
+            });
+
+            return { school, admin };
         }
     )
-
     return NextResponse.json(
         { message: "School created", data: created },
         { status: 201 }
