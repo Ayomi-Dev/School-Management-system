@@ -37,6 +37,7 @@ enum UserStatus {
 
 enum TokenType {
   REFRESH
+  SET_UP
   VERIFICATION
   PASSWORD_RESET
 }

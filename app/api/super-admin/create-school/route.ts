@@ -13,18 +13,10 @@ export const POST = async(req: NextRequest) => {
             { status: auth.status }
         )
     }
-
     let authId: string | undefined = undefined;
     if(auth.success){
         authId = auth.userId
     }
-
-    console.log("auth id", authId)
-
-    const result = createSchoolAndAdmin(req, authId)
-     
-    // console.log("this is result", result)
+    const result = createSchoolAndAdmin(req, authId);
     return result
-
-    
 }

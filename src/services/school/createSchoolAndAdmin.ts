@@ -1,7 +1,7 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { createSchoolAndAdminSchema } from "@/src/validators/schoolSchema";
 import { NextRequest, NextResponse } from "next/server";
-import { generateTempPassword, generateVerificationToken } from "../notification/services";
+import { generateSetUpTokenForAdmin, setUpTempPasswordForAdmin } from "../notification/services";
 import { hashPassword } from "@/src/lib/auth/hash";
 
 export const createSchoolAndAdmin = async(req: NextRequest, userId: string | undefined) => {
@@ -14,7 +14,6 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
             { status: 400}
         )
     }
-
     const { school: schoolData, admin: adminData } = parsedBody.data
     const existingSchoolName = await prisma.school.findFirst(
         {
@@ -29,14 +28,12 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
             select: { id: true }
         }
     )
-
     if(existingSchoolName){
         return NextResponse.json(
             { error: `A school named ${schoolData.name} already exists.`},
             { status: 409 }
         )
     }
-
     if(adminData){
         const emailTaken = await prisma.user.findUnique( //matches email of the admin created to existing emails in the database
             { 
@@ -51,11 +48,9 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
             )
         }
     }
-
     const superAdminProfile = await prisma.user.findUnique(
         { where: { id: userId  }, select: {id: true} }
     )
-
     const created = await prisma.$transaction(
         async(tx) => {
             const school = await tx.school.create(
@@ -74,18 +69,16 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
                     }
                 }
             )
-
             if(!adminData) {
                 return { school, admin: null }
             }
-
             // admin creation if admin data is provided on school creation
             let temporaryPassword: string | undefined;
             let rawSetUpToken: string | undefined
 
-            temporaryPassword = generateTempPassword(); //generates a temporary password
-            const hashedTemporaryPassword = await hashPassword(temporaryPassword) //hashes thhe password with the bcrypt helper function
-            rawSetUpToken = generateVerificationToken().raw
+            temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
+            const hashedTemporaryPassword = await hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
+            rawSetUpToken = generateSetUpTokenForAdmin().raw
 
             const admin = await tx.user.create({
                 data: {
@@ -105,6 +98,15 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
                     status: true, schoolId: true, createdAt: true
                 }
             });
+
+            await prisma.token.create({
+                data: {
+                    userId: admin.id,
+                    tokenHash: generateSetUpTokenForAdmin().hash,
+                    type: "SET_UP",
+                    expiresAt: ""
+                }
+            })
 
             return { school, admin };
         }
