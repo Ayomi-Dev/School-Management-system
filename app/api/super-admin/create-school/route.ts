@@ -5,7 +5,6 @@ import { createSchoolAndAdmin } from "@/src/services/school/createSchoolAndAdmin
 
 
 export const POST = async(req: NextRequest) => {
-    console.log("Received request to create school");
     const auth = await requireSuperAdmin(req); //vlaidates the role of the user is SUPER_ADMIN
     if(!auth.success && auth.shouldRefresh) {
         return NextResponse.json(

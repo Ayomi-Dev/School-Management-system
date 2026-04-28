@@ -1,7 +1,7 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { createSchoolAndAdminSchema } from "@/src/validators/schoolSchema";
 import { NextRequest, NextResponse } from "next/server";
-import { generateSetUpTokenForAdmin, setUpTempPasswordForAdmin } from "../notification/services";
+import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/services";
 import { hashPassword } from "@/src/lib/auth/hash";
 
 export const createSchoolAndAdmin = async(req: NextRequest, userId: string | undefined) => {
@@ -78,7 +78,7 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
 
             temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
             const hashedTemporaryPassword = await hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
-            rawSetUpToken = generateSetUpTokenForAdmin().raw
+            rawSetUpToken = generateSetUpToken().raw
 
             const admin = await tx.user.create({
                 data: {
@@ -102,7 +102,7 @@ export const createSchoolAndAdmin = async(req: NextRequest, userId: string | und
             await prisma.token.create({
                 data: {
                     userId: admin.id,
-                    tokenHash: generateSetUpTokenForAdmin().hash,
+                    tokenHash: generateSetUpToken().hash,
                     type: "SET_UP",
                     expiresAt: ""
                 }

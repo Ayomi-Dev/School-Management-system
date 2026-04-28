@@ -23,7 +23,7 @@ export const generalTempPassword = (lastName: string): string => {
  * Returns both the raw token (for the email link) and its SHA-256 hash (for DB storage).
  * The raw token is NEVER stored — only the hash is.
  */
-export function generateSetUpTokenForAdmin(): { raw: string; hash: string } {
+export function generateSetUpToken(): { raw: string; hash: string } {
   const raw  = crypto.randomBytes(32).toString("hex"); // 64-char hex string sent with a verification link
   const hash = crypto.createHash("sha256").update(raw).digest("hex"); //stored in the db
   return { raw, hash };

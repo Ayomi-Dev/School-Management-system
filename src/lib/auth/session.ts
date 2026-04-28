@@ -36,7 +36,7 @@ export const buildTokenCookies = ( // sets the access and refresh tokens as secu
     secure:   isProd,
     sameSite: "lax",
     path:     "/",
-    maxAge:   15 * 60,
+    maxAge:   30 * 60, //30mins lifespan for access token to limit the window of opportunity for an attacker if the token is compromised. This short lifespan encourages regular token refreshes, which can help mitigate risks associated with token theft.
   });
   res.cookies.set("refresh_token", rawRefresh, {
     httpOnly: true,

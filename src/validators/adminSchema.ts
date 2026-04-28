@@ -17,10 +17,21 @@ export const adminCreateUserSchema = z.discriminatedUnion("role", [
   bursarSchema,
 ]);
 
+export const provisionAdminSchema = z.object({
+  firstName: z.string().min(1).max(50),
+  lastName:  z.string().min(1).max(50),
+  email:     z
+    .string()
+    .email("Must be a valid email address")
+    .transform((v) => v.toLowerCase().trim()),
+  phone: z.string().max(20).optional(),
+});
+
 
 
 // ── Inferred types (use these in the route handler for full type safety) ───────
 export type AdminCreateUserInput = z.infer<typeof adminCreateUserSchema>;
+export type ProvisionAdminInput = z.infer<typeof provisionAdminSchema>;
 export type StudentInput         = z.infer<typeof studentSchema>;
 export type TeacherInput         = z.infer<typeof teacherSchema>;
 export type ParentInput          = z.infer<typeof parentSchema>;
