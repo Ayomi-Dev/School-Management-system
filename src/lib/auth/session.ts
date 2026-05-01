@@ -20,10 +20,6 @@ const ACCESS_SECRET = new TextEncoder().encode(
     process.env.JWT_ACCESS_SECRET
 )
 
-const REFRESH_SECRET = new TextEncoder().encode(
-    process.env.JWT_REFRESH_SECRET
-)
-
 
 export const buildTokenCookies = ( // sets the access and refresh tokens as secure, HTTP-only cookies in the response. It configures the cookies with appropriate flags to enhance security, such as SameSite and Secure, and sets their expiration times according to best practices.
   res: NextResponse,

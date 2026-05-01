@@ -13,7 +13,7 @@ export function setUpTempPasswordForAdmin(): string {
   return `${rand(adjectives)}-${rand(nouns)}-${digits}`;
 }
 
-export const generalTempPassword = (lastName: string): string => {
+export const generalTempPassword = (lastName: string): string => { //uses user's surname as the temporaty password
     return lastName;
 }
 
@@ -24,7 +24,7 @@ export const generalTempPassword = (lastName: string): string => {
  * The raw token is NEVER stored — only the hash is.
  */
 export function generateSetUpToken(): { raw: string; hash: string } {
-  const raw  = crypto.randomBytes(32).toString("hex"); // 64-char hex string sent with a verification link
+  const raw  = crypto.randomBytes(4).toString("hex"); // 64-char hex string sent with a verification link
   const hash = crypto.createHash("sha256").update(raw).digest("hex"); //stored in the db
   return { raw, hash };
 }

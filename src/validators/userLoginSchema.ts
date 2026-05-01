@@ -5,3 +5,6 @@ export const userLoginSchema = z.object({
   password: z.string().min(1, "Password is required"),
   email:    z.undefined({ error: "Use your user code, not email" }).optional(),
 });
+
+
+export type UserLoginInput = z.infer<typeof userLoginSchema>;

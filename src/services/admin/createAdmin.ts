@@ -4,6 +4,7 @@ import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/s
 import { hashPassword } from "@/src/lib/auth/hash";
 import { NextRequest, NextResponse } from "next/server";
 import { error } from "console";
+import { USER_SELECT } from "@/src/lib/prisma/fields";
 
 
 export const createAdmin = async(req: NextRequest, id: string) => {
@@ -57,7 +58,7 @@ export const createAdmin = async(req: NextRequest, id: string) => {
                 const {raw, hash} = generateSetUpToken();
                 rawSetUpToken = raw
                 const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
-                const userCode = `ADM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`; // generates a random user code for the admin
+                const userCode = `ADM/${Math.random().toString(36).substring(2, 8).toUpperCase()}`; // generates a random user code for the admin
     
                 const admin = await tx.user.create({
                     data: {
@@ -73,10 +74,8 @@ export const createAdmin = async(req: NextRequest, id: string) => {
                         mustChangePassword: true,
                         isActive: true, 
                     },
-                    select: {
-                        id: true, email: true, firstName: true, lastName: true, phone: true,
-                        status: true, schoolId: true, createdAt: true, school: { select: { id: true } }
-                    }
+                    select: {...USER_SELECT, school: {select: { id: true}}}
+                    
                 });
                 
                 await tx.token.create({
@@ -91,12 +90,12 @@ export const createAdmin = async(req: NextRequest, id: string) => {
             
         )
         return NextResponse.json(
-        {
-          message: `Admin provisioned for ${school.name}. Onboarding email sent to ${email}.`,
-          admin,
-        },
-        { status: 201 }
-      );
+            {
+              message: `Admin provisioned for ${school.name}. Onboarding email sent to ${email}.`,
+              admin
+            },
+            { status: 201 }
+        );
     } 
     catch (error) {
         console.error("Error creating admin:", error);
