@@ -1,7 +1,7 @@
 import { verifyPassword } from '@/src/lib/auth/hash';
 import { buildTokenCookies, persistRefreshToken, signAccessToken } from '@/src/lib/auth/session';
 import {prisma}from '@/src/lib/prisma/client';
-import { UserLoginInput } from '@/src/validators/userLoginSchema';
+import { UserLoginInput } from '@/src/validators/authSchema';
 import { NextResponse } from 'next/server';
 
 export const authService = {
@@ -32,26 +32,50 @@ export const authService = {
         });
         return user?.isActive ?? false; // If user not found, treat as inactive
     },
-    async login(userInput: UserLoginInput, meta: { ipAddress: string; userAgent: string }){
+
+    //login service
+    async login(userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
         const user = await prisma.user.findUnique(
             { 
-                where: { userCode: userInput.userCode, email: userInput.email},
-                select: { id: true, passwordHash: true, role: true, isActive: true, schoolId: true }
+                where: { 
+                    userCode: userInput.userCode, 
+                    email: userInput.email
+                },
+                select: { 
+                    id: true, 
+                    passwordHash: true, 
+                    role: true, 
+                    isActive: true, 
+                    schoolId: true 
+                }
             }
         )
         if(!user || !user.passwordHash || !user.isActive){
-            return null; // Invalid credentials or inactive user
+            return NextResponse.json(
+                { error: "Invalid credentials or inactive user" },
+                { status: 401 }
+            );
         }
 
         const passwordMatches = await verifyPassword(userInput.password, user.passwordHash);
         if(!passwordMatches){
-            return null; // Invalid password
+            return NextResponse.json(
+                { error: "Password do not match" },
+                { status: 401 }
+            );
         }
-        const payload = { userId: user.id, role: user.role, schoolId: user.schoolId };
 
-        const accessToken = await signAccessToken(payload);
-        const refreshToken = await persistRefreshToken(user.id);
+        const payload = { 
+            userId: user.id, 
+            role: user.role, 
+            schoolId: user.schoolId 
+        };
 
+        const [ accessToken, refreshToken ] = await Promise.all([
+            signAccessToken(payload),
+            persistRefreshToken(user.id, meta)
+        ])
+ 
         const res = NextResponse.json(
             { message: "Login successful"},
             { status: 200}

@@ -6,3 +6,7 @@ import { userLoginSchema } from './userLoginSchema'
 export const loginSchema = z.union([
     superAdminLoginSchema, userLoginSchema
 ])
+
+
+
+export type UserLoginInput = z.infer<typeof loginSchema>

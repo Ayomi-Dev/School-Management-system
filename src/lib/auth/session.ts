@@ -51,7 +51,7 @@ export const signAccessToken = async(payload: sessionPayload): Promise<string> =
     .sign(ACCESS_SECRET) // Performs the actual signing operation using the access token secret, producing a compact JWT string that can be sent to clients and stored securely.
 }
 
-export const persistRefreshToken = async(userId: string): Promise<string> => {
+export const persistRefreshToken = async(userId: string, meta: { userAgent?: string; ipAddress?: string }): Promise<string> => {
   const rawRefreshToken  = crypto.randomBytes(32).toString("hex"); //creates a 64-char hex string
   const refreshHashToken = crypto.createHash("sha256")  //Creates a new hash object using the SHA-256 algorithm, which is a cryptographic hash function that produces a fixed-size 256-bit (32-byte) hash value.
   .update(rawRefreshToken) //Feeds the token string into the hasher.
