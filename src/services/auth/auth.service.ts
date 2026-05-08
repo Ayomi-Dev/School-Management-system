@@ -1,8 +1,9 @@
 import { verifyPassword } from '@/src/lib/auth/hash';
 import { buildTokenCookies, persistRefreshToken, signAccessToken } from '@/src/lib/auth/session';
 import {prisma}from '@/src/lib/prisma/client';
+import { USER_SELECT } from '@/src/lib/prisma/fields';
 import { UserLoginInput } from '@/src/validators/authSchema';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const authService = {
     async isFirstTimeLogin(userId: string): Promise<boolean> {
@@ -34,29 +35,25 @@ export const authService = {
     },
 
     //login service
-    async login(userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
+    async login( userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
         const user = await prisma.user.findUnique(
             { 
                 where: { 
                     userCode: userInput.userCode, 
                     email: userInput.email
                 },
-                select: { 
-                    id: true, 
-                    passwordHash: true, 
-                    role: true, 
-                    isActive: true, 
-                    schoolId: true 
-                }
+                select: USER_SELECT
+                
             }
         )
-        if(!user || !user.passwordHash || !user.isActive){
+        if(!user || !user.passwordHash){
             return NextResponse.json(
-                { error: "Invalid credentials or inactive user" },
+                { error: "Invalid credentials or password incorrect" },
                 { status: 401 }
             );
         }
 
+        // ── 2. Password check ────────────────────────────────────────────────────────
         const passwordMatches = await verifyPassword(userInput.password, user.passwordHash);
         if(!passwordMatches){
             return NextResponse.json(
@@ -64,6 +61,39 @@ export const authService = {
                 { status: 401 }
             );
         }
+        // ── 3. Lock check ────────────────────────────────────────────────────────────
+        if (user?.lockedUntil && user.lockedUntil > new Date()) {
+            const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+            return NextResponse.json(
+              { error: `Account locked. Try again in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.` },
+              { status: 429 }
+            );
+        }
+
+        // ── 4. Status checks ─────────────────────────────────────────────────────────
+        if(!user?.isActive || user.status === "SUSPENDED"){
+            return NextResponse.json(
+                { error: "Your account has been suspended. Contact your administrator." },
+                { status: 403 }
+            )
+        }
+
+        if (user.status === "INACTIVE") {
+            return NextResponse.json(
+              {
+                error: "Account setup incomplete.",
+                code:  "SETUP_REQUIRED",
+                hint:  "Check your email for the setup link, or ask your administrator to resend it.",
+              },
+              { status: 403 }
+            );
+        }
+
+        // ── 5. Reset failed counter + stamp last login ────────────────────────────────
+        await prisma.user.update({
+          where: { id: user.id },
+          data:  { failedLoginCount: 0, lockedUntil: null, lastLoginAt: new Date() },
+        });
 
         const payload = { 
             userId: user.id, 
@@ -77,7 +107,7 @@ export const authService = {
         ])
  
         const res = NextResponse.json(
-            { message: "Login successful"},
+            { message: "Login successful", user},
             { status: 200}
         )
         buildTokenCookies(res, accessToken, refreshToken)

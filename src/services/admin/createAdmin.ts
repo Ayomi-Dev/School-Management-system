@@ -3,7 +3,6 @@ import {  provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adm
 import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/services";
 import { hashPassword } from "@/src/lib/auth/hash";
 import { NextRequest, NextResponse } from "next/server";
-import { error } from "console";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 
 
@@ -54,7 +53,7 @@ export const createAdmin = async(req: NextRequest, id: string) => {
                 let temporaryPassword: string | undefined;
                 let rawSetUpToken: string | undefined
                 temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
-                const hashedTemporaryPassword = await hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
+                const hashTemporaryPassword = await hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
                 const {raw, hash} = generateSetUpToken();
                 rawSetUpToken = raw
                 const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
@@ -69,7 +68,7 @@ export const createAdmin = async(req: NextRequest, id: string) => {
                         phone,
                         role: "ADMIN",
                         schoolId: id,
-                        passwordHash: hashedTemporaryPassword,
+                        passwordHash: hashTemporaryPassword,
                         status: "PENDING",
                         mustChangePassword: true,
                         isActive: true, 
@@ -86,7 +85,9 @@ export const createAdmin = async(req: NextRequest, id: string) => {
                         expiresAt
                     }
                 })
+                console.log(`Admin created with user code: ${admin.userCode} and temporary password: ${temporaryPassword}. Set up token (raw): ${rawSetUpToken}`);
             }
+
             
         )
         return NextResponse.json(
