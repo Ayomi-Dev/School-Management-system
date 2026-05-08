@@ -1,5 +1,5 @@
 import { verifyPassword } from '@/src/lib/auth/hash';
-import { buildTokenCookies, persistRefreshToken, signAccessToken } from '@/src/lib/auth/session';
+import { buildTokenCookies, persistRefreshToken, revokeAllUserTokens, signAccessToken } from '@/src/lib/auth/session';
 import {prisma}from '@/src/lib/prisma/client';
 import { USER_SELECT } from '@/src/lib/prisma/fields';
 import { UserLoginInput } from '@/src/validators/authSchema';
@@ -112,6 +112,14 @@ export const authService = {
         )
         buildTokenCookies(res, accessToken, refreshToken)
         return res; // Return user data for further processing (e.g., password verification)
+    },
+
+    async logout(userId: string) {
+        await revokeAllUserTokens(userId) //deletes all refresh tokens for the user, effectively logging them out from all devices/sessions. This is a security measure to ensure that once a user logs out, any existing sessions are invalidated and cannot be used to gain unauthorized access.
+        const res = NextResponse.json({ message: "Logout successful" }, { status: 200 });
+        res.cookies.set("accessToken", "", { path: "/", expires: new Date(0) });
+        res.cookies.set("refreshToken", "", { path: "/", expires: new Date(0) });
+        return res; 
     }
 
 }
