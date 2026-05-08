@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/src/lib/middleware/requireRole";
 import { schoolsServices } from "@/src/services/school/schools.service";
 
-
-
-export const POST = async(req: NextRequest) => {
-    const auth = await requireSuperAdmin(req); //vlaidates the role of the user is SUPER_ADMIN
+export const GET = async(req: NextRequest) => {
+    const auth = await requireSuperAdmin(req)
     if(!auth.success && auth.shouldRefresh) {
         return NextResponse.json(
             { error: auth.error },
             { status: auth.status }
         )
     }
-    let authId: string | undefined = undefined;
-    if(auth.success){
-        authId = auth.userId
+    if(!auth.success){
+        return NextResponse.json(
+            { error: auth.error },
+            { status: auth.status }
+        )
     }
-    const result = await schoolsServices.createSchoolAndAdmin(req, authId);
+
+    const result = await schoolsServices.getAllSchools(req);
     return result
 }

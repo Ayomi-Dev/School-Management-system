@@ -1,5 +1,5 @@
 import { requireSuperAdmin } from "@/src/lib/middleware/requireRole";
-import { createAdmin } from "@/src/services/admin/createAdmin";
+import { schoolsServices } from "@/src/services/school/schools.service";
 import { ParamsContext } from "@/src/types/params";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -20,6 +20,6 @@ export const POST = async(req: NextRequest, context: ParamsContext) => {
     }
     const { id } = await context.params
     console.log(`Received request to create admin for school with id: ${id}`);
-    const result = await createAdmin(req, id);
+    const result = await schoolsServices.provisionAdmin(req, id);
     return result;
 }

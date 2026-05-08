@@ -13,7 +13,7 @@ export function setUpTempPasswordForAdmin(): string {
   return `${rand(adjectives)}-${rand(nouns)}-${digits}`;
 }
 
-export const generalTempPassword = (lastName: string): string => { //uses user's surname as the temporaty password
+export const generalTempPassword = (lastName: string): string => { //uses user's surname as the temporaty password 
     return lastName;
 }
 
