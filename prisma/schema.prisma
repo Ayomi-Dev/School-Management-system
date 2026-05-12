@@ -22,7 +22,7 @@ datasource db {
 enum Role {
   SUPER_ADMIN
   ADMIN
-  TUTOR
+  TEACHER
   STUDENT
   PARENT
   BURSAR
@@ -69,7 +69,6 @@ enum Department {
 enum Gender {
   MALE
   FEMALE
-  OTHER
 }
 
 enum AttendanceStatus {
@@ -147,7 +146,7 @@ model School {
   classes         Class[]
   subjects        Subject[]
   studentProfiles StudentProfile[]
-  tutorProfiles   TutorProfile[]
+  teacherProfiles   TeacherProfile[]
   feeStructures   FeeStructure[]
   announcements   Announcement[]
   notifications   Notification[]
@@ -196,7 +195,7 @@ model User {
   auditLogs             AuditLog[]
   superAdminProfile SuperAdminProfile?
   studentProfile        StudentProfile?
-  tutorProfile          TutorProfile?
+  teacherProfile          TeacherProfile?
   guardianProfile       Guardian?
   sentNotifications     Notification[]     @relation("NotificationSender")
   userNotifications     UserNotification[]
@@ -405,6 +404,7 @@ model StudentProfile {
   enrolledAt    DateTime      @default(now()) @map("enrolled_at")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
+  level         ClassLevel
 
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   school      School            @relation(fields: [schoolId], references: [id])
@@ -415,6 +415,7 @@ model StudentProfile {
   feeBalances FeeBalance[]
   feePayments FeePayment[]
   reportCards ReportCard[]
+  stateOfOrigin  String?          @map("state_of_origin")
 
   @@index([schoolId, status])
   @@map("student_profiles")
@@ -442,7 +443,7 @@ model Enrollment {
 // TEACHERS
 // ============================================================
 
-model TutorProfile {
+model TeacherProfile {
   id             String      @id @default(auto()) @map("_id") @db.ObjectId
   userId         String      @unique @map("user_id") @db.ObjectId
   schoolId       String      @map("school_id") @db.ObjectId
@@ -475,7 +476,7 @@ model TeacherClassAssignment {
   isClassTeacher Boolean  @default(false) @map("is_class_teacher")
   assignedAt     DateTime @default(now()) @map("assigned_at")
 
-  tutor TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  tutor TeacherProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
   class Class        @relation(fields: [classId], references: [id])
 
   @@unique([tutorId, classId, academicYearId])
@@ -490,7 +491,7 @@ model SubjectTeacher {
   termId     String   @map("term_id") @db.ObjectId
   assignedAt DateTime @default(now()) @map("assigned_at")
 
-  tutor   TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  tutor   TeacherProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
   subject Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   class   Class        @relation(fields: [classId], references: [id])
 
@@ -514,7 +515,7 @@ model ClassSession {
 
   class       Class         @relation(fields: [classId], references: [id])
   term        Term          @relation(fields: [termId], references: [id])
-  tutor       TutorProfile? @relation(fields: [tutorId], references: [id])
+  tutor       TeacherProfile? @relation(fields: [tutorId], references: [id])
   attendances Attendance[]
 
   @@unique([classId, date, label])
@@ -534,7 +535,7 @@ model Attendance {
 
   session   ClassSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  markedBy  TutorProfile?  @relation("AttendanceMarkedBy", fields: [markedById], references: [id])
+  markedBy  TeacherProfile?  @relation("AttendanceMarkedBy", fields: [markedById], references: [id])
 
   @@unique([sessionId, studentId])
   @@index([studentId])
@@ -566,7 +567,7 @@ model Score {
   student   StudentProfile @relation(fields: [studentId], references: [id])
   subject   Subject        @relation(fields: [subjectId], references: [id])
   term      Term           @relation(fields: [termId], references: [id])
-  enteredBy TutorProfile?  @relation("ScoreEnteredBy", fields: [enteredById], references: [id])
+  enteredBy TeacherProfile?  @relation("ScoreEnteredBy", fields: [enteredById], references: [id])
 
   @@unique([studentId, subjectId, termId])
   @@index([termId, subjectId])
