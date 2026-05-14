@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/src/lib/middleware/requireRole";
-import { schoolsServices } from "@/src/services/school/schools.service";
+import { superAdminServices } from "@/src/services/super-admin/super-admin.service";
 
 export const GET = async(req: NextRequest) => {
     const auth = await requireSuperAdmin(req)
@@ -17,6 +17,6 @@ export const GET = async(req: NextRequest) => {
         )
     }
 
-    const result = await schoolsServices.getAllSchools(req);
+    const result = await superAdminServices.getAllSchools(req);
     return result
 }

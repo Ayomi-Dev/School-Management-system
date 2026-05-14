@@ -125,7 +125,16 @@ enum AnnouncementTarget {
   CLASS
   INDIVIDUAL
 }
+enum EmployeeType {
+  FULL_TIME
+  PART_TIME
+}
 
+enum Relationship {
+  MOTHER
+  FATHER
+  GUARDIAN
+}
 // ============================================================
 // SCHOOL
 // ============================================================
@@ -328,16 +337,18 @@ model Class {
 }
 
 model Subject {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  schoolId String  @map("school_id") @db.ObjectId
-  name     String
-  code     String?
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  schoolId   String  @map("school_id") @db.ObjectId
+  teacherId  String   @map("teacher_id") @db.ObjectId
+  name       String
+  code       String?
 
   school          School           @relation(fields: [schoolId], references: [id])
   scores          Score[]
   subjectTeachers SubjectTeacher[]
+  teacher    TeacherProfile       @relation(fields: [teacherId], references: [id])
 
-  @@unique([schoolId, name])
+  @@unique([schoolId, name, teacherId])
   @@map("subjects")
 }
 
@@ -363,7 +374,7 @@ model Guardian {
   lastName     String  @map("last_name")
   phone        String
   email        String?
-  relationship String?
+  relationship Relationship?
 
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   children GuardianStudent[]
@@ -464,38 +475,41 @@ model TeacherProfile {
   classSessions     ClassSession[]
   attendancesMarked Attendance[]             @relation("AttendanceMarkedBy")
   scoresEntered     Score[]                  @relation("ScoreEnteredBy")
+  subjects          Subject[]
+  qualification     String?
+  employeeType      EmployeeType?           @map("employee_type")
 
-  @@map("tutor_profiles")
+  @@map("teacher_profiles")
 }
 
 model TeacherClassAssignment {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  tutorId        String   @map("tutor_id") @db.ObjectId
+  teacherId        String   @map("teacher_id") @db.ObjectId
   classId        String   @map("class_id") @db.ObjectId
   academicYearId String   @map("academic_year_id") @db.ObjectId
   isClassTeacher Boolean  @default(false) @map("is_class_teacher")
   assignedAt     DateTime @default(now()) @map("assigned_at")
 
-  tutor TeacherProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  teacher TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   class Class        @relation(fields: [classId], references: [id])
 
-  @@unique([tutorId, classId, academicYearId])
+  @@unique([teacherId, classId, academicYearId])
   @@map("teacher_class_assignments")
 }
 
 model SubjectTeacher {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  tutorId    String   @map("tutor_id") @db.ObjectId
+  teacherId    String   @map("teacher_id") @db.ObjectId
   subjectId  String   @map("subject_id") @db.ObjectId
   classId    String   @map("class_id") @db.ObjectId
   termId     String   @map("term_id") @db.ObjectId
   assignedAt DateTime @default(now()) @map("assigned_at")
 
-  tutor   TeacherProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   subject Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   class   Class        @relation(fields: [classId], references: [id])
 
-  @@unique([tutorId, subjectId, classId, termId])
+  @@unique([teacherId, subjectId, classId, termId])
   @@map("subject_teachers")
 }
 
@@ -507,7 +521,7 @@ model ClassSession {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   classId     String    @map("class_id") @db.ObjectId
   termId      String    @map("term_id") @db.ObjectId
-  tutorId     String?   @map("tutor_id") @db.ObjectId
+  teacherId     String?   @map("teacher_id") @db.ObjectId
   date        DateTime
   label       String?
   isCompleted Boolean   @default(false) @map("is_completed")
@@ -515,7 +529,7 @@ model ClassSession {
 
   class       Class         @relation(fields: [classId], references: [id])
   term        Term          @relation(fields: [termId], references: [id])
-  tutor       TeacherProfile? @relation(fields: [tutorId], references: [id])
+  teacher       TeacherProfile? @relation(fields: [teacherId], references: [id])
   attendances Attendance[]
 
   @@unique([classId, date, label])

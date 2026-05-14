@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { baseSchemaForUserCreation } from "./baseSchema"
 import { studentSchema } from "./studentSchema";
 import { teacherSchema } from "./teacherSchema";
 import { parentSchema } from "./parentSchema";

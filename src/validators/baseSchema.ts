@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { Gender } from "@/app/generated/prisma/enums";
 
-export const RoleEnum = z.enum(["STUDENT", "TEACHER", "PARENT"])
-export const GenderEnum = z.enum(["MALE", "FEMALE"]);
+
+export const GenderEnum = z.enum(Gender);
 
 export const baseSchemaForUserCreation = z.object({  //
     firstName: z
@@ -30,8 +31,7 @@ export const baseSchemaForUserCreation = z.object({  //
  
     phone: z
     .string()
-    .regex(/^\+?[0-9\s\-().]{7,20}$/, "Invalid phone number format")
-    .optional(),
+    .regex(/^\+?[0-9\s\-().]{7,20}$/, "Invalid phone number format"),
  
     dateOfBirth: z
     .string()

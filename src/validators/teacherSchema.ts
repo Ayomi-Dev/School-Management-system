@@ -1,12 +1,16 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
+import { Role, Department, EmployeeType } from "@/app/generated/prisma/enums";
 
-export const EmploymentType = z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"])  // a tuple of string literals, which z.enum can use to create a type-safe enum
+
+export const EmploymentType = z.enum(EmployeeType)  // a tuple of string literals, which z.enum can use to create a type-safe enum
+const DepartmentEnum = z.enum(Department) // Create a Zod enum from the Prisma Department enum values 
 
 
 export const teacherSchema = baseSchemaForUserCreation.extend({
-  role: z.literal("TEACHER"),
- 
+  role: z.literal(Role.TEACHER),
+  department: DepartmentEnum.optional(),
+
   subjects: z
     .array(z.string().min(1))
     .min(1, "At least one subject is required")
@@ -16,17 +20,15 @@ export const teacherSchema = baseSchemaForUserCreation.extend({
     .string()
     .max(100, "Qualification must be 100 characters or fewer")
     .optional(),
- 
+  employeeNumber: z
+    .string()
+    .max(20, "Employee number must be 20 characters or fewer"),
+
   yearsExperience: z
     .number()
     .int("Years of experience must be a whole number")
     .min(0, "Years of experience cannot be negative")
     .max(60, "Years of experience seems too high")
-    .optional(),
- 
-  department: z
-    .string()
-    .max(100, "Department name must be 100 characters or fewer")
     .optional(),
  
   employmentType: EmploymentType.optional(),

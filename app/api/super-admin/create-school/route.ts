@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/src/lib/middleware/requireRole";
-import { schoolsServices } from "@/src/services/school/schools.service";
+import { superAdminServices } from "@/src/services/super-admin/super-admin.service";
 
 
 
@@ -16,6 +16,6 @@ export const POST = async(req: NextRequest) => {
     if(auth.success){
         authId = auth.userId
     }
-    const result = await schoolsServices.createSchoolAndAdmin(req, authId);
+    const result = await superAdminServices.createSchoolAndAdmin(req, authId);
     return result
 }

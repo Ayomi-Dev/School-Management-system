@@ -73,7 +73,7 @@ export const generateUserCode = async (role: Role, schoolId: string,
 
   const codePrefixes = {
     STUDENT: "STU",
-    TUTOR: "TUT",
+    TEACHER: "TUT",
     ADMIN: "ADM",
     PARENT: "PAR"
   };
@@ -85,7 +85,7 @@ export const generateUserCode = async (role: Role, schoolId: string,
       return `${codePrefixes[role]}-${academicSession}/${termMap[term]}/${String(sequence).padStart(4, "0")}`;
     }
  
-    case "TUTOR": {
+    case "TEACHER": {
       return `${codePrefixes[role]}-${academicSession}-${String(sequence).padStart(3, "0")}`;
     }
   

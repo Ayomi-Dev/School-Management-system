@@ -11,7 +11,6 @@ export const POST = async(req: NextRequest) => {
             )
         }
         const { userId } = session.accessPayload
-        console.log(userId)
         const logoutResult = await authService.logout(userId);
         return logoutResult;
     } 

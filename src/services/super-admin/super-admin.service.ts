@@ -5,11 +5,12 @@ import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/s
 import { hashPassword } from "@/src/lib/auth/hash";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
+import { generateUserCode } from "../userCode";
 
 
 
 
-export const schoolsServices = {
+export const superAdminServices = {
 
     //creates school and admin in one transaction. If any of the operations fail, the entire transaction will be rolled back to maintain data integrity. This ensures that either both the school and admin are created successfully, or neither is created if there's an error.
     async createSchoolAndAdmin (req: NextRequest, userId: string | undefined) {
@@ -224,7 +225,7 @@ export const schoolsServices = {
                     const {raw, hash} = generateSetUpToken();
                     rawSetUpToken = raw
                     const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
-                    const userCode = `ADM/${Math.random().toString(36).substring(2, 8).toUpperCase()}`; // generates a random user code for the admin
+                    const userCode = await generateUserCode("ADMIN", id) //generates a unique user code for the admin based on their role and school ID
                 
                     const admin = await tx.user.create({
                         data: {
@@ -252,10 +253,7 @@ export const schoolsServices = {
                             expiresAt
                         }
                     })
-                    console.log(`Admin created with user code: ${admin.userCode} and temporary password: ${temporaryPassword}. Set up token (raw): ${rawSetUpToken}`);
                 }
-
-
             )
             return NextResponse.json(
                 {
@@ -273,5 +271,5 @@ export const schoolsServices = {
             );
         }
 
-}
+    }
 }
