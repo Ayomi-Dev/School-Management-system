@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
 import { ClassLevel } from "@/app/generated/prisma/enums";
-import { Role } from "@/app/generated/prisma/enums";
+import { Role, Gender } from "@/app/generated/prisma/enums";
 
 
 
@@ -20,25 +20,27 @@ const ClassLevelEnum = z.enum([
   ClassLevel.SS2,
   ClassLevel.SS3,
 ])
+
+const GenderEnum = z.enum(Gender)
 export const studentSchema = baseSchemaForUserCreation.extend({
   role: z.literal(Role.STUDENT),
  
   gradeLevel: ClassLevelEnum,
+  gender: GenderEnum,
  
   section: z
     .string()
     .max(10, "Section must be 10 characters or fewer"),
-    // .optional(),
  
   stateOfOrigin: z
     .string()
-    .max(50, "State of origin must be 50 characters or fewer"),
-    // .optional(),
+    .max(50, "State of origin must be 50 characters or fewer")
+    .optional(),
  
   previousSchool: z
     .string()
-    .max(100, "Previous school name must be 100 characters or fewer"),
-    // .optional(),
+    .max(100, "Previous school name must be 100 characters or fewer")
+    .optional(),
  
   medicalNotes: z
     .string()

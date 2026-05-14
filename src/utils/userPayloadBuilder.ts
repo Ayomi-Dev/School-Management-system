@@ -57,7 +57,8 @@ export type UserCreatePayload = Prisma.UserCreateInput;
 
 export const buildUserPayload = (
   data: AdminCreateUserInput,
-  ctx: UserPayloadContext
+  ctx: UserPayloadContext,
+  passwordHash: string
 ): UserCreatePayload => {
   /**
    * Base fields that map directly onto the User model.
@@ -71,6 +72,7 @@ export const buildUserPayload = (
    * syntax rather than setting the scalar field directly.
    */
   const base: Prisma.UserCreateInput = {
+    passwordHash,
     firstName: data.firstName,
     lastName:  data.lastName,
     role:      data.role,

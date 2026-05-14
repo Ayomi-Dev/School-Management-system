@@ -3,7 +3,7 @@ import { baseSchemaForUserCreation } from "./baseSchema";
 import { Role, Department, EmployeeType } from "@/app/generated/prisma/enums";
 
 
-export const EmploymentType = z.enum(EmployeeType)  // a tuple of string literals, which z.enum can use to create a type-safe enum
+export const EmploymentType = z.enum(EmployeeType)  // Create a Zod enum from the Prisma EmployeeType enum values
 const DepartmentEnum = z.enum(Department) // Create a Zod enum from the Prisma Department enum values 
 
 

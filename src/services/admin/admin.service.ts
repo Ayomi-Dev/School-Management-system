@@ -8,8 +8,8 @@ import { hashPassword } from "@/src/lib/auth/hash";
 
 
 export const adminServices = {
-    //create a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
-    async provisionUser(req: NextRequest, schoolId: string) {
+    //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
+    async provisionUser(req: NextRequest, schoolId: string ) {
         try{
 
             const body = await req.json()
@@ -27,41 +27,30 @@ export const adminServices = {
             const userInput = parsedBody.data
             const existingUser = await prisma.user.findUnique(
                 {
-                    where: { email: userInput.email },
+                    where: { email: userInput.email, phone: userInput.phone },
                     select: { id: true}
                 }
             );
             if(existingUser){
                 return NextResponse.json(
-                    { error: "A user with this email already exists" }, 
+                    { error: "A user with this email/phone already exists" }, 
                     { status: 409 }
                 )
             }
-            const userPayload = buildUserPayload(userInput)
             let tempPassword: string | undefined;
             let rawSetUpToken: string | undefined;
             tempPassword = generalTempPassword(userInput.lastName)
-            const hashTempPassword = await hashPassword(tempPassword)
+            const passwordHash = await hashPassword(tempPassword)
             const { raw, hash } = generateSetUpToken();
             rawSetUpToken = raw;
             const userCode = await generateUserCode(userInput.role, schoolId )
+            const userPayload = buildUserPayload(userInput, {schoolId, userCode}, passwordHash)
     
             const newUser = await prisma.$transaction(
                 async(tx) => {
                     const newUser = await tx.user.create(
                         {
-                            data:{
-                                email:        userInput.email.toLowerCase(),
-                                firstName:    userInput.firstName,
-                                lastName:     userInput.lastName,
-                                role:         userInput.role,
-                                phone:        userInput.phone,
-                                dateOfBirth:  userInput.dateOfBirth ? new Date(userInput.dateOfBirth) : undefined,
-                                gender:       userInput.gender,
-                                address:      userInput.address,
-                                passwordHash: hashTempPassword,
-                                userCode,
-                            },
+                            data: userPayload,
                             select: {
                                 id:        true,
                                 email:     true,

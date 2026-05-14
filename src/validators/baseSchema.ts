@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Gender } from "@/app/generated/prisma/enums";
 
 
-export const GenderEnum = z.enum(Gender);
+export const GenderEnum = z.nativeEnum(Gender);
 
 export const baseSchemaForUserCreation = z.object({  //
     firstName: z
@@ -43,7 +43,7 @@ export const baseSchemaForUserCreation = z.object({  //
     }, "Date of birth must be in the past")
     .optional(),
  
-    gender: GenderEnum.optional(),  
+    gender: GenderEnum,  
  
     address: z
     .string()

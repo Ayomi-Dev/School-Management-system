@@ -41,7 +41,7 @@ export const PERMISSIONS: Record<Role, PermissionMatrix> = {
     "report-cards":["read", "write", "publish"],
     announcements: ["read", "write", "publish"],
   },
-  TUTOR: {
+  TEACHER: {
     students:      ["read"],
     classes:       ["read"],
     scores:        ["read", "write"],
