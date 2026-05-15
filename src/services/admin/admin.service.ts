@@ -1,4 +1,4 @@
-import { AdminCreateUserInput, adminCreateUserSchema } from "@/src/validators/adminSchema";
+import { adminCreateUserSchema } from "@/src/validators/adminSchema";
 import { prisma } from "@/src/lib/prisma/client";
 import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
@@ -25,7 +25,7 @@ export const adminServices = {
             }
     
             const userInput = parsedBody.data
-            const existingUser = await prisma.user.findUnique(
+            const existingUser = await prisma.user.findFirst(
                 {
                     where: { email: userInput.email, phone: userInput.phone },
                     select: { id: true}
@@ -41,10 +41,11 @@ export const adminServices = {
             let rawSetUpToken: string | undefined;
             tempPassword = generalTempPassword(userInput.lastName)
             const passwordHash = await hashPassword(tempPassword)
-            const { raw, hash } = generateSetUpToken();
-            rawSetUpToken = raw;
+            const { rawCaps, hash } = generateSetUpToken();
+            rawSetUpToken = rawCaps;
             const userCode = await generateUserCode(userInput.role, schoolId )
             const userPayload = buildUserPayload(userInput, {schoolId, userCode}, passwordHash)
+            console.log("Generated user payload:", userPayload) // Debug log to inspect the payload structure before database insertion
     
             const newUser = await prisma.$transaction(
                 async(tx) => {
@@ -58,10 +59,16 @@ export const adminServices = {
                                 lastName:  true,
                                 role:      true,
                                 status:    true,
-                                createdAt: true,  
+                                createdAt: true,
+                                user: {
+                                    select: {
+                                        studentProfile: {
+                                            select: { id: true }
+                                        }
+                                    }
+                                }
                             }
-                       },
-            
+                        }
                     )
     
                     await tx.token.create(
@@ -82,7 +89,7 @@ export const adminServices = {
             return NextResponse.json(
                 {
                     message: "User provisioned successfully",
-                    user: newUser,
+                    user: newUser, token: rawSetUpToken
                 }
             )
         }

@@ -31,7 +31,8 @@ export const baseSchemaForUserCreation = z.object({  //
  
     phone: z
     .string()
-    .regex(/^\+?[0-9\s\-().]{7,20}$/, "Invalid phone number format"),
+    .regex(/^\+?[0-9\s\-().]{7,20}$/, "Invalid phone number format")
+    .optional(),
  
     dateOfBirth: z
     .string()
@@ -42,9 +43,7 @@ export const baseSchemaForUserCreation = z.object({  //
       return date < now;
     }, "Date of birth must be in the past")
     .optional(),
- 
-    gender: GenderEnum,  
- 
+  
     address: z
     .string()
     .max(200, "Address must be 200 characters or fewer")

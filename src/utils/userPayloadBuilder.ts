@@ -1,5 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/browser";
 import { AdminCreateUserInput } from "@/src/validators/adminSchema";
+import { getAcademicSession, getCurrentTerm } from "../services/userCode";
 // export const buildUserPayload = (data: AdminCreateUserInput): Prisma.UserCreateInput => {
    
 //     switch(data.role){
@@ -72,6 +73,7 @@ export const buildUserPayload = (
    * syntax rather than setting the scalar field directly.
    */
   const base: Prisma.UserCreateInput = {
+    userCode: ctx.userCode,
     passwordHash,
     firstName: data.firstName,
     lastName:  data.lastName,
@@ -94,6 +96,9 @@ export const buildUserPayload = (
        * All optional fields (dateOfBirth, stateOfOrigin, middleName) are
        * passed only when present to avoid writing explicit `undefined` values.
        */
+      const currentTerm = getCurrentTerm();
+      const academicSession = getAcademicSession();
+      const dateTime = new Date().toLocaleDateString()
       const studentCreate: Prisma.StudentProfileCreateWithoutUserInput = {
         studentNumber: ctx.userCode,
         firstName:     data.firstName,
@@ -101,6 +106,7 @@ export const buildUserPayload = (
         lastName:      data.lastName,
         gender:        data.gender,       // Gender enum — required on StudentProfile
         level:         data.gradeLevel,   // ClassLevel enum
+        enrolledAt: `${academicSession}/${currentTerm}/${dateTime}`, // e.g. "2024/2025 - 1st Term/09-02-2024"
         school:        { connect: { id: ctx.schoolId } },
         ...(data.dateOfBirth
           ? { dateOfBirth: new Date(data.dateOfBirth) }

@@ -412,7 +412,7 @@ model StudentProfile {
   status        StudentStatus @default(ACTIVE)
   deletedAt     DateTime?     @map("deleted_at")
   exitReason    String?       @map("exit_reason")
-  enrolledAt    DateTime      @default(now()) @map("enrolled_at")
+  enrolledAt    String       @map("enrolled_at")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
   level         ClassLevel
