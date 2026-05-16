@@ -4,8 +4,7 @@ import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
 import { generateUserCode } from "../userCode";
 import { generalTempPassword, generateSetUpToken } from "../notification/services";
-import { hashPassword } from "@/src/lib/auth/hash";
-
+import { passwordServices } from "../passwords/password.service";
 
 export const adminServices = {
     //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
@@ -40,9 +39,9 @@ export const adminServices = {
             let tempPassword: string | undefined;
             let rawSetUpToken: string | undefined;
             tempPassword = generalTempPassword(userInput.lastName)
-            const passwordHash = await hashPassword(tempPassword)
-            const { rawCaps, hash } = generateSetUpToken();
-            rawSetUpToken = rawCaps;
+            const passwordHash = await passwordServices.hashPassword(tempPassword)
+            const { raw, hash } = generateSetUpToken();
+            rawSetUpToken = raw;
             const userCode = await generateUserCode(userInput.role, schoolId )
             const userPayload = buildUserPayload(userInput, {schoolId, userCode}, passwordHash)
             console.log("Generated user payload:", userPayload) // Debug log to inspect the payload structure before database insertion
@@ -59,14 +58,7 @@ export const adminServices = {
                                 lastName:  true,
                                 role:      true,
                                 status:    true,
-                                createdAt: true,
-                                user: {
-                                    select: {
-                                        studentProfile: {
-                                            select: { id: true }
-                                        }
-                                    }
-                                }
+                                createdAt: true
                             }
                         }
                     )

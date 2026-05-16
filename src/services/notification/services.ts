@@ -1,10 +1,11 @@
 import crypto from 'crypto'
 
 /**
- * Generates a temporary password the user never sees after creation.
+ * Generates a temporary password the admin never sees after creation.
  * Format: 3 words + 4-digit number, e.g. "amber-fox-7291"
  * Easy to read aloud/type but hard to guess.
  */
+
 export function setUpTempPasswordForAdmin(): string {
   const adjectives = ["amber", "brave", "calm", "deep", "eager", "fair", "gold", "high", "iron", "jade"];
   const nouns      = ["crane", "delta", "eagle", "flame", "grove", "heron", "ivory", "lark",  "maple", "north"];
@@ -23,10 +24,9 @@ export const generalTempPassword = (lastName: string): string => { //uses user's
  * Returns both the raw token (for the email link) and its SHA-256 hash (for DB storage).
  * The raw token is NEVER stored — only the hash is.
  */
-export function generateSetUpToken(): { rawCaps: string; hash: string } {
-  const raw  = crypto.randomBytes(4).toString("hex"); // 8-char hex string sent with a verification link
+export function generateSetUpToken(): { raw: string; hash: string } {
+  const raw  = crypto.randomBytes(4).toString("hex").toUpperCase(); // 8-char hex string sent with a verification link
   const hash = crypto.createHash("sha256").update(raw).digest("hex"); //stored in the db
-  const rawCaps = raw.toUpperCase()
-  return { rawCaps, hash };
+  return { raw, hash };
 }
 

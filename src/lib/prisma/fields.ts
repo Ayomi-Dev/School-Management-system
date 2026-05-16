@@ -12,4 +12,5 @@ export const USER_SELECT = { //Defines a reusable selection set for Prisma queri
   firstName:          true,
   lastName:           true,
   userCode:           true,
+  lastLoginAt: true
 } as const;
