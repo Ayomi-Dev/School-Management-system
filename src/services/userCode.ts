@@ -4,7 +4,13 @@ import { Role, TermPeriod } from "@/app/generated/prisma/enums";
 
 export const getAcademicSession = () => {
   const year = new Date().getFullYear();
-  return `${year}/${year + 1}`; //formats the session as "2024/2025"
+  const month = new Date().getMonth()+1
+  const yearBeginningSuffix = year.toString().split("").splice(2).join("")
+  const yearBeforeSuffix = (year - 1).toString().split("").splice(2).join("");
+  const yearEndingSuffix = (year + 1).toString().split("").splice(2).join("")
+
+  
+  return month <= 8 ? `${yearBeforeSuffix}/${yearBeginningSuffix}`: `${yearBeginningSuffix}/${yearEndingSuffix}`; //formats the session as "24/25"
 };
 
 export const getCurrentTerm = ():TermPeriod => {
@@ -58,12 +64,7 @@ export const generateUserCode = async (role: Role, schoolId: string,
   const academicSession = getAcademicSession();
   const term = getCurrentTerm();
 
-  const sequence = await nextSequence( {
-    schoolId,
-    type: role,
-    year,
-    term,
-  });
+  const sequence = await nextSequence({schoolId, type: role, year, term,});
 
   const termMap: Record<typeof term, string> = {
    [TermPeriod.FIRST]: "T1",

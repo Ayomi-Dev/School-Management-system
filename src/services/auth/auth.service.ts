@@ -1,9 +1,9 @@
-import { verifyPassword } from '@/src/lib/auth/hash';
 import { buildTokenCookies, persistRefreshToken, revokeAllUserTokens, signAccessToken } from '@/src/lib/auth/session';
 import {prisma}from '@/src/lib/prisma/client';
 import { USER_SELECT } from '@/src/lib/prisma/fields';
 import { UserLoginInput } from '@/src/validators/authSchema';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { passwordServices } from '../passwords/password.service';
 
 export const authService = {
     async handleFailedLogin (userId: string, currentCount: number)  {
@@ -16,6 +16,7 @@ export const authService = {
             where: { id: userId},
             data: {
                 failedLoginCount: newCount,
+                lastLoginAt: new Date(),
                 lockedUntil: whenToLock ? new Date(Date.now() + LOCKOUT_DURATION ) : undefined //this updates the lockedUntil field only when the account should be locked, otherwise it leaves it unchanged
             }
         })
@@ -58,7 +59,6 @@ export const authService = {
                     email: userInput.email
                 },
                 select: USER_SELECT
-                
             }
         )
         if(!user || !user.passwordHash){
@@ -69,7 +69,7 @@ export const authService = {
         }
 
         // ── 2. Password check ────────────────────────────────────────────────────────
-        const passwordMatches = await verifyPassword(userInput.password, user.passwordHash);
+        const passwordMatches = await passwordServices.verifyPassword(userInput.password, user.passwordHash);
         if(!passwordMatches){
             return NextResponse.json(
                 { error: "Password do not match" },
@@ -105,6 +105,7 @@ export const authService = {
         }
 
         // ── 5. Reset failed counter + stamp last login ────────────────────────────────
+        await this.handleFailedLogin(user.id, 0)
         await prisma.user.update({
           where: { id: user.id },
           data:  { failedLoginCount: 0, lockedUntil: null, lastLoginAt: new Date() },
