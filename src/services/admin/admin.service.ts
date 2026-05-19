@@ -1,4 +1,4 @@
-import { adminCreateUserSchema } from "@/src/validators/adminSchema";
+import { adminCreateUserSchema, adminUpdateSchema } from "@/src/validators/adminSchema";
 import { prisma } from "@/src/lib/prisma/client";
 import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
@@ -24,17 +24,43 @@ export const adminServices = {
             }
     
             const userInput = parsedBody.data
-            const existingUser = await prisma.user.findFirst(
+
+            //get school id
+            const idForSchool = await prisma.school.findFirst(
                 {
-                    where: { email: userInput.email, phone: userInput.phone },
-                    select: { id: true}
+                    where: { id: schoolId },
+                    select: { id: true }
                 }
-            );
-            if(existingUser){
+            )
+            if(!idForSchool) {
                 return NextResponse.json(
-                    { error: "A user with this email/phone already exists" }, 
-                    { status: 409 }
+                    { error: "School id is missing."},
+                    { status: 400 }
                 )
+            }
+
+            //checks for email uniqueness since only non-admin roles uses usercode
+            if((userInput.role === "TEACHER" || userInput.role === "BURSAR") && !userInput.email ){
+                return NextResponse.json(
+                    { error: "Email is required for this role"},
+                    { status: 422 }
+                )
+            }
+
+            //checks if the user already exists or not
+            if(userInput.email){
+                const existingUser = await prisma.user.findFirst(
+                    {
+                        where: { email: userInput.email, schoolId },
+                        select: { id: true}
+                    }
+                );
+                if(existingUser){
+                    return NextResponse.json(
+                        { error: "A user with this email/phone already exists" }, 
+                        { status: 409 }
+                    )
+                }
             }
             let tempPassword: string | undefined;
             let rawSetUpToken: string | undefined;
@@ -44,7 +70,6 @@ export const adminServices = {
             rawSetUpToken = raw;
             const userCode = await generateUserCode(userInput.role, schoolId )
             const userPayload = buildUserPayload(userInput, {schoolId, userCode}, passwordHash)
-            console.log("Generated user payload:", userPayload) // Debug log to inspect the payload structure before database insertion
     
             const newUser = await prisma.$transaction(
                 async(tx) => {
@@ -58,7 +83,8 @@ export const adminServices = {
                                 lastName:  true,
                                 role:      true,
                                 status:    true,
-                                createdAt: true
+                                createdAt: true,
+                                isActive: true
                             }
                         }
                     )
@@ -73,11 +99,45 @@ export const adminServices = {
                             }
                         }
                     )
+
+                   
     
                     return newUser
                 }
                 
             )
+
+            //links existing student to a guardian
+            if(userInput.role==="PARENT" && userInput.studentUserIds?.length){
+                const guardian = await prisma.guardian.findUnique(
+                    {
+                        where: { id: newUser.id },
+                        select: {id: true}
+                    }
+                )
+                if(guardian){
+                    const studentProfiles = await prisma.studentProfile.findMany(
+                        {
+                            where: { userId: { in: userInput.studentUserIds }},
+                            select: { id: true },
+                        }
+                    )
+                    if(studentProfiles.length) {
+                        await prisma.guardianStudent.createMany(
+                            { 
+                                data: studentProfiles.map((student) => 
+                                (
+                                    { 
+                                        guardianId: guardian.id, 
+                                        studentId: student.id
+                                    }
+                                )),
+                                
+                            }
+                        )
+                    }
+                }
+            }
             return NextResponse.json(
                 {
                     message: "User provisioned successfully",
@@ -86,11 +146,41 @@ export const adminServices = {
             )
         }
         catch(error){
-            console.error("Error provisioning user:", error);
+            console.error("Error provisioning user:", error); 
             return NextResponse.json(
-                { error: "An unexpected error occurred while provisioning the user" },
+                { error: `"An unexpected error occurred while provisioning the user" ${error}` },
                 { status: 500 }
             )
         }
+   },
+
+   async updateUser(req: NextRequest, id: string){
+        const body = await req.json()
+        const parsedBody = adminUpdateSchema.safeParse(body)
+        if(!parsedBody.success){
+            return NextResponse.json(
+                {
+                    error: "Validation failed",
+                    details: parsedBody.error.flatten().fieldErrors,
+                },
+                { status: 400 }
+            )  
+        }
+
+        //check if user exists
+        const user = await prisma.user.findUnique(
+            {
+                where: { id },
+                select: { id: true }
+            }
+        )
+        if(!user){
+            return NextResponse.json(
+                { error: "Sorry, no user with this ID found."},
+                { status: 404 }
+            )
+        }
+
+
    }
 }

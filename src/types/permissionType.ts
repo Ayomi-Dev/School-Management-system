@@ -5,10 +5,10 @@ export type Resource =
   | "students"
   | "teachers"
   | "classes"
-  | "scores"
+  | "scores" 
   | "attendance"
   | "fees"
-  | "report-cards"
+  | "report_cards"
   | "announcements"
   | "users"
   | "schools";
@@ -27,18 +27,18 @@ export const PERMISSIONS: Record<Role, PermissionMatrix> = {
     scores:        ["read", "write", "delete", "publish"],
     attendance:    ["read", "write", "delete"],
     fees:          ["read", "write", "delete"],
-    "report-cards":["read", "write", "delete", "publish"],
+    report_cards:  ["read", "write", "delete", "publish"],
     announcements: ["read", "write", "delete", "publish"],
   },
   ADMIN: {
     users:         ["read", "write"],
     students:      ["read", "write", "delete"],
-    teachers:      ["read", "write"],
+    teachers:      ["read", "write", "delete"],
     classes:       ["read", "write"],
-    scores:        ["read", "write", "publish"],
+    scores:        ["read", "write", "publish", "delete"],
     attendance:    ["read", "write"],
     fees:          ["read", "write"],
-    "report-cards":["read", "write", "publish"],
+    report_cards:  ["read", "write", "publish"],
     announcements: ["read", "write", "publish"],
   },
   TEACHER: {
@@ -46,7 +46,7 @@ export const PERMISSIONS: Record<Role, PermissionMatrix> = {
     classes:       ["read"],
     scores:        ["read", "write"],
     attendance:    ["read", "write"],
-    "report-cards":["read"],
+    report_cards:  ["read"],
     announcements: ["read", "write"],
   },
   BURSAR: {
@@ -57,14 +57,14 @@ export const PERMISSIONS: Record<Role, PermissionMatrix> = {
   STUDENT: {
     scores:        ["read"],
     attendance:    ["read"],
-    "report-cards":["read"],
+    report_cards:  ["read"],
     fees:          ["read"],
     announcements: ["read"],
   },
   PARENT: {
     scores:        ["read"],
     attendance:    ["read"],
-    "report-cards":["read"],
+    report_cards:  ["read"],
     fees:          ["read"],
     announcements: ["read"],
   },

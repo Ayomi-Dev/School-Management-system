@@ -2,7 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { createSchoolAndAdminSchema } from "@/src/validators/schoolSchema";
 import { NextRequest, NextResponse } from "next/server";
 import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/services";
-import { hashPassword } from "@/src/lib/auth/hash";
+import { passwordServices } from "../passwords/password.service";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
 import { generateUserCode } from "../userCode";
@@ -88,7 +88,7 @@ export const superAdminServices = {
                     let rawSetUpToken: string | undefined
         
                     temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
-                    const hashedTemporaryPassword = await hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
+                    const hashedTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
                     rawSetUpToken = generateSetUpToken().raw
         
                     const admin = await tx.user.create({
@@ -135,7 +135,7 @@ export const superAdminServices = {
 
     //retrieves all schools with pagination. It calculates the offset based on the current page and limit, and then uses Prisma's findMany method to fetch the schools from the database. The total count of schools is also retrieved to calculate the total number of pages for pagination.
     async getAllSchools(req: NextRequest) {
-        const { searchParams } = new URL(req.url) //
+        const { searchParams } = new URL(req.url)
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "10", 10);// Parses the "page" and "limit" query parameters from the request URL. If they are not provided, it defaults to page 1 and limit 10.
         const offset = (page - 1) * limit;
@@ -221,7 +221,7 @@ export const superAdminServices = {
                     let temporaryPassword: string | undefined;
                     let rawSetUpToken: string | undefined
                     temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
-                    const hashTemporaryPassword = await hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
+                    const hashTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
                     const {raw, hash} = generateSetUpToken();
                     rawSetUpToken = raw
                     const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation

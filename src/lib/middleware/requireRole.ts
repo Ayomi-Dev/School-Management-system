@@ -1,5 +1,5 @@
 import { Role } from "@/app/generated/prisma/enums";
-import { getSession, refreshTokenHandler, verifyAccessToken } from "../auth/session";
+import { getSession } from "../auth/session";
 import { NextRequest } from "next/server";
 
 interface AuthSuccess {

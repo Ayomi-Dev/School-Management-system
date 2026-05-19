@@ -26,6 +26,11 @@ export const provisionAdminSchema = z.object({
   phone: z.string().max(20).optional(),
 });
 
+export const adminUpdateSchema = z.object({
+  phone: z.string().max(20).optional(),
+  
+})
+
 
 
 // ── Inferred types (use these in the route handler for full type safety) ───────

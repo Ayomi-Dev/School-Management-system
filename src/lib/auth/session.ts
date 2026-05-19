@@ -4,7 +4,7 @@ import { prisma } from "../prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto"
 import { AuthFailure } from "../middleware/requireRole";
-import { hashedRefreshToken } from "./hash";
+import { hashToken } from "./hash";
 
 export interface sessionPayload {
     userId: string;
@@ -153,7 +153,7 @@ export const revokeAllUserTokens = async(userId: string) => { // deletes all ref
 }
 
 export const isTokenRevoked = async(token: string): Promise<boolean> => { // checks if a given refresh token has been revoked by looking for its hashed value in the database. If the token is not found, it is considered revoked.
-    const hashedToken = hashedRefreshToken(token);
+    const hashedToken = hashToken(token);
     const tokenRecord = await prisma.token.findUnique({
         where: { tokenHash: hashedToken }
     });
