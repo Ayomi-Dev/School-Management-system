@@ -167,23 +167,17 @@ export const passwordServices = {
             // Find the token in the database and verify it
             const tokenRecord = await prisma.token.findFirst({
                 where: { tokenHash, type: "PASSWORD_RESET" },
-                select: { id: true, expiresAt: true, userId: true }
+                select: { id: true, expiresAt: true, isRevoked: true, userId: true }
             });
-            console.log("token record", tokenRecord)
-            if(!tokenRecord || !tokenRecord.expiresAt) {
+
+            if(!tokenRecord || tokenRecord.expiresAt < new Date() || tokenRecord.isRevoked){ 
                 return NextResponse.json(
                     { error: "Invalid or expired token"},
                     { status: 400 }
                 )
-            }
-            const user = await prisma.user.findUnique(
-                {
-                    where: {id:tokenRecord.userId},
-                    select: { id: true, passwordHash: true }    
-                }
-            )
-            console.log("user", user)
-    
+            }   
+
+            // Update the user's password and revoke the token in a single transaction to ensure atomicity
             await prisma.$transaction(
                 async(tx) => {
                     await tx.user.update(
@@ -194,9 +188,9 @@ export const passwordServices = {
                             }
                         }
                     )
-                    await tx.token.updateMany(
+                    await tx.token.updateMany( //Revoke all password reset tokens for this user to prevent reuse of any previously issued tokens that might still be valid.
                         {
-                            where: { id: user?.id, type: "PASSWORD_RESET"},
+                            where: { id: tokenRecord.id, type: "PASSWORD_RESET"},
                             data: {
                                isRevoked: true
                             }
