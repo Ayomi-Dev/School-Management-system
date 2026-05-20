@@ -115,15 +115,11 @@ export const passwordServices = {
                 { status: 400 }
             )  
         }
-        const { email, phone } = parsedBody.data;
+        const {userCode} = parsedBody.data;
         // Find the user by email or phone
-        const user = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { email },
-                    { phone }
-                ]
-            }
+        const user = await prisma.user.findUnique({
+            where: {userCode},
+            select: { id: true, email: true, phone: true }
         });
         if(!user){
             // To prevent user enumeration attacks, we return a generic message even if the user is not found.
@@ -146,12 +142,12 @@ export const passwordServices = {
         // The email sending logic would go here, using your preferred email service provider.
         // The reset link would look something like: `https://yourapp.com/reset-password?token=${raw}`
         return NextResponse.json(
-            { message: "If an account with that email or phone number exists, a password reset link has been sent.", rawToken: raw },
+            { message: " A password reset link has been sent to your phone.", rawToken: raw },
             { status: 200 }
         )
     },
 
-    async resetPassword(req: NextRequest, userId: string) {
+    async resetPassword(req: NextRequest) {
         try {
             const body = await req.json();
             const parsedBody = resetPasswordSchema.safeParse(body);
@@ -170,21 +166,29 @@ export const passwordServices = {
     
             // Find the token in the database and verify it
             const tokenRecord = await prisma.token.findFirst({
-                where: { userId, tokenHash, type: "PASSWORD_RESET" },
-                select: { id: true, expiresAt: true }
+                where: { tokenHash, type: "PASSWORD_RESET" },
+                select: { id: true, expiresAt: true, userId: true }
             });
+            console.log("token record", tokenRecord)
             if(!tokenRecord || !tokenRecord.expiresAt) {
                 return NextResponse.json(
                     { error: "Invalid or expired token"},
                     { status: 400 }
                 )
             }
+            const user = await prisma.user.findUnique(
+                {
+                    where: {id:tokenRecord.userId},
+                    select: { id: true, passwordHash: true }    
+                }
+            )
+            console.log("user", user)
     
             await prisma.$transaction(
                 async(tx) => {
                     await tx.user.update(
                         {
-                            where: { id: userId },
+                            where: { id: tokenRecord.userId },
                             data: {
                                 passwordHash
                             }
@@ -192,7 +196,7 @@ export const passwordServices = {
                     )
                     await tx.token.updateMany(
                         {
-                            where: { userId, type: "PASSWORD_RESET"},
+                            where: { id: user?.id, type: "PASSWORD_RESET"},
                             data: {
                                isRevoked: true
                             }
