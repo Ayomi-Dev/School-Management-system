@@ -2,15 +2,21 @@ import { prisma } from "../lib/prisma/client";
 import { Role, TermPeriod } from "@/app/generated/prisma/enums";
 
 
-export const getAcademicSession = () => {
+
+
+export const currentAcademicSession = () => {
   const year = new Date().getFullYear();
   const month = new Date().getMonth()+1
   const yearBeginningSuffix = year.toString().split("").splice(2).join("")
   const yearBeforeSuffix = (year - 1).toString().split("").splice(2).join("");
   const yearEndingSuffix = (year + 1).toString().split("").splice(2).join("")
 
+  if(month >= 9) {
+    return `${yearBeginningSuffix}/${yearEndingSuffix}`
+  }
+
   
-  return month <= 8 ? `${yearBeforeSuffix}/${yearBeginningSuffix}`: `${yearBeginningSuffix}/${yearEndingSuffix}`; //formats the session as "24/25"
+  return `${yearBeforeSuffix}/${yearBeginningSuffix}`; //formats the session as "24/25"
 };
 
 export const getCurrentTerm = ():TermPeriod => {
@@ -61,7 +67,7 @@ async function nextSequence({
 export const generateUserCode = async (role: Role, schoolId: string,
 ): Promise<string> => { // Generates a unique code based on role, school, year, and term whenever a new user is created by the admin
   const year = new Date().getFullYear();
-  const academicSession = getAcademicSession();
+  const academicSession = currentAcademicSession();
   const term = getCurrentTerm();
 
   const sequence = await nextSequence({schoolId, type: role, year, term,});
@@ -79,26 +85,22 @@ export const generateUserCode = async (role: Role, schoolId: string,
     PARENT: "PAR"
   };
   
-  switch (role) {
+  switch (role) { 
     case "STUDENT": {
-      
       // Zero-pad to 4 digits: 0001, 0042, 1000
       return `${codePrefixes[role]}-${academicSession}/${termMap[term]}/${String(sequence).padStart(4, "0")}`;
     }
- 
     case "TEACHER": {
       return `${codePrefixes[role]}-${academicSession}-${String(sequence).padStart(3, "0")}`;
     }
-  
     case "PARENT": {
       return `${codePrefixes[role]}-${academicSession}-${String(sequence).padStart(3, "0")}`;
     }
- 
     case "ADMIN": {
-      
       return `${codePrefixes[role]}-${academicSession}-${String(sequence).padStart(3, "0")}`;
     }
     default:
       throw new Error("Invalid role for code generation");
   }
 };
+

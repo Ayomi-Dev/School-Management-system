@@ -26,3 +26,50 @@ export const createSchoolAndAdminSchema = z.object({
     })
     .optional(),
 }); 
+
+// ============================================================
+// ACADEMIC YEAR & TERM
+// ============================================================
+
+export const createAcademicYearSchema = z.object({
+  label: z
+    .string()
+    .min(1)
+    .regex(/^\d{4}\/\d{4}$/, 'Label must be in the format "2024/2025"'),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  isCurrent: z.boolean().optional().default(false),
+}).refine((d) => d.endDate > d.startDate, {
+  message: "endDate must be after startDate",
+  path: ["endDate"],
+});
+
+export const updateAcademicYearSchema = createAcademicYearSchema.partial();
+
+export const createTermSchema = z.object({
+  academicYearId: z.string().min(1),
+  period: z.enum(["FIRST", "SECOND", "THIRD"]),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  isCurrent: z.boolean().optional().default(false),
+}).refine((d) => d.endDate > d.startDate, {
+  message: "endDate must be after startDate",
+  path: ["endDate"],
+});
+
+export const updateTermSchema = createTermSchema
+  .omit({ academicYearId: true, period: true })
+  .partial();
+
+
+ // ============================================================
+// USER CODE GENERATION
+// ============================================================
+
+  // Internal — no direct HTTP schema needed, but exported for reference
+export const userCodeContextSchema = z.object({
+  role: z.enum(["STUDENT", "TEACHER", "BURSAR", "ADMIN", "PARENT"]),
+  schoolId: z.string().min(1),
+  year: z.number().int().optional(),
+  term: z.enum(["FIRST", "SECOND", "THIRD"]).optional(),
+});

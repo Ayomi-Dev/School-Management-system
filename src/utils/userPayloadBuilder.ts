@@ -1,6 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/browser";
 import { AdminCreateUserInput } from "@/src/validators/adminSchema";
-import { getAcademicSession, getCurrentTerm } from "../services/userCode";
+import { getAcademicSession, getCurrentTerm } from "./userCode";
 // export const buildUserPayload = (data: AdminCreateUserInput): Prisma.UserCreateInput => {
    
 //     switch(data.role){

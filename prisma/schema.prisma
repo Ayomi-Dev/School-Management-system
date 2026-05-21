@@ -308,7 +308,7 @@ model Term {
   scores        Score[]
   feeStructures FeeStructure[]
   feePayments   FeePayment[]
-  reportCards   ReportCard[]
+  reportCards   ReportCard[] 
 
   @@unique([academicYearId, period])
   @@map("terms")

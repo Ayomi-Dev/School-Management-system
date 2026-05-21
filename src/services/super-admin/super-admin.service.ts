@@ -5,7 +5,9 @@ import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/s
 import { passwordServices } from "../passwords/password.service";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
-import { generateUserCode } from "../userCode";
+import { generateUserCode, getCurrentTerm } from "../../utils/userCode";
+import { academicYearService, termService } from "../academics/academic.service";
+import { createSessionDate } from "@/src/utils/date";
 
 
 
@@ -80,6 +82,7 @@ export const superAdminServices = {
                             }
                         }
                     )
+
                     if(!adminData) {
                         return { school, admin: null }
                     }
@@ -89,7 +92,8 @@ export const superAdminServices = {
         
                     temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
                     const hashedTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
-                    rawSetUpToken = generateSetUpToken().raw
+                    const { raw, hash} = generateSetUpToken()
+                    rawSetUpToken = raw
         
                     const admin = await tx.user.create({
                         data: {
@@ -110,21 +114,49 @@ export const superAdminServices = {
                     await prisma.token.create({
                         data: {
                             userId: admin.id,
-                            tokenHash: generateSetUpToken().hash,
+                            tokenHash: hash,
                             type: "SET_UP",
                             expiresAt: ""
                         }
                     })
+
+                    //creates current academic year + term for the school created
+                    const { currentAcademicYearStart, currentAcademicYearEnd} = createSessionDate();
+                    const period = getCurrentTerm();
+
+                    const year = await academicYearService.createAcademicYear(school.id, { 
+                        label: `${currentAcademicYearStart}/${currentAcademicYearEnd}`, 
+                        startDate: new Date(`${currentAcademicYearStart}/09/01`), 
+                        endDate: new Date(`${currentAcademicYearEnd}/0731`), 
+                        isCurrent: true 
+                    })
+                    if(!year){
+                        return NextResponse.json(
+                            { error: "Error creating academic year" },
+                            { status: 400 }
+                        )
+                    }
+                    await termService.createTerm(school.id, {
+                        academicYearId: year?.id as string,
+                        period,
+                        startDate: new Date(`${currentAcademicYearStart}/09/01`), 
+                        endDate: new Date(`${currentAcademicYearEnd}/0731`), 
+                        isCurrent: true 
+                    })
         
                     return { school, admin };
                 }
+
+                
             )
+
             return NextResponse.json(
                 { message: "School created", data: created },
                 { status: 201 }
             )
             
-        } catch (error) {
+        } 
+        catch (error) {
             console.error("Error creating school and admin:", error);
             return NextResponse.json(
                 { error: "An error occurred while creating the school and admin." },
@@ -272,4 +304,5 @@ export const superAdminServices = {
         }
 
     }
+
 }

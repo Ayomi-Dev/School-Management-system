@@ -2,7 +2,7 @@ import { adminCreateUserSchema, adminUpdateSchema } from "@/src/validators/admin
 import { prisma } from "@/src/lib/prisma/client";
 import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
-import { generateUserCode } from "../userCode";
+import { generateUserCode } from "../../utils/userCode";
 import { generalTempPassword, generateSetUpToken } from "../notification/services";
 import { passwordServices } from "../passwords/password.service";
 
@@ -88,7 +88,7 @@ export const adminServices = {
                             }
                         }
                     )
-    
+                    //persist hashed set-up token in the DB
                     await tx.token.create(
                         {
                             data: {
@@ -100,8 +100,18 @@ export const adminServices = {
                         }
                     )
 
-                   
-    
+                    //Create Enrollment record if the user created is a student
+                    if(userInput.role === "STUDENT"){
+                        await tx.enrollment.create({
+                          data: {
+                            studentId: newUser.id,
+                            classId: userInput.classId,
+                            academicYearId: userInput.academicYearId,
+                            enrolledAt: new Date(),
+                          },
+                        });
+                    }
+
                     return newUser
                 }
                 

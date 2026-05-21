@@ -38,3 +38,17 @@ export const teacherSchema = baseSchemaForUserCreation.extend({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Joining date must be in YYYY-MM-DD format")
     .optional(),
 });
+
+export const assignSubjectToTeacherSchema = z.object({
+  teacherId: z.string().min(1),
+  subjectId: z.string().min(1),
+  classId: z.string().min(1),
+  termId: z.string().min(1),
+});
+
+export const assignClassTeacherSchema = z.object({
+  teacherId: z.string().min(1),
+  classId: z.string().min(1),
+  academicYearId: z.string().min(1),
+  isClassTeacher: z.boolean().default(false),
+});
