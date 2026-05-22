@@ -1,6 +1,7 @@
+import { Role } from "@/app/generated/prisma/enums";
 import { z } from "zod"
 
-
+const RoleEnum = z.enum(Role)
 export const createSchoolAndAdminSchema = z.object({
   // School and admin fields
   school: z.object({
@@ -16,6 +17,7 @@ export const createSchoolAndAdminSchema = z.object({
   // via POST /api/super-admin/schools/:schoolId/admin
   admin: z
     .object({
+      role: RoleEnum,
       firstName: z.string().min(1).max(50),
       lastName:  z.string().min(1).max(50),
       email:     z

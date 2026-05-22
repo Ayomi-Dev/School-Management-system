@@ -4,7 +4,7 @@ import { authService } from "@/src/services/auth/auth.service";
 
 
 export const POST = async( req: NextRequest) => {
-  const body   = await req.json().catch(() => ({}));
+  const body   = await req.json()
   const parsed = loginSchema.safeParse(body); //parses the incoming request body against a predefined schema (loginSchema) to validate the structure and types of the login credentials. If the parsing fails, it returns an error response with details about what went wrong, helping the client understand how to correct their request.
  
   if (!parsed.success) {

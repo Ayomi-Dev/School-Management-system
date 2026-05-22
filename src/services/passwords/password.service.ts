@@ -26,7 +26,7 @@ export const passwordServices = {
  * Format: 3 words + 4-digit number, e.g. "amber-fox-7291"
  * Easy to read aloud/type but hard to guess.
  */
-  setUpTempPasswordForAdmin(): string {
+    setUpTempPasswordForAdmin(): string {
     const adjectives = ["amber", "brave", "calm", "deep", "eager", "fair", "gold", "high", "iron", "jade"];
     const nouns      = ["crane", "delta", "eagle", "flame", "grove", "heron", "ivory", "lark",  "maple", "north"];
     const rand       = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
@@ -172,19 +172,21 @@ export const passwordServices = {
 
             if(!tokenRecord || tokenRecord.expiresAt < new Date() || tokenRecord.isRevoked){ 
                 return NextResponse.json(
-                    { error: "Invalid or expired token"},
+                    { error: "Invalid or expired token. Contact Admin to resend."},
                     { status: 400 }
                 )
             }   
 
-            // Update the user's password and revoke the token in a single transaction to ensure atomicity
+            // Update the user's password/status and revoke the token in a single transaction to ensure atomicity
             await prisma.$transaction(
                 async(tx) => {
                     await tx.user.update(
                         {
                             where: { id: tokenRecord.userId },
                             data: {
-                                passwordHash
+                                passwordHash,
+                                status: "ACTIVE",
+                                mustChangePassword: false
                             }
                         }
                     )
@@ -201,7 +203,7 @@ export const passwordServices = {
             )
     
             return NextResponse.json(
-                { message: "Password reset succesfully"},
+                { message: "Password reset succesfully. Re-login with your new password."},
                 { status: 200 }
             )
             

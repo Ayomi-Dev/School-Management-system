@@ -1,8 +1,8 @@
 import { buildTokenCookies, persistRefreshToken, revokeAllUserTokens, signAccessToken } from '@/src/lib/auth/session';
 import {prisma}from '@/src/lib/prisma/client';
 import { USER_SELECT } from '@/src/lib/prisma/fields';
-import { UserLoginInput } from '@/src/validators/authSchema';
-import { NextResponse } from 'next/server';
+import { AccountSetUpInput, UserLoginInput } from '@/src/validators/authSchema';
+import { NextRequest, NextResponse } from 'next/server';
 import { passwordServices } from '../passwords/password.service';
 
 export const authService = {
@@ -93,7 +93,7 @@ export const authService = {
             )
         }
 
-        if (user.status === "INACTIVE") {
+        if (user.status === "INACTIVE" || user.status === "PENDING") {
             return NextResponse.json(
               {
                 error: "Account setup incomplete.",
@@ -136,6 +136,67 @@ export const authService = {
         res.cookies.set("accessToken", "", { path: "/", expires: new Date(0) });
         res.cookies.set("refreshToken", "", { path: "/", expires: new Date(0) });
         return res; 
+    },
+
+    async accountSetUp(req: NextRequest, credentials: AccountSetUpInput) {
+        try {
+            const { email, userCode, newPassword, oldPassword, confirmNewPassword } = credentials
+            const user = await prisma.user.findUnique(
+                {
+                    where: {
+                        email,
+                        userCode
+                    }
+                }
+            )
+            if(!user || !user.passwordHash){ //checks if user exist or not
+                return NextResponse.json(
+                    { error: "No record found. Please enter your correct usercode or email" },
+                    { status: 404 }
+                )
+            }
+    
+            const isOldPasswordValid = await passwordServices.verifyPassword(oldPassword, user.passwordHash)
+            if(!isOldPasswordValid){
+                return NextResponse.json(
+                    { error: "Incorrect password" },
+                    { status: 404 }
+                )
+            }
+    
+            if(newPassword !== confirmNewPassword){
+                return NextResponse.json(
+                    { error: "Passwords do no match."},
+                    { status: 400 }
+                )
+            }
+            const hashNewPassword = await passwordServices.hashPassword(newPassword)
+    
+            await prisma.user.update(
+                {
+                    where: { id: user.id},
+                    data: {
+                        status: "ACTIVE",
+                        mustChangePassword: false,
+                        passwordHash: hashNewPassword
+                    }
+                }
+            )
+    
+            return NextResponse.json(
+                { message: "Account fully set up. Kindly relogin"},
+                { status: 201 }
+            
+            )
+        } 
+        catch (error) {
+            console.log("Error completing account set up", error);
+            return NextResponse.json(
+                { error: "Internal server error" },
+                { status: 500 }
+            )
+        }
+
     }
 
 }

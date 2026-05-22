@@ -21,7 +21,10 @@ export const superAdminServices = {
             const parsedBody = createSchoolAndAdminSchema.safeParse(body); //reads the form inputs sent from the client and parses it
             if(!parsedBody.success) {
                 return NextResponse.json(
-                    { error: "Input validation failed"},
+                    { 
+                        error: "Input validation failed",
+                        details: parsedBody.error.flatten().fieldErrors,
+                    },
                     { status: 400}
                 )
             }
@@ -30,9 +33,9 @@ export const superAdminServices = {
                 {
                     where: 
                     { 
-                        name: 
+                        email: 
                         {
-                            equals: schoolData.name,
+                            equals: schoolData.email,
                             mode: "insensitive"
                         },
                     },
@@ -41,7 +44,7 @@ export const superAdminServices = {
             )
             if(existingSchoolName){
                 return NextResponse.json(
-                    { error: `A school named ${schoolData.name} already exists.`},
+                    { error: `A school named ${schoolData.email} already exists.`},
                     { status: 409 }
                 )
             }
@@ -79,14 +82,14 @@ export const superAdminServices = {
                                     ? { createdById: superAdminProfile.id }
                                     : {}
                                 )
-                            }
+                            },
+                            select: { id: true }
                         }
                     )
-
                     if(!adminData) {
                         return { school, admin: null }
                     }
-                    // admin creation if admin data is provided on school creation
+                    // admin creation if admin data is provided at school creation
                     let temporaryPassword: string | undefined;
                     let rawSetUpToken: string | undefined
         
@@ -94,40 +97,50 @@ export const superAdminServices = {
                     const hashedTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
                     const { raw, hash} = generateSetUpToken()
                     rawSetUpToken = raw
+                    const userCode = await generateUserCode(adminData.role, school.id);
+                    const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
+
         
                     const admin = await tx.user.create({
                         data: {
+                            userCode,
                             email: adminData.email,
                             firstName: adminData.firstName,
                             lastName: adminData.lastName,
-                            role: "ADMIN",
-                            schoolId: school.id,
-                            password: hashedTemporaryPassword,
+                            role: adminData.role,
                             status: "PENDING",
                             mustChangePassword: true,
                             isActive: true,
-                            passwordHash: hashedTemporaryPassword
+                            passwordHash: hashedTemporaryPassword,
+                            school: {
+                                connect: { id: school.id }
+                            }
                         },
-                        select: USER_SELECT
+                        select: {...USER_SELECT, school: {select: { id: true}}}
                     });
         
-                    await prisma.token.create({
+                    await tx.token.create({
                         data: {
                             userId: admin.id,
                             tokenHash: hash,
                             type: "SET_UP",
-                            expiresAt: ""
+                            expiresAt
                         }
                     })
 
-                    //creates current academic year + term for the school created
+                   
+                    return { school, admin, temporaryPassword, rawSetUpToken };
+                }
+            )
+
+             //creates current academic year + term for the school created
                     const { currentAcademicYearStart, currentAcademicYearEnd} = currentAcademicYearLabel();
                     const period = getCurrentTerm();
 
-                    const year = await academicYearService.createAcademicYear(school.id, { 
+                    const year = await academicYearService.createAcademicYear(created.school.id, { 
                         label: `${currentAcademicYearStart}/${currentAcademicYearEnd}`, 
                         startDate: new Date(`${currentAcademicYearStart}/09/01`), 
-                        endDate: new Date(`${currentAcademicYearEnd}/0731`), 
+                        endDate: new Date(`${currentAcademicYearEnd}/07/31`), 
                         isCurrent: true 
                     })
                     if(!year){
@@ -136,7 +149,7 @@ export const superAdminServices = {
                             { status: 400 }
                         )
                     }
-                    await termService.createTerm(school.id, {
+                    await termService.createTerm(created.school.id, {
                         academicYearId: year?.id as string,
                         period,
                         startDate: new Date(`${currentAcademicYearStart}/09/01`), 
@@ -144,11 +157,6 @@ export const superAdminServices = {
                         isCurrent: true 
                     })
         
-                    return { school, admin };
-                }
-
-                
-            )
 
             return NextResponse.json(
                 { message: "School created", data: created },
@@ -338,48 +346,46 @@ export const superAdminServices = {
     },
 
     async deleteSchoolAndAdmin(schoolId: string) {
-  try {
-    // 1️⃣ Check school exists first (prevents unnecessary work)
-    const school = await prisma.school.findUnique({
-      where: { id: schoolId },
-    });
-
-    if (!school) {
-      return NextResponse.json(
-        { error: "School not found" },
-        { status: 404 }
-      );
-    }
-
-    // 2️⃣ Delete admins first (child records)
-    await prisma.user.deleteMany({
-      where: {
-        schoolId,
-        role: "ADMIN",
-      },
-    });
-
-    // 3️⃣ Delete the school (parent record)
-    await prisma.school.delete({
-      where: { id: schoolId },
-    });
-
-    // 4️⃣ Return success
-    return NextResponse.json(
-      { message: "School and admins deleted successfully" },
-      { status: 200 }
-    );
-
-  } catch (error) {
-    console.error("Error deleting school and admin:", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to delete school and admins",
-      },
-      { status: 500 }
-    );
-  }
+        try {
+            //Check school exists first (prevents unnecessary work)
+            const school = await prisma.school.findUnique({
+              where: { id: schoolId },
+            });
+            if (!school) {
+              return NextResponse.json(
+                { error: "School not found" },
+                { status: 404 }
+              );
+            }
+        
+            // Delete admins first (child records)
+            await prisma.user.deleteMany({
+              where: {
+                schoolId,
+                role: "ADMIN",
+              },
+            });
+        
+            // Delete the school (parent record)
+            await prisma.school.delete({
+              where: { id: schoolId },
+            });
+        
+            //Return success
+            return NextResponse.json(
+              { message: "School and admins deleted successfully" },
+              { status: 200 }
+            );
+        } 
+        catch (error) {
+            console.error("Error deleting school and admin:", error);
+            return NextResponse.json(
+              {
+                error: "Failed to delete school and admins",
+              },
+              { status: 500 }
+            );
+        } 
 }
 
 }

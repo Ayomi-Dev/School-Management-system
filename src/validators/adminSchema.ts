@@ -17,13 +17,14 @@ export const adminCreateUserSchema = z.discriminatedUnion("role", [
 ]);
 
 export const provisionAdminSchema = z.object({
+  role: z.string().min(1).max(20),
   firstName: z.string().min(1).max(50),
   lastName:  z.string().min(1).max(50),
   email:     z
     .string()
     .email("Must be a valid email address")
     .transform((v) => v.toLowerCase().trim()),
-  phone: z.string().max(20).optional(),
+  phone: z.string().max(20).optional()
 });
 
 export const adminUpdateSchema = z.object({
