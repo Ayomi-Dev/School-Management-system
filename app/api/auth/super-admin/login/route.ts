@@ -2,7 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { superAdminLoginSchema } from "@/src/validators/superAdminSchema";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
-import { compareHashes } from "@/src/lib/auth/hash";
+import { passwordServices } from "@/src/services/passwords/password.service";
 import { buildTokenCookies, persistRefreshToken, sessionPayload, signAccessToken } from "@/src/lib/auth/session";
 
 
@@ -30,7 +30,7 @@ export const POST = async(req: NextRequest) => {
       )
     }
     // Verify password
-    const isPasswordValid = await compareHashes(password, user.passwordHash!)  // Compares the provided password with the stored password hash using a secure hashing algorithm. 
+    const isPasswordValid = await passwordServices.verifyPassword(password, user.passwordHash!)  // Compares the provided password with the stored password hash using a secure hashing algorithm. 
     if(!isPasswordValid) {
       return NextResponse.json(
           { error: "Password does not match"},
@@ -42,7 +42,7 @@ export const POST = async(req: NextRequest) => {
       role: user.role, 
     }
     const accessToken = await signAccessToken(payload as sessionPayload); // Generates a signed JWT access token containing the user's ID and role, which will be used for authenticating subsequent requests.
-    const rawRefreshToken = await persistRefreshToken(user.id); // Generates a secure random refresh token, hashes it, and stores the hash in the database associated with the user. The raw refresh token is returned to be sent to the client for future token refresh requests.
+    const rawRefreshToken = await persistRefreshToken(user.id, {userAgent: req.headers.get("user-agent") || undefined, ipAddress: req.headers.get("x-forwarded-for") || undefined}); // Generates a secure random refresh token, hashes it, and stores the hash in the database associated with the user. The raw refresh token is returned to be sent to the client for future token refresh requests.
     const res = NextResponse.json(
       { message: "Login Successful" },
       { status: 200 }

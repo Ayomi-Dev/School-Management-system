@@ -1,7 +1,8 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { TermPeriod } from "@/app/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
-import { createAcademicYearSchema, createTermSchema, updateAcademicYearSchema, updateTermSchema } from "@/src/validators/schoolSchema";
+import {  updateAcademicYearSchema } from "@/src/validators/schoolSchema";
+import { resolveTermByPeriod } from "@/src/utils/resolvers";
 
 
 // export const academicService = {
@@ -286,16 +287,11 @@ export const termService = {
         }
     },
  
-    async updateTerm(req: NextRequest, termId: string, schoolId: string) {
+    async updateTerm(schoolId: string, {
+        academicYearId, period, startDate, endDate, isCurrent
+    }: TermType) {
         try {
-            const body = await req.json();
-            const parsed = updateTermSchema.safeParse(body);
-            if (!parsed.success) {
-              return NextResponse.json(
-                { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-                { status: 400 }
-              );
-            }
+            const termId = await resolveTermByPeriod(schoolId, period, academicYearId).then(t => t.id);
           
             // Confirm term belongs to this school (via academic year)
             const term = await prisma.term.findFirst({
@@ -307,7 +303,7 @@ export const termService = {
             }
           
             const updated = await prisma.$transaction(async (tx) => {
-                if (parsed.data.isCurrent) {
+                if (isCurrent) {
                     const allYearIds = await tx.academicYear
                       .findMany({ where: { schoolId }, select: { id: true } })
                       .then((ys) => ys.map((y) => y.id));
@@ -317,7 +313,7 @@ export const termService = {
                       data: { isCurrent: false },
                     });
                 }
-                return tx.term.update({ where: { id: termId }, data: parsed.data });
+                return tx.term.update({ where: { id: termId }, data: { academicYearId, period, startDate, endDate, isCurrent } });
             });
             return NextResponse.json({ message: "Term updated.", data: updated });
         } 

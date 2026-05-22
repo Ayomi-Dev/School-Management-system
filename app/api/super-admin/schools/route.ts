@@ -20,3 +20,4 @@ export const GET = async(req: NextRequest) => {
     const result = await superAdminServices.getAllSchools(req);
     return result
 }
+

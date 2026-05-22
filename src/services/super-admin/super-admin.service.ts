@@ -7,7 +7,7 @@ import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
 import { generateUserCode, getCurrentTerm } from "../../utils/userCode";
 import { academicYearService, termService } from "../academics/academic.service";
-import { createSessionDate } from "@/src/utils/date";
+import { currentAcademicYearLabel } from "@/src/utils/date";
 
 
 
@@ -121,7 +121,7 @@ export const superAdminServices = {
                     })
 
                     //creates current academic year + term for the school created
-                    const { currentAcademicYearStart, currentAcademicYearEnd} = createSessionDate();
+                    const { currentAcademicYearStart, currentAcademicYearEnd} = currentAcademicYearLabel();
                     const period = getCurrentTerm();
 
                     const year = await academicYearService.createAcademicYear(school.id, { 
@@ -160,6 +160,38 @@ export const superAdminServices = {
             console.error("Error creating school and admin:", error);
             return NextResponse.json(
                 { error: "An error occurred while creating the school and admin." },
+                { status: 500 }
+            )
+        }
+    },
+
+    async getSchoolById(schoolId: string) {
+        try{
+            const school = await prisma.school.findUnique({
+                where: { id: schoolId },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    address: true,
+                    createdBy: true
+                }
+            })
+            if(!school){
+                return NextResponse.json(
+                    { error: "School not found" },
+                    { status: 404 }
+                )
+            }
+            return NextResponse.json(
+                { school},
+                { status: 201}
+            )
+        }
+        catch( error) {
+            console.log(error, "Error finding school");
+            return NextResponse.json(
+                { error: "An error occurred while finding the school." },
                 { status: 500 }
             )
         }
@@ -303,6 +335,51 @@ export const superAdminServices = {
             );
         }
 
+    },
+
+    async deleteSchoolAndAdmin(schoolId: string) {
+  try {
+    // 1️⃣ Check school exists first (prevents unnecessary work)
+    const school = await prisma.school.findUnique({
+      where: { id: schoolId },
+    });
+
+    if (!school) {
+      return NextResponse.json(
+        { error: "School not found" },
+        { status: 404 }
+      );
     }
+
+    // 2️⃣ Delete admins first (child records)
+    await prisma.user.deleteMany({
+      where: {
+        schoolId,
+        role: "ADMIN",
+      },
+    });
+
+    // 3️⃣ Delete the school (parent record)
+    await prisma.school.delete({
+      where: { id: schoolId },
+    });
+
+    // 4️⃣ Return success
+    return NextResponse.json(
+      { message: "School and admins deleted successfully" },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Error deleting school and admin:", error);
+
+    return NextResponse.json(
+      {
+        error: "Failed to delete school and admins",
+      },
+      { status: 500 }
+    );
+  }
+}
 
 }

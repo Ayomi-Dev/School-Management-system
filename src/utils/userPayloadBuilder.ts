@@ -1,6 +1,6 @@
 import { Prisma } from "@/app/generated/prisma/browser";
 import { AdminCreateUserInput } from "@/src/validators/adminSchema";
-import { getAcademicSession, getCurrentTerm } from "./userCode";
+import { currentAcademicSession, getCurrentTerm } from "./userCode";
 // export const buildUserPayload = (data: AdminCreateUserInput): Prisma.UserCreateInput => {
    
 //     switch(data.role){
@@ -97,7 +97,7 @@ export const buildUserPayload = (
        * passed only when present to avoid writing explicit `undefined` values.
        */
       const currentTerm = getCurrentTerm();
-      const academicSession = getAcademicSession();
+      const academicSession = currentAcademicSession();
       const dateTime = new Date().toLocaleDateString()
       const studentCreate: Prisma.StudentProfileCreateWithoutUserInput = {
         studentNumber: ctx.userCode,

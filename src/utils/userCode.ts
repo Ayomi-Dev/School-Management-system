@@ -11,7 +11,7 @@ export const currentAcademicSession = () => {
   const yearBeforeSuffix = (year - 1).toString().split("").splice(2).join("");
   const yearEndingSuffix = (year + 1).toString().split("").splice(2).join("")
 
-  if(month >= 9) {
+  if(month >= 8) { // if it's august or later, we're in the new academic session that starts this year and ends next year
     return `${yearBeginningSuffix}/${yearEndingSuffix}`
   }
 

@@ -44,22 +44,7 @@ export const createAcademicYearSchema = z.object({
   path: ["endDate"],
 });
 
-export const updateAcademicYearSchema = createAcademicYearSchema.partial();
-
-export const createTermSchema = z.object({
-  academicYearId: z.string().min(1),
-  period: z.enum(["FIRST", "SECOND", "THIRD"]),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
-  isCurrent: z.boolean().optional().default(false),
-}).refine((d) => d.endDate > d.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
-});
-
-export const updateTermSchema = createTermSchema
-  .omit({ academicYearId: true, period: true })
-  .partial();
+export const updateAcademicYearSchema = createAcademicYearSchema;
 
 
  // ============================================================

@@ -1,6 +1,6 @@
 import { passwordServices } from "@/src/services/passwords/password.service";
 import { ParamsContext } from "@/src/types/params";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 
 export const POST = async (req: NextRequest, context: ParamsContext) => {
