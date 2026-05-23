@@ -84,39 +84,21 @@ export const academicYearService = {
    * Create a new academic year for a school.
    * If isCurrent=true, unsets any existing current year first.
    */
-    async createAcademicYear( schoolId: string, {label, startDate, endDate, isCurrent}: AcademicYearType) {
-        try {
-            // Enforce unique label per school
-            // const existing = await prisma.academicYear.findUnique({
-            //   where: { schoolId_label: { schoolId, label } },
-            //   select: { id: true },
-            // });
-            // if (existing) {
-            //   return NextResponse.json(
-            //     { error: `Academic year "${label}" already exists for this school.` },
-            //     { status: 409 }
-            //   );
-            // }
-        
-            const academicYear = await prisma.$transaction(async (tx) => {
-              // Demotes existing current year if setting a new one
-              if (isCurrent) {
-                await tx.academicYear.updateMany({
-                  where: { schoolId, isCurrent: true },
-                  data: { isCurrent: false },
-                });
-              }
-          
-              return tx.academicYear.create({
-                data: { schoolId, label, startDate, endDate, isCurrent: isCurrent ?? false },
-              });
+    async createAcademicYear( 
+      tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+      schoolId: string,
+      {label, startDate, endDate, isCurrent}: AcademicYearType) {
+          // Demotes existing current year if setting a new one
+          if (isCurrent) {
+            await tx.academicYear.updateMany({
+              where: { schoolId, isCurrent: true },
+              data: { isCurrent: false },
             });
-        
-            return academicYear;
-        } 
-        catch (error) {
-            console.error("[academicYearService.create]", error);
-        }
+          }
+          
+          return tx.academicYear.create({
+            data: { schoolId, label, startDate, endDate, isCurrent: isCurrent ?? false },
+          });
     },
  
     async listAllAcademicYears(schoolId: string) {
@@ -233,59 +215,48 @@ export const termService = {
    * If isCurrent=true, existing current term in the same school is unset.
    */
   
-    async createTerm(schoolId: string, {
-        academicYearId, period, startDate, endDate, isCurrent
+    async createTerm(
+      tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+      schoolId: string, {
+        academicYearId, 
+        period, startDate, 
+        endDate, 
+        isCurrent
     }: TermType) {
-        try {
-            // Verify academic year belongs to school
-            const academicYear = await prisma.academicYear.findFirst({
-              where: { id: academicYearId, schoolId },
-              select: { id: true },
-            });
-            if (!academicYear) {
-              return NextResponse.json(
-                { error: "Academic year not found for this school." },
-                { status: 404 }
-              );
-            }
+          const academicYear = await tx.academicYear.updateMany({
+            where: { schoolId, isCurrent: true },
+            data:  { isCurrent: false },
+          });
+          if(!academicYear){
+            throw new Error(`Academic year ${academicYearId} not found for school ${schoolId}.`);
+          }
         
             // Unique check: one period per academic year
-            const existingTerm = await prisma.term.findUnique({
-              where: { academicYearId_period: { academicYearId, period } },
-              select: { id: true },
-            });
-            if (existingTerm) {
-              return NextResponse.json(
-                { error: `A "${period}" term already exists for this academic year.` },
-                { status: 409 }
-              );
-            }
-        
-            const term = await prisma.$transaction(async (tx) => {
-              if (isCurrent) {
-                // Unset any current term across all years of this school
-                const allYearIds = await tx.academicYear
-                  .findMany({ where: { schoolId }, select: { id: true } })
-                  .then((ys) => ys.map((y) => y.id));
+          const existingTerm = await prisma.term.findUnique({
+            where: { academicYearId_period: { academicYearId, period } },
+            select: { id: true },
+          });
+          if (existingTerm) {
+            throw new Error("Term already exist for this academic year!")
+          }
 
-                await tx.term.updateMany({
-                  where: { academicYearId: { in: allYearIds }, isCurrent: true },
-                  data: { isCurrent: false },
-                });
-              }
-          
-            return tx.term.create({
-                data: { academicYearId, period, startDate, endDate, isCurrent: isCurrent ?? false },
-              });
-            });
         
-            return term
-        } 
-        catch (error) {
-          console.error("[termService.create]", error);
-          return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
-        }
-    },
+          if (isCurrent) {
+            // Unset any current term across all years of this school
+            const allYearIds = await tx.academicYear
+              .findMany({ where: { schoolId }, select: { id: true } })
+              .then((ys) => ys.map((y) => y.id));
+            await tx.term.updateMany({
+              where: { academicYearId: { in: allYearIds }, isCurrent: true },
+              data: { isCurrent: false },
+            });
+          }
+        
+          return tx.term.create({
+            data: { academicYearId, period, startDate, endDate, isCurrent: isCurrent ?? false },
+          });
+        },
+
  
     async updateTerm(schoolId: string, {
         academicYearId, period, startDate, endDate, isCurrent

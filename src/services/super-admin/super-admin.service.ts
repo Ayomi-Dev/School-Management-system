@@ -5,9 +5,10 @@ import { generateSetUpToken, setUpTempPasswordForAdmin } from "../notification/s
 import { passwordServices } from "../passwords/password.service";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
-import { generateUserCode, getCurrentTerm } from "../../utils/userCode";
+import { currentSession, generateUserCode, getCurrentTerm, getCurrentTermSpan } from "../../utils/userCode";
 import { academicYearService, termService } from "../academics/academic.service";
 import { currentAcademicYearLabel } from "@/src/utils/date";
+import { hashToken } from "@/src/lib/auth/hash";
 
 
 
@@ -48,6 +49,19 @@ export const superAdminServices = {
                     { status: 409 }
                 )
             }
+            //resolves superadmin
+            const superAdminProfile = userId ? await prisma.user.findUnique(
+                { where: {id: userId}, 
+                  select: {id: true} 
+                }
+            ) : null
+
+
+
+            let temporaryPassword: string | undefined;
+            let rawSetUpToken: string | undefined;
+            let hashedTempPassword: string | undefined
+            let hashedToken: string
             if(adminData){
                 const emailTaken = await prisma.user.findUnique( //matches email of the admin created to existing emails in the database
                     { 
@@ -61,12 +75,23 @@ export const superAdminServices = {
                         { status: 409}
                     )
                 }
+
+                temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
+                hashedTempPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
+                const { raw, hash} = generateSetUpToken()
+                rawSetUpToken = raw;
+                hashedToken = hash
             }
-            const superAdminProfile = await prisma.user.findUnique(
-                { where: {id: userId}, 
-                  select: {id: true} 
-                }
-            )
+
+            // ------current academic year data-------------
+            const session = currentSession();
+            const [start, end] = session.split("/");
+            const currentFullYear  = new Date().getFullYear();
+            const startYear = currentFullYear.toString().slice(0, 2) + start;
+            const endYear   = currentFullYear.toString().slice(0, 2) + end;
+            const period    = getCurrentTerm();
+            const {startDate, endDate} = getCurrentTermSpan()
+
             const created = await prisma.$transaction(
                 async(tx) => {
                     const school = await tx.school.create(
@@ -86,21 +111,29 @@ export const superAdminServices = {
                             select: { id: true }
                         }
                     )
-                    if(!adminData) {
-                        return { school, admin: null }
-                    }
-                    // admin creation if admin data is provided at school creation
-                    let temporaryPassword: string | undefined;
-                    let rawSetUpToken: string | undefined
-        
-                    temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
-                    const hashedTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
-                    const { raw, hash} = generateSetUpToken()
-                    rawSetUpToken = raw
-                    const userCode = await generateUserCode(adminData.role, school.id);
-                    const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
+                    //create academic year and term related to the school
+                    const academicYear = await academicYearService.createAcademicYear(tx, school.id, { 
+                        label: `${startYear}/${endYear}`, 
+                        startDate: new Date(`${startYear}/09/01`), 
+                        endDate: new Date(`${endYear}/07/31`), 
+                        isCurrent: true 
+                    })
 
-        
+                    const term = await termService.createTerm(tx, school.id, {
+                        academicYearId: academicYear.id as string,
+                        period,
+                        startDate,
+                        endDate,
+                        isCurrent: true 
+                    })
+
+                    if (!adminData || !hashedTempPassword || !hashedToken) {
+                        return { school, academicYear, term, admin: null };
+                    }
+
+                    // admin creation if admin data is provided at school creation
+                    const userCode = await generateUserCode(tx, adminData.role, school.id);
+                    const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
                     const admin = await tx.user.create({
                         data: {
                             userCode,
@@ -111,7 +144,7 @@ export const superAdminServices = {
                             status: "PENDING",
                             mustChangePassword: true,
                             isActive: true,
-                            passwordHash: hashedTemporaryPassword,
+                            passwordHash: hashedTempPassword,
                             school: {
                                 connect: { id: school.id }
                             }
@@ -122,52 +155,45 @@ export const superAdminServices = {
                     await tx.token.create({
                         data: {
                             userId: admin.id,
-                            tokenHash: hash,
+                            tokenHash: hashedToken,
                             type: "SET_UP",
                             expiresAt
                         }
                     })
-
-                   
-                    return { school, admin, temporaryPassword, rawSetUpToken };
+                
+                    return { school, admin, temporaryPassword, rawSetUpToken, term };
                 }
             )
 
-             //creates current academic year + term for the school created
-                    const { currentAcademicYearStart, currentAcademicYearEnd} = currentAcademicYearLabel();
-                    const period = getCurrentTerm();
-
-                    const year = await academicYearService.createAcademicYear(created.school.id, { 
-                        label: `${currentAcademicYearStart}/${currentAcademicYearEnd}`, 
-                        startDate: new Date(`${currentAcademicYearStart}/09/01`), 
-                        endDate: new Date(`${currentAcademicYearEnd}/07/31`), 
-                        isCurrent: true 
-                    })
-                    if(!year){
-                        return NextResponse.json(
-                            { error: "Error creating academic year" },
-                            { status: 400 }
-                        )
-                    }
-                    await termService.createTerm(created.school.id, {
-                        academicYearId: year?.id as string,
-                        period,
-                        startDate: new Date(`${currentAcademicYearStart}/09/01`), 
-                        endDate: new Date(`${currentAcademicYearEnd}/0731`), 
-                        isCurrent: true 
-                    })
-        
-
             return NextResponse.json(
-                { message: "School created", data: created },
+                { 
+                    message: "School created", 
+                    data: {
+                        school: created.school,
+                        academicYear: created.academicYear,
+                        term: created.term,
+                        admin: created.admin,
+
+                        //only returned for super admin use before adding notification service
+                        ...(temporaryPassword ? { temporaryPassword } : {}),
+                        ...(rawSetUpToken     ? { setupToken: rawSetUpToken } : {}),
+                    },
+                },
                 { status: 201 }
             )
             
         } 
         catch (error) {
             console.error("Error creating school and admin:", error);
+            const message = error instanceof Error ? error.message : String(error);
+            if (message.includes("users_user_code_key")) {
+              return NextResponse.json(
+                { error: "Could not generate a unique user code. Please try again." },
+                { status: 409 }
+              );
+            }
             return NextResponse.json(
-                { error: "An error occurred while creating the school and admin." },
+                { error: `An error occurred while creating the school and admin. ${error}` },
                 { status: 500 }
             )
         }
@@ -288,17 +314,16 @@ export const superAdminServices = {
                 )
             }
         
+            let temporaryPassword: string | undefined;
+            let rawSetUpToken: string | undefined
+            temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
+            const hashTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
+            const {raw, hash} = generateSetUpToken();
+            rawSetUpToken = raw
             const admin = await prisma.$transaction(
                 async(tx) => {
-                    let temporaryPassword: string | undefined;
-                    let rawSetUpToken: string | undefined
-                    temporaryPassword = setUpTempPasswordForAdmin(); //generates a temporary password
-                    const hashTemporaryPassword = await passwordServices.hashPassword(temporaryPassword) //hashes the temporary password with the bcrypt helper function
-                    const {raw, hash} = generateSetUpToken();
-                    rawSetUpToken = raw
                     const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
-                    const userCode = await generateUserCode("ADMIN", id) //generates a unique user code for the admin based on their role and school ID
-                
+                    const userCode = await generateUserCode(tx, "ADMIN", id) //generates a unique user code for the admin based on their role and school ID
                     const admin = await tx.user.create({
                         data: {
                             email,
