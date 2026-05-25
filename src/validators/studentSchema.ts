@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
 import { Role, Gender, ClassLevel } from "@/app/generated/prisma/enums";
+import { classLevelEnum } from "./classSchema";
 
 
 
@@ -10,18 +11,10 @@ const GenderEnum = z.enum(Gender)
 export const studentSchema = baseSchemaForUserCreation.extend({
   role: z.literal(Role.STUDENT),
  
-  gradeLevel: ClassLevelEnum,
   gender: GenderEnum,
 
   // Enrollment
-  classId: z.string().min(1, "classId is required"),
-  academicYearId: z.string().min(1, "academicYearId is required"),
-  termId: z.string().min(1, "termId is required"),
-  level: z.enum([
-    "CRECHE", "NURSERY1", "NURSERY2",
-    "PRIMARY1", "PRIMARY2", "PRIMARY3", "PRIMARY4", "PRIMARY5", "PRIMARY6",
-    "JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3",
-  ]),
+  level: classLevelEnum,
 
   // Optional guardian linking
   guardianUserIds: z.array(z.string()).optional(),

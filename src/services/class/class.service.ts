@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma/client";
 import { createClassSchema, updateClassSchema, createSubjectSchema, updateSubjectSchema } from "@/src/validators/classSchema";
-import { ResolverError } from "@/src/utils/resolvers";
+import { resolveClass, ResolverError } from "@/src/utils/resolvers";
 import { ClassLevel, Department } from "@/src/types/types";
 
 // ============================================================
@@ -36,7 +36,9 @@ export const classService = {
    * Used by studentService.create so it can participate in the
    * same service call without needing a second HTTP request.
    */
-  async _createFromData(data: unknown, schoolId: string) {
+  async _createFromData(
+    data: unknown, 
+    schoolId: string) {
     const parsed = createClassSchema.safeParse(data);
     if (!parsed.success) {
       return NextResponse.json(
@@ -48,11 +50,11 @@ export const classService = {
     const { name, level, order, department } = parsed.data;
 
     // Unique: one class name per school
-    const existing = await prisma.class.findFirst({
+    const existingClass = await prisma.class.findFirst({
       where: { schoolId, name },
-      select: { id: true },
-    });
-    if (existing) {
+      select: { id: true, name: true, level: true}
+    })
+    if(!existingClass){
       return NextResponse.json(
         { error: `Class "${name}" already exists in this school.` },
         { status: 409 }
@@ -76,18 +78,14 @@ export const classService = {
   // NextResponse) because this is an internal utility.
   // ----------------------------------------------------------------
   async getOrCreate(
+    tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
     schoolId: string,
     name: string,
     level: ClassLevel,
     order: number,
     department?: Department,
-    createIfMissing = false
   ): Promise<{ id: string; name: string; level: string; isNew: boolean }> {
-    const existing = await prisma.class.findFirst({
-      where: { schoolId, name },
-      select: { id: true, name: true, level: true },
-    });
-
+    const existing = await resolveClass(tx, schoolId, name)
     if (existing) {
       // Validate the level matches what we expect
       if (existing.level !== level) {
@@ -100,11 +98,7 @@ export const classService = {
       return { ...existing, isNew: false };
     }
 
-    if (!createIfMissing) {
-      throw new ResolverError(
-        `Class "${name}" not found. Create it first or set createIfMissing=true.`
-      );
-    }
+    
 
     const levelClass = await prisma.class.create({
       data: {

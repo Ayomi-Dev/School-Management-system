@@ -86,21 +86,15 @@ export async function resolveTerm(
 // ─────────────────────────────────────────────────────────────
 
 export async function resolveClass(
+  tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
   schoolId: string,
   className: string
 ) {
-  const cls = await prisma.class.findFirst({
+  const classRecord = await prisma.class.findFirst({
     where: { schoolId, name: className },
     select: { id: true, name: true, level: true, department: true },
   });
-
-  if (!cls) {
-    throw new ResolverError(
-      `Class "${className}" not found in this school. Create it first.`
-    );
-  }
-
-  return cls;
+  return classRecord;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -109,18 +103,14 @@ export async function resolveClass(
 // ─────────────────────────────────────────────────────────────
 
 export async function resolveClassByLevel(
+  tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
   schoolId: string,
   level: string,
   className?: string // if provided, validates level matches
 ) {
   if (className) {
-    const cls = await resolveClass(schoolId, className);
-    if (cls.level !== level) {
-      throw new ResolverError(
-        `Class "${className}" exists but its level is "${cls.level}", not "${level}".`,
-        400
-      );
-    }
+    const cls = await resolveClass(tx, schoolId, className);
+    
     return cls;
   }
 
@@ -260,7 +250,7 @@ export async function resolveTermByPeriod(
   period: "FIRST" | "SECOND" | "THIRD",
   academicYearLabel?: string
 ) {
-  const year = await resolveAcademicYear(schoolId, academicYearLabel);
+  const year = await resolveAcademicYear( schoolId, academicYearLabel);
   return resolveTerm(schoolId, { period, academicYearId: year.id });
 }
 

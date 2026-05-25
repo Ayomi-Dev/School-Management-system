@@ -7,8 +7,6 @@ import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
 import { currentSession, generateUserCode, getCurrentTerm, getCurrentTermSpan } from "../../utils/userCode";
 import { academicYearService, termService } from "../academics/academic.service";
-import { currentAcademicYearLabel } from "@/src/utils/date";
-import { hashToken } from "@/src/lib/auth/hash";
 
 
 
@@ -63,7 +61,7 @@ export const superAdminServices = {
             let hashedTempPassword: string | undefined
             let hashedToken: string
             if(adminData){
-                const emailTaken = await prisma.user.findUnique( //matches email of the admin created to existing emails in the database
+                const emailTaken = await prisma.user.findFirst( //matches email of the admin created to existing emails in the database
                     { 
                         where: { email: adminData.email },
                         select: { id: true }
@@ -85,10 +83,8 @@ export const superAdminServices = {
 
             // ------current academic year data-------------
             const session = currentSession();
-            const [start, end] = session.split("/");
-            const currentFullYear  = new Date().getFullYear();
-            const startYear = currentFullYear.toString().slice(0, 2) + start;
-            const endYear   = currentFullYear.toString().slice(0, 2) + end;
+            const startYear = session[0]
+            const endYear   = session[1]
             const period    = getCurrentTerm();
             const {startDate, endDate} = getCurrentTermSpan()
 
@@ -113,7 +109,7 @@ export const superAdminServices = {
                     )
                     //create academic year and term related to the school
                     const academicYear = await academicYearService.createAcademicYear(tx, school.id, { 
-                        label: `${startYear}/${endYear}`, 
+                        label: session, 
                         startDate: new Date(`${startYear}/09/01`), 
                         endDate: new Date(`${endYear}/07/31`), 
                         isCurrent: true 
@@ -140,7 +136,7 @@ export const superAdminServices = {
                             email: adminData.email,
                             firstName: adminData.firstName,
                             lastName: adminData.lastName,
-                            role: adminData.role,
+                            role: adminData.role, 
                             status: "PENDING",
                             mustChangePassword: true,
                             isActive: true,
@@ -161,7 +157,7 @@ export const superAdminServices = {
                         }
                     })
                 
-                    return { school, admin, temporaryPassword, rawSetUpToken, term };
+                    return { school, admin, academicYear, term, temporaryPassword, rawSetUpToken };
                 }
             )
 
@@ -302,7 +298,7 @@ export const superAdminServices = {
                 )
             }
         
-            const emailTaken = await prisma.user.findUnique({
+            const emailTaken = await prisma.user.findFirst({
                 where: { email },
                 select: { id: true}
             })
@@ -310,7 +306,7 @@ export const superAdminServices = {
             if(emailTaken){
                 return NextResponse.json(
                     { error: `Email: ${email} is already registered!`},
-                    { status: 409}
+                    { status: 409 }
                 )
             }
         
@@ -394,6 +390,7 @@ export const superAdminServices = {
             // Delete the school (parent record)
             await prisma.school.delete({
               where: { id: schoolId },
+
             });
         
             //Return success

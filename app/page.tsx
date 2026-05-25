@@ -5,25 +5,6 @@ import { currentSession } from "@/src/utils/userCode";
 import Image from "next/image";
 
 export default function Home() {
-  const year = new Date().getFullYear()
-  const month = new Date().getMonth()
-    const yearBefore = (year - 1).toString().split("").splice(2).join("");
-  const yearBeginningSuffix = year.toString().split("").splice(2).join("")
-  const yearEnding = year + 1
-  const yearEndingSuffix = (year + 1).toString().split("").splice(2).join("")
-                      const currentSess = (month <= 7 ? year - 1 : year ).toString()
-                      const currentEnd = (month <= 7 ? year : year + 1 ).toString()
-
-                      const session = currentSession() 
-                      const [st, en] = session.split("/")
-      // Reconstruct full years — handles the century boundary
-      const currentFullYear  = new Date().getFullYear();
-      const startYear = currentFullYear.toString().slice(0, 2) + st;
-      // const endYear   = currentFullYear.toString().slice(0, 2) + endYY;
-
-  const startDate = new Date(`${currentSess}/09/01`) 
-  const endDate = new Date(`${currentEnd}/07/31`)
-  console.log(startYear)
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">

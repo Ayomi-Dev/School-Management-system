@@ -72,7 +72,7 @@ export const authService = {
         const passwordMatches = await passwordServices.verifyPassword(userInput.password, user.passwordHash);
         if(!passwordMatches){
             return NextResponse.json(
-                { error: "Password do not match" },
+                { error: "Password is incorrect" },
                 { status: 401 }
             );
         }
@@ -86,7 +86,7 @@ export const authService = {
         }
 
         // ── 4. Status checks ─────────────────────────────────────────────────────────
-        if(!user?.isActive || user.status === "SUSPENDED"){
+        if(user.status === "SUSPENDED"){
             return NextResponse.json(
                 { error: "Your account has been suspended. Contact your administrator." },
                 { status: 403 }

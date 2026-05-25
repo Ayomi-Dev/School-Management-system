@@ -182,7 +182,7 @@ model User {
   id                  String    @id @default(auto()) @map("_id") @db.ObjectId
   schoolId            String?    @map("school_id") @db.ObjectId
   role                Role      @default(STUDENT)
-  email               String    @unique
+  email               String?
   passwordHash        String?   @map("password_hash")
   phone               String?
   firstName           String?   @map("first_name")
@@ -284,7 +284,7 @@ model AcademicYear {
   isCurrent Boolean  @default(false) @map("is_current")
   createdAt DateTime @default(now()) @map("created_at")
 
-  school      School       @relation(fields: [schoolId], references: [id])
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   terms       Term[]
   enrollments Enrollment[]
   reportCards ReportCard[]
@@ -303,7 +303,7 @@ model Term {
   isCurrent      Boolean    @default(false) @map("is_current")
   createdAt      DateTime   @default(now()) @map("created_at")
 
-  academicYear  AcademicYear   @relation(fields: [academicYearId], references: [id])
+  academicYear  AcademicYear   @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
   classSessions ClassSession[]
   scores        Score[]
   feeStructures FeeStructure[]
@@ -323,7 +323,7 @@ model Class {
   department Department?
   createdAt  DateTime    @default(now()) @map("created_at")
 
-  school             School                   @relation(fields: [schoolId], references: [id])
+  school             School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   enrollments        Enrollment[]
   teacherAssignments TeacherClassAssignment[]
   classSessions      ClassSession[]
@@ -343,7 +343,7 @@ model Subject {
   name       String
   code       String?
 
-  school          School           @relation(fields: [schoolId], references: [id])
+  school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   scores          Score[]
   subjectTeachers SubjectTeacher[]
   teacher    TeacherProfile       @relation(fields: [teacherId], references: [id])
@@ -409,6 +409,8 @@ model StudentProfile {
   dateOfBirth   DateTime?     @map("date_of_birth")
   gender        Gender
   photoUrl      String?       @map("photo_url")
+  previousSchool String?       @map("previous_school")
+  medicalNotes   String?       @map("medical_notes")
   status        StudentStatus @default(ACTIVE)
   deletedAt     DateTime?     @map("deleted_at")
   exitReason    String?       @map("exit_reason")
@@ -627,7 +629,7 @@ model FeeStructure {
   isOptional Boolean  @default(false) @map("is_optional")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  school   School       @relation(fields: [schoolId], references: [id])
+  school   School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class    Class?       @relation(fields: [classId], references: [id])
   term     Term         @relation(fields: [termId], references: [id])
   balances FeeBalance[]
@@ -687,7 +689,7 @@ model Announcement {
   publishedAt  DateTime?          @map("published_at")
   createdAt    DateTime           @default(now()) @map("created_at")
 
-  school        School         @relation(fields: [schoolId], references: [id])
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   author        User           @relation(fields: [authorId], references: [id])
   class         Class?         @relation(fields: [classId], references: [id])
   notifications Notification[]
@@ -705,7 +707,7 @@ model Notification {
   payload        Json
   createdAt      DateTime              @default(now()) @map("created_at")
 
-  school       School             @relation(fields: [schoolId], references: [id])
+  school       School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   sentBy       User?              @relation("NotificationSender", fields: [sentById], references: [id])
   announcement Announcement?      @relation(fields: [announcementId], references: [id])
   deliveries   UserNotification[]

@@ -23,7 +23,7 @@ export const parentSchema = baseSchemaForUserCreation.extend({
  
   // Optional: link to one or more existing student accounts at creation time
   studentUserIds: z
-    .array(z.uuid("Each student ID must be a valid UUID"))
+    .array(z.string())
     .max(10, "Cannot link more than 10 students at once")
     .optional(),
 });
