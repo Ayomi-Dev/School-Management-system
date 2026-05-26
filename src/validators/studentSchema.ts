@@ -74,3 +74,10 @@ export const listStudentsQuerySchema = z.object({
   search: z.string().optional(), // firstName | lastName | studentNumber
 });
 
+export const linkStudentToParentSchema = z.object({
+  parentUserId: z.string().min(1).optional(),
+})
+
+
+export type LinkStudentInput = z.infer<typeof linkStudentToParentSchema>
+

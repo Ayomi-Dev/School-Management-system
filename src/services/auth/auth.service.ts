@@ -178,7 +178,8 @@ export const authService = {
                     data: {
                         status: "ACTIVE",
                         mustChangePassword: false,
-                        passwordHash: hashNewPassword
+                        passwordHash: hashNewPassword,
+                        isActive: true
                     }
                 }
             )

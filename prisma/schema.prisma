@@ -368,71 +368,59 @@ model CodeCounter {
 // ============================================================
 
 model Guardian {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String  @unique @map("user_id") @db.ObjectId
-  firstName    String  @map("first_name")
-  lastName     String  @map("last_name")
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String       @unique @map("user_id") @db.ObjectId
+  firstName    String       @map("first_name")
+  lastName     String       @map("last_name")
   phone        String
   email        String?
   relationship Relationship?
 
-  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  children GuardianStudent[]
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students StudentProfile[] // one guardian → many students (siblings)
 
   @@map("guardians")
 }
 
-// MongoDB does not support composite @@id with @db.ObjectId
-// so we use a surrogate String id and enforce uniqueness via @@unique
-model GuardianStudent {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  guardianId String   @map("guardian_id") @db.ObjectId
-  studentId  String   @map("student_id") @db.ObjectId
-  isPrimary  Boolean  @default(false) @map("is_primary")
-  addedAt    DateTime @default(now()) @map("added_at")
-
-  guardian Guardian       @relation(fields: [guardianId], references: [id], onDelete: Cascade)
-  student  StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([guardianId, studentId])
-  @@map("guardian_students")
-}
-
 model StudentProfile {
-  id            String        @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String        @unique @map("user_id") @db.ObjectId
-  schoolId      String        @map("school_id") @db.ObjectId
-  studentNumber String        @unique @map("student_number")
-  firstName     String        @map("first_name")
-  middleName    String?       @map("middle_name")
-  lastName      String        @map("last_name")
-  dateOfBirth   DateTime?     @map("date_of_birth")
-  gender        Gender
-  photoUrl      String?       @map("photo_url")
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String        @unique @map("user_id") @db.ObjectId
+  schoolId       String        @map("school_id") @db.ObjectId
+  guardianId     String?       @map("guardian_id") @db.ObjectId  // ← NEW: direct FK
+  studentNumber  String        @unique @map("student_number")
+  firstName      String        @map("first_name")
+  middleName     String?       @map("middle_name")
+  lastName       String        @map("last_name")
+  dateOfBirth    DateTime?     @map("date_of_birth")
+  gender         Gender
+  photoUrl       String?       @map("photo_url")
   previousSchool String?       @map("previous_school")
   medicalNotes   String?       @map("medical_notes")
-  status        StudentStatus @default(ACTIVE)
-  deletedAt     DateTime?     @map("deleted_at")
-  exitReason    String?       @map("exit_reason")
-  enrolledAt    String       @map("enrolled_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
-  level         ClassLevel
+  status         StudentStatus @default(ACTIVE)
+  deletedAt      DateTime?     @map("deleted_at")
+  exitReason     String?       @map("exit_reason")
+  enrolledAt     String        @map("enrolled_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  level          ClassLevel
+  stateOfOrigin  String?       @map("state_of_origin")
 
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  school      School            @relation(fields: [schoolId], references: [id])
-  guardians   GuardianStudent[]
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school      School     @relation(fields: [schoolId], references: [id])
+  guardian    Guardian?  @relation(fields: [guardianId], references: [id]) // ← NEW
+
   enrollments Enrollment[]
   attendances Attendance[]
   scores      Score[]
   feeBalances FeeBalance[]
   feePayments FeePayment[]
   reportCards ReportCard[]
-  stateOfOrigin  String?          @map("state_of_origin")
 
   @@index([schoolId, status])
+  @@index([guardianId])       // ← index for guardian lookups
   @@map("student_profiles")
 }
+
 
 model Enrollment {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId

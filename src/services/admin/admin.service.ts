@@ -8,6 +8,7 @@ import { passwordServices } from "../passwords/password.service";
 import { resolveAcademicYear, resolveClass } from "@/src/utils/resolvers";
 import { classService } from "../class/class.service";
 import { _levelOrder } from "@/src/utils/levelOrder";
+import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
 
 export const adminServices = {
     //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
@@ -64,6 +65,22 @@ export const adminServices = {
                     )
                 }
             }
+
+            // Check phone uniqueness
+            if(userInput.phone){
+                const existingPhone = await prisma.user.findFirst({
+                    where: { phone: userInput.phone, schoolId },
+                    select: { id: true }
+                });
+                if(existingPhone){
+                    return NextResponse.json(
+                        { error: "A user with this phone number already exists" },
+                        { status: 409 }
+                    )
+                }
+            }
+
+
             let tempPassword: string | undefined;
             let rawSetUpToken: string | undefined;
             tempPassword = generalTempPassword(userInput.lastName)
@@ -127,109 +144,12 @@ export const adminServices = {
                         });
 
                         // Link to parent guardian if parentUserId provided
-                        if(userInput.parentUserId){
-                            let parentGuardian = await tx.guardian.findUnique({
-                                where: { userId: userInput.parentUserId },
-                                select: { id: true, userId: true }
-                            })
-
-                            // If guardian record doesn't exist, create one from the user
-                            if(!parentGuardian){
-                                const parentUser = await tx.user.findUnique({
-                                    where: { id: userInput.parentUserId },
-                                    select: { firstName: true, lastName: true, phone: true, email: true }
-                                })
-
-                                if(parentUser && parentUser.phone){
-                                    parentGuardian = await tx.guardian.create({
-                                        data: {
-                                            userId: userInput.parentUserId,
-                                            firstName: parentUser.firstName || 'Guardian',
-                                            lastName: parentUser.lastName || '',
-                                            phone: parentUser.phone,
-                                            email: parentUser.email
-                                        },
-                                        select: { id: true, userId: true }
-                                    })
-                                }
-                            }
-
-                            if(parentGuardian){
-                                try {
-                                    await tx.guardianStudent.create({
-                                        data: {
-                                            guardianId: parentGuardian.id,
-                                            studentId: profile.id,
-                                            isPrimary: true
-                                        }
-                                    })
-                                } catch (error: any) {
-                                    // If relation already exists (unique constraint), ignore
-                                    if (!error.message?.includes('Unique constraint')) {
-                                        throw error
-                                    }
-                                }
-                            }
+                        if (userInput.parentUserId || userInput.guardianUserIds?.length) {
+                            await linkStudentToGuardians(tx, profile.id, {
+                              parentUserId: userInput.parentUserId,
+                            });
                         }
-
-                        // Link to additional guardians if guardianUserIds provided
-                        if(userInput.guardianUserIds?.length){
-                            const guardianProfiles = await tx.guardian.findMany({
-                                where: { userId: { in: userInput.guardianUserIds } },
-                                select: { id: true, userId: true }
-                            })
-
-                            // Create GuardianStudent links for found guardians
-                            for (const guardian of guardianProfiles) {
-                                try {
-                                    await tx.guardianStudent.create({
-                                        data: {
-                                            guardianId: guardian.id,
-                                            studentId: profile.id
-                                        }
-                                    })
-                                } catch (error: any) {
-                                    // If relation already exists, continue to next
-                                    if (!error.message?.includes('Unique constraint')) {
-                                        throw error
-                                    }
-                                }
-                            }
-
-                            // For users that don't have guardian records, create them
-                            const missingGuardianIds = userInput.guardianUserIds.filter(
-                                id => !guardianProfiles.find(g => g.userId === id)
-                            )
-
-                            if(missingGuardianIds.length){
-                                const missingUsers = await tx.user.findMany({
-                                    where: { id: { in: missingGuardianIds } },
-                                    select: { id: true, firstName: true, lastName: true, phone: true, email: true }
-                                })
-
-                                for (const user of missingUsers) {
-                                    if(user.phone){
-                                        const newGuardian = await tx.guardian.create({
-                                            data: {
-                                                userId: user.id,
-                                                firstName: user.firstName || 'Guardian',
-                                                lastName: user.lastName || '',
-                                                phone: user.phone,
-                                                email: user.email
-                                            }
-                                        })
-
-                                        await tx.guardianStudent.create({
-                                            data: {
-                                                guardianId: newGuardian.id,
-                                                studentId: profile.id
-                                            }
-                                        })
-                                    }
-                                }
-                            }
-                        }
-
+                        
                         // Create fee balances for the student's class and current term
                         const feeStructures = await tx.feeStructure.findMany({
                             where: {
@@ -266,34 +186,15 @@ export const adminServices = {
                     if(userInput.role==="PARENT" && userInput.studentUserIds?.length){
                         const guardian = await tx.guardian.findUnique(
                             {
-                                where: { id: newUser.id },
+                                where: { userId: newUser.id },
                                 select: {id: true}
                             }
                         )
                         if(guardian){
-                            const studentProfiles = await tx.studentProfile.findMany(
-                                {
-                                    where: { userId: { in: userInput.studentUserIds }},
-                                    select: { id: true },
-                                }
-                            )
-                            if(studentProfiles.length) {
-                                for (const student of studentProfiles) {
-                                    try {
-                                        await tx.guardianStudent.create({
-                                            data: {
-                                                guardianId: guardian.id,
-                                                studentId: student.id
-                                            }
-                                        })
-                                    } catch (error: any) {
-                                        // If relation already exists, continue
-                                        if (!error.message?.includes('Unique constraint')) {
-                                            throw error
-                                        }
-                                    }
-                                }
-                            }
+                            await tx.studentProfile.updateMany({
+                                where: { userId: { in: userInput.studentUserIds } },
+                                data:  { guardianId: guardian.id },
+                            });
                         }
                     }
 
@@ -345,5 +246,5 @@ export const adminServices = {
         }
 
 
-   }
+   }, 
 }
