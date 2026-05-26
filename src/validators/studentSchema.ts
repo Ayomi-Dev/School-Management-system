@@ -16,9 +16,6 @@ export const studentSchema = baseSchemaForUserCreation.extend({
   // Enrollment
   level: classLevelEnum,
 
-  // Optional guardian linking
-  guardianUserIds: z.array(z.string()).optional(),
-
   stateOfOrigin: z
     .string()
     .max(50, "State of origin must be 50 characters or fewer")
@@ -37,7 +34,6 @@ export const studentSchema = baseSchemaForUserCreation.extend({
   // Optional: link the student to an existing parent account at creation time
   parentUserId: z
     .string()
-    .uuid("Parent user ID must be a valid UUID")
     .optional(),
 });
 

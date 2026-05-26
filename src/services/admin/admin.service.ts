@@ -106,6 +106,7 @@ export const adminServices = {
                                 isActive: true,
                                 mustChangePassword: true,
                                 isEmailVerified: true,
+                                email: true
                             }
                         }
                     )
@@ -132,54 +133,74 @@ export const adminServices = {
                         }
 
                         const classRecord = await classService.getOrCreate(tx, schoolId, userInput.level, profile.level, _levelOrder(profile.level))
-                        const label = currentSession()
-                        const yearId = await resolveAcademicYear(schoolId, label)
+                        const label      = currentSession();
+                        const yearRecord = await resolveAcademicYear(schoolId, label);
+
                         await tx.enrollment.create({
-                          data: {
-                            studentId: profile.id,
-                            classId: classRecord.id,
-                            academicYearId: yearId.id,
-                            enrolledAt: new Date(),
-                          },
+                            data: {
+                              studentId: profile.id,
+                              classId: classRecord.id,
+                              academicYearId: yearRecord.id,
+                              enrolledAt: new Date(),
+                            },
                         });
 
                         // Link to parent guardian if parentUserId provided
-                        if (userInput.parentUserId || userInput.guardianUserIds?.length) {
+                        if (userInput.parentUserId) {
                             await linkStudentToGuardians(tx, profile.id, {
                               parentUserId: userInput.parentUserId,
                             });
                         }
-                        
-                        // Create fee balances for the student's class and current term
+                        // ── Resolve academic year + current term ─────────────────────────
+                        const currentTerm = await tx.term.findFirst({
+                            where: {
+                                academicYearId: yearRecord.id,
+                                isCurrent:      true,           // Term has its own isCurrent flag
+                            },
+                            select: { id: true },
+                        });
+                        if (!currentTerm) {
+                            throw new Error(
+                                `No active term found for academic year "${yearRecord.label}". ` +
+                                `Mark a term as current before provisioning students.`
+                            );
+                        }
+
+                        // ── Fetch applicable fee structures ──────────────────────────────
+                        // Matches global fees (classId = null) AND class-specific fees
                         const feeStructures = await tx.feeStructure.findMany({
                             where: {
                                 schoolId,
-                                termId: yearId.id,
+                                termId: currentTerm.id,         // ← Term.id, not AcademicYear.id
                                 OR: [
                                     { classId: null },
-                                    { classId: classRecord.id }
-                                ]
+                                    { classId: classRecord.id },
+                                ],
                             },
-                            select: { id: true, amount: true }
-                        })
-
+                            select: { id: true, amount: true },
+                        });                     
+                        console.log("fee structure",feeStructures)
+                        // Create fee balances for the student's class and current term
+                        // ── Create fee balances ───────────────────────────────────────────
+                        // upsert instead of create so re-provisioning a student never throws
                         for (const fee of feeStructures) {
-                            try {
-                                await tx.feeBalance.create({
-                                    data: {
-                                        studentId: profile.id,
+                            await tx.feeBalance.upsert({
+                                where: {
+                                    studentId_feeStructureId: {
+                                        studentId:      profile.id,
                                         feeStructureId: fee.id,
-                                        amountDue: fee.amount,
-                                        amountPaid: 0
-                                    }
-                                })
-                            } catch (error: any) {
-                                // If fee balance already exists, continue
-                                if (!error.message?.includes('Unique constraint')) {
-                                    throw error
-                                }
-                            }
+                                    },
+                                },
+                                update: {},                     // already exists — leave it alone
+                                create: {
+                                    studentId:      profile.id,
+                                    feeStructureId: fee.id,
+                                    amountDue:      fee.amount,
+                                    amountPaid:     0,
+                                },
+                            });
                         }
+                        
                     }
 
                     // Link existing students to newly created parent

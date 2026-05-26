@@ -210,7 +210,6 @@ model User {
   userNotifications     UserNotification[]
   announcementsAuthored Announcement[]
 
-  @@unique([email, schoolId])
   @@unique([phone, schoolId])
   @@index([schoolId, role])
   @@map("users")
