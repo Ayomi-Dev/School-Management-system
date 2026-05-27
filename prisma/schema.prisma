@@ -308,6 +308,7 @@ model Term {
   feeStructures FeeStructure[]
   feePayments   FeePayment[]
   reportCards   ReportCard[] 
+  subjectTeacher   SubjectTeacher[]
 
   @@unique([academicYearId, period])
   @@map("terms")
@@ -329,6 +330,7 @@ model Class {
   subjectTeachers    SubjectTeacher[]
   feeStructures      FeeStructure[]
   announcements      Announcement[]
+  subjects           Subject[]
 
   @@unique([schoolId, name])
   @@index([schoolId])
@@ -338,16 +340,17 @@ model Class {
 model Subject {
   id         String  @id @default(auto()) @map("_id") @db.ObjectId
   schoolId   String  @map("school_id") @db.ObjectId
-  teacherId  String   @map("teacher_id") @db.ObjectId
+  classId  String  @map("class_id") @db.ObjectId 
   name       String
   code       String?
 
   school          School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   scores          Score[]
   subjectTeachers SubjectTeacher[]
-  teacher    TeacherProfile       @relation(fields: [teacherId], references: [id])
+  class      Class                 @relation(fields: [classId], references: [id], onDelete: Cascade)
 
-  @@unique([schoolId, name, teacherId])
+  @@unique([classId, name])   // "Mathematics" is unique per class, not per school
+  @@index([schoolId])
   @@map("subjects")
 }
 
@@ -464,7 +467,6 @@ model TeacherProfile {
   classSessions     ClassSession[]
   attendancesMarked Attendance[]             @relation("AttendanceMarkedBy")
   scoresEntered     Score[]                  @relation("ScoreEnteredBy")
-  subjects          Subject[]
   qualification     String?
   employeeType      EmployeeType?           @map("employee_type")
 
@@ -488,17 +490,18 @@ model TeacherClassAssignment {
 
 model SubjectTeacher {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  teacherId    String   @map("teacher_id") @db.ObjectId
   subjectId  String   @map("subject_id") @db.ObjectId
   classId    String   @map("class_id") @db.ObjectId
+  teacherId  String   @map("teacher_id") @db.ObjectId
   termId     String   @map("term_id") @db.ObjectId
   assignedAt DateTime @default(now()) @map("assigned_at")
 
-  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  subject Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  class   Class        @relation(fields: [classId], references: [id])
+  subject Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class   Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  term    Term           @relation(fields: [termId], references: [id])
 
-  @@unique([teacherId, subjectId, classId, termId])
+  @@unique([subjectId, classId, teacherId]) // termId excluded — one teacher per subject per class
   @@map("subject_teachers")
 }
 

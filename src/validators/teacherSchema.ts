@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
 import { Role, Department, EmployeeType } from "@/app/generated/prisma/enums";
+import { classLevelEnum } from "./classSchema";
 
 
 export const EmploymentType = z.enum(EmployeeType)  // Create a Zod enum from the Prisma EmployeeType enum values
@@ -39,16 +40,20 @@ export const teacherSchema = baseSchemaForUserCreation.extend({
     .optional(),
 });
 
+
+// Subject assignment:
+// Route: POST /schools/:schoolId/teachers/:teacherEmployeeNumber/subjects
+// IDs are resolved server-side from provided names/periods
 export const assignSubjectToTeacherSchema = z.object({
-  teacherId: z.string().min(1),
-  subjectId: z.string().min(1),
-  classId: z.string().min(1),
-  termId: z.string().min(1),
+  subjectName: z.string().min(1, "Subject name is required"),
+  className: z.string().min(1, "Class name is required"),
+  termPeriod: z.string().optional(),
 });
 
+// Class teacher assignment:
+// Route: POST /schools/:schoolId/classes/:className/teacher
 export const assignClassTeacherSchema = z.object({
-  teacherId: z.string().min(1),
-  classId: z.string().min(1),
-  academicYearId: z.string().min(1),
+  teacherEmployeeNumber: z.string().min(1, "Teacher employee number is required"),
   isClassTeacher: z.boolean().default(false),
+  academicYearLabel: z.string().optional(),
 });

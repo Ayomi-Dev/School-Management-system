@@ -94,6 +94,11 @@ export async function resolveClass(
     where: { schoolId, name: className },
     select: { id: true, name: true, level: true, department: true },
   });
+  if (!classRecord) {
+    throw new ResolverError(
+      `Class with name:"${classRecord}" not found in this school.`
+    );
+  }
   return classRecord;
 }
 
@@ -135,15 +140,15 @@ export async function resolveClassByLevel(
 // SUBJECT
 // ─────────────────────────────────────────────────────────────
 
-export async function resolveSubject(schoolId: string, subjectName: string) {
+export async function resolveSubject(schoolId: string, subjectId: string) {
   const subject = await prisma.subject.findFirst({
-    where: { schoolId, name: subjectName },
+    where: { schoolId, id: subjectId },
     select: { id: true, name: true, code: true, teacherId: true },
   });
 
   if (!subject) {
     throw new ResolverError(
-      `Subject "${subjectName}" not found in this school.`
+      `Subject with ID:"${subjectId}" not found in this school.`
     );
   }
 
