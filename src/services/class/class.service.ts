@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma/client";
 import { createClassSchema, updateClassSchema, createSubjectSchema, updateSubjectSchema } from "@/src/validators/classSchema";
-import { resolveClass, ResolverError } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveClass, ResolverError } from "@/src/utils/resolvers";
 import { ClassLevel, Department } from "@/src/types/types";
+import { currentSession } from "@/src/utils/userCode";
 
 // ============================================================
 // CLASS SERVICE
@@ -210,15 +211,8 @@ export const classService = {
       }
 
       // Resolve academic year
-      const yearWhere: any = { schoolId };
-      if (academicYearLabel) yearWhere.label = academicYearLabel;
-      else yearWhere.isCurrent = true;
-
-      const academicYear = await prisma.academicYear.findFirst({
-        where: yearWhere,
-        select: { id: true, label: true },
-      });
-
+      const yearLabel = currentSession()
+      const academicYear = await resolveAcademicYear(schoolId, yearLabel)
       if (!academicYear) {
         return NextResponse.json(
           { error: "Academic year not found." },
