@@ -107,48 +107,40 @@ export async function resolveClass(
 // class at that level within the school)
 // ─────────────────────────────────────────────────────────────
 
-export async function resolveClassByLevel(
-  tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+export async function resolveClassByName(
   schoolId: string,
-  level: string,
-  className?: string // if provided, validates level matches
+  className: string,
 ) {
-  if (className) {
-    const cls = await resolveClass(tx, schoolId, className);
-    
-    return cls;
-  }
-
   // Fall back: first class at this level (ordered by class.order)
-  const cls = await prisma.class.findFirst({
-    where: { schoolId,  },
+  const classRecord = await prisma.class.findFirst({
+    where: { schoolId, name: className },
     orderBy: { order: "asc" },
     select: { id: true, name: true, level: true, department: true },
   });
 
-  if (!cls) {
+  if (!classRecord) {
     throw new ResolverError(
-      `No class found for level "${level}" in this school. Create one first.`,
+      `No class found for name "${className}" in this school. Create one first.`,
       404
     );
   }
 
-  return cls;
+  return classRecord;
 }
 
 // ─────────────────────────────────────────────────────────────
 // SUBJECT
 // ─────────────────────────────────────────────────────────────
 
-export async function resolveSubject(schoolId: string, subjectId: string) {
+export async function resolveSubject(schoolId: string, subjectName: string) {
   const subject = await prisma.subject.findFirst({
-    where: { schoolId, id: subjectId },
-    select: { id: true, name: true, code: true, teacherId: true },
+    where: { schoolId, name: subjectName },
+    select: { id: true, name: true, code: true, classId: true },
   });
 
   if (!subject) {
     throw new ResolverError(
-      `Subject with ID:"${subjectId}" not found in this school.`
+      `Subject with name:"${subjectName}" not found in this school.`
     );
   }
 
@@ -161,7 +153,7 @@ export async function resolveSubject(schoolId: string, subjectId: string) {
 
 export async function resolveTeacher(schoolId: string, employeeNumber: string) {
   const teacher = await prisma.teacherProfile.findFirst({
-    where: { schoolId, employeeNumber, deletedAt: null },
+    where: { schoolId, employeeNumber },
     select: { id: true, firstName: true, lastName: true, employeeNumber: true },
   });
 

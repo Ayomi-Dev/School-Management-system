@@ -1,105 +1,102 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
-import { resolveAcademicYear, resolveClass, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveClass, resolveClassByName, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
+import { getCurrentTerm } from "@/src/utils/userCode";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
 
 export const teacherServices = {
-    async assignSubject(req: NextRequest, schoolId: string, employeeNumber: string) {
+  async assignSubject(req: NextRequest, schoolId: string) {
     try {
-        const body = await req.json();
-        const parsed = assignSubjectToTeacherSchema.safeParse(body);
-        if (!parsed.success) {
-            return NextResponse.json(
-                { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-                { status: 400 }
-            );
+      const body = await req.json();
+      const parsed = assignSubjectToTeacherSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+            { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+            { status: 400 }
+        );
+      }
+      const { subjectName, className, teacherNumber } = parsed.data;
+      const termPeriod = getCurrentTerm()
+      let teacher:     { id: string };
+      let classRecord: { id: string; name: string; level: string; department: string | null };
+      let term:        { id: string };
+      
+      try {
+        // ── Step 1: resolve teacher + class + term in parallel (neither depends on the other)
+        [teacher, classRecord, term] = await Promise.all([
+          resolveTeacher(schoolId, teacherNumber),
+          prisma.class.findFirst({
+              where:  { schoolId, name: className },
+              select: { id: true, name: true, level: true, department: true },
+          }).then((c) => {
+              if (!c) throw new ResolverError(`Class "${className}" not found in this school.`);
+              return c;
+          }),
+          await resolveTerm(schoolId)
+        ]);
+
+           
+      } 
+      catch (err) {
+        if (err instanceof ResolverError) {
+          return NextResponse.json({ error: err.message }, { status: err.statusCode });
         }
+        throw err;
+      }
 
-        const { subjectName, className, termPeriod } = parsed.data;
+      const assignment = await prisma.$transaction(async (tx) => {
+        // find or create the Subject scoped to this class
+        // Subject identity is now (classId, name) not (schoolId, name, teacherId)
+        // We use upsert so repeated calls are idempotent
+        const subject = await tx.subject.upsert({
+          where: {
+            classId_name: {
+              classId: classRecord.id,
+              name:    subjectName,
+            },
+          },
+          create: {
+            name:     subjectName,
+            schoolId,
+            classId:  classRecord.id,
+          },
+          update: {}, // subject already exists for this class — nothing to change on it
+          select: { id: true },
+        });
 
-        let teacher:     { id: string };
-        let classRecord: { id: string; name: string; level: string; department: string | null };
-        let term:        { id: string };
-
-        try {
-            // ── Step 1: resolve teacher + class in parallel (neither depends on the other)
-            [teacher, classRecord] = await Promise.all([
-                resolveTeacher(schoolId, employeeNumber),
-                prisma.class.findFirst({
-                    where:  { schoolId, name: className },
-                    select: { id: true, name: true, level: true, department: true },
-                }).then((c) => {
-                    if (!c) throw new ResolverError(`Class "${className}" not found in this school.`);
-                    return c;
-                }),
-            ]);
-
-            // ── Step 2: resolve term (independent of subject/class)
-            term = termPeriod
-                ? await resolveTermByPeriod(schoolId, termPeriod)
-                : await resolveTerm(schoolId);
-
-        } catch (err) {
-            if (err instanceof ResolverError) {
-                return NextResponse.json({ error: err.message }, { status: err.statusCode });
-            }
-            throw err;
-        }
-
-        const assignment = await prisma.$transaction(async (tx) => {
-            // ── Step 3: find or create the Subject scoped to this class
-            // Subject identity is now (classId, name) — not (schoolId, name, teacherId)
-            // We use upsert so repeated calls are idempotent
-            const subject = await tx.subject.upsert({
-                where: {
-                    classId_name: {
-                        classId: classRecord.id,
-                        name:    subjectName,
-                    },
-                },
-                create: {
-                    name:     subjectName,
-                    schoolId,
-                    classId:  classRecord.id,
-                },
-                update: {}, // subject already exists for this class — nothing to change on it
-                select: { id: true },
-            });
-
-            // ── Step 4: assign the teacher to the subject for this class + term
+        // ── Step 4: assign the teacher to the subject for this class + term
             // teacherId is no longer on Subject — it lives exclusively on SubjectTeacher
-            const record = await tx.subjectTeacher.upsert({
-                where: {
-                    subjectId_classId_teacherId: {
-                        subjectId: subject.id,
-                        classId:   classRecord.id,
-                        teacherId: teacher.id,
-                    },
-                },
-                create: {
-                    subjectId: subject.id,
-                    classId:   classRecord.id,
-                    teacherId: teacher.id,
-                    termId:    term.id,
-                },
-                update: {
-                    termId:     term.id,      // update term if re-assigning for a different term
-                    assignedAt: new Date(),
-                },
-            });
+        const record = await tx.subjectTeacher.upsert({
+          where: {
+            subjectId_classId_teacherId: {
+              subjectId: subject.id,
+              classId:   classRecord.id,
+              teacherId: teacher.id,
+            },
+          },
+          create: {
+            subjectId: subject.id,
+            classId:   classRecord.id,
+            teacherId: teacher.id,
+            termId:    term.id,
+          },
+          update: {
+            termId:     term.id,      // update term if re-assigning for a different term
+            assignedAt: new Date(),
+          },
+        })
+        return { subject, record };
+      });
 
-            return { subject, record };
-        });
-
-        return NextResponse.json({
-            message:  `"${subjectName}" assigned to ${employeeNumber} for ${className}.`,
-            data: assignment,
-        });
-
-    } catch (error) {
-        console.error("[teacherService.assignSubject]", error);
-        return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
+      return NextResponse.json({
+        message:  `"${subjectName}" assigned to ${teacherNumber} for ${className}.`,
+        data: assignment,
+      });
+    } 
+    catch (error) {
+      console.error("[teacherService.assignSubject]", error);
+      return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
     }
 },
  
@@ -111,7 +108,6 @@ export const teacherServices = {
   async removeSubjectAssignment(
     req: NextRequest,
     schoolId: string,
-    employeeNumber: string
   ) {
     try {
       const body = await req.json();
@@ -123,31 +119,21 @@ export const teacherServices = {
         );
       }
  
-      const { subjectName, className, termPeriod } = parsed.data;
- 
+      const { subjectName, className, teacherNumber } = parsed.data;
+
       let teacher: { id: string };
       let subject: { id: string };
-      let classRecord;
+      let classRecord: { id: string; name: string; level: string; department: string | null };
       let term:    { id: string };
  
       try {
-        [teacher, subject] = await Promise.all([
-          resolveTeacher(schoolId, employeeNumber),
+        [teacher, classRecord, subject, term] = await Promise.all([
+          resolveTeacher(schoolId, teacherNumber),
+          resolveClassByName(schoolId, className),
           resolveSubject(schoolId, subjectName),
-          
+          resolveTerm(schoolId)
         ]);
-        classRecord = await prisma.class.findFirst({
-            where: { schoolId, name: className },
-            select: { id: true, name: true, level: true, department: true },
-        });
-        if (!classRecord) {
-          throw new ResolverError(
-            `Class with name:"${className}" not found in this school.`
-          );
-        }
-        term = termPeriod
-          ? await resolveTermByPeriod(schoolId, termPeriod)
-          : await resolveTerm(schoolId);
+
       } catch (err) {
         if (err instanceof ResolverError) {
           return NextResponse.json({ error: err.message }, { status: err.statusCode });
@@ -307,7 +293,7 @@ export const teacherServices = {
   // LIST TEACHERS
   // GET /schools/:schoolId/teachers?department=SCIENCE&search=ayo
   // ----------------------------------------------------------------
-  async list(req: NextRequest, schoolId: string) {
+  async listAllTeachers(req: NextRequest, schoolId: string) {
     try {
       const { searchParams } = new URL(req.url);
       const page       = Math.max(1, parseInt(searchParams.get("page")  ?? "1",  10));

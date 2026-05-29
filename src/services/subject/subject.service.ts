@@ -5,6 +5,7 @@
 // ============================================================
 
 import { prisma } from "@/src/lib/prisma/client";
+import { resolveClassByName } from "@/src/utils/resolvers";
 import { createSubjectSchema, updateSubjectSchema } from "@/src/validators/subjectSchema";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,10 +25,7 @@ export const subjectService = {
       const { name, code, className } = parsed.data;
 
       // ── Resolve the class this subject belongs to ─────────────────
-      const classRecord = await prisma.class.findFirst({
-        where:  { schoolId, name: className },
-        select: { id: true, name: true, level: true },
-      });
+      const classRecord = await resolveClassByName(schoolId, className as string);
       if (!classRecord) {
         return NextResponse.json(
           { error: `Class "${className}" not found in this school.` },
@@ -188,7 +186,8 @@ export const subjectService = {
       });
 
       return NextResponse.json({ message: "Subject updated.", data: updated });
-    } catch (error) {
+    } 
+    catch (error) {
       console.error("[subjectService.update]", error);
       return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
     }
