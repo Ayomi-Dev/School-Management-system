@@ -115,28 +115,6 @@ export const getSession = async(req: NextRequest): Promise<SessionResult> => {
     }
 }
 
-
-// export const persistRefreshToken = async(
-//     userId: string,
-//     rawToken: string,
-//     metadata: { userAgent: string; ipAddress: string }
-// ) => {
-
-//     const expiresAt = new Date( Date.now() + 7 * 24 * 60 * 60 * 1000) // Calculates a timestamp 7 days from now. The math: 7 days × 24 hours × 60 mins × 60 secs × 1000ms. This is the refresh token's TTL (time to live).
-
-
-//     await prisma.token.create({ //Stores a hashed version of the token — never the raw token itself. If your DB is breached, attackers can't use the hashes directly.
-//         data: {
-//             userId,
-//             tokenHash: generateSetupToken().hashedToken,
-//             type: "REFRESH", //Labels this record as a refresh token, since the same Token table may store other token types (e.g., "PASSWORD_RESET", "EMAIL_VERIFY").
-//             expiresAt,
-//             ...metadata  //Stores the expiry time and spreads in userAgent and ipAddress. Useful for showing users their active sessions and detecting suspicious logins.
-//         }
-//     })
-// }
-
-
 export const revokeRefreshToken = async(token: string) => { // deletes the corresponding record from your database based on the hashed token value. This ensures that the token can no longer be used to obtain new access tokens.
     await prisma.token.delete({
         where: {
@@ -144,7 +122,6 @@ export const revokeRefreshToken = async(token: string) => { // deletes the corre
         }
     });
 }
-
 
 export const revokeAllUserTokens = async(userId: string) => { // deletes all refresh tokens associated with a specific user ID, effectively logging the user out from all devices and sessions.
     await prisma.token.deleteMany({

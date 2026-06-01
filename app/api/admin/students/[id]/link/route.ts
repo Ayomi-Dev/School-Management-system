@@ -41,11 +41,10 @@ export const POST = async(req: NextRequest, context: ParamsContext) => {
                return await linkStudentToGuardians(tx, id, userInput )
             }
         )
-        console.log(result)
         return NextResponse.json(
             { 
                 message: "Student successfully linked to guardian",
-                
+                result
             }
         );
         

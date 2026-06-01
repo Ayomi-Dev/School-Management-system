@@ -1,5 +1,5 @@
-import { hashPassword } from "@/src/lib/auth/hash";
 import { prisma } from "@/src/lib/prisma/client";
+import { passwordServices } from "@/src/services/passwords/password.service";
 
 
 async function main() {
@@ -11,7 +11,7 @@ async function main() {
   const lastName  = process.env.SEED_ADMIN_LAST_NAME  ?? "Admin";
 
   // Idempotent — safe to run multiple times
-  const existing = await prisma.user.findUnique({
+  const existing = await prisma.user.findFirst({
     where:  { email },
     select: { id: true, role: true, superAdminProfile: { select: { id: true } } },
   });
@@ -21,7 +21,7 @@ async function main() {
     return;
   }
 
-  const passwordHash = await hashPassword(password);
+  const passwordHash = await passwordServices.hashPassword(password);
 
   const superAdmin = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({

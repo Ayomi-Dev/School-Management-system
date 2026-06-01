@@ -155,7 +155,7 @@ export const adminServices = {
                         const currentTerm = await tx.term.findFirst({
                             where: {
                                 academicYearId: yearRecord.id,
-                                isCurrent:      true,           // Term has its own isCurrent flag
+                                isCurrent:      true,
                             },
                             select: { id: true },
                         });
@@ -178,9 +178,9 @@ export const adminServices = {
                                 ],
                             },
                             select: { id: true, amount: true },
-                        });                     
-                        console.log("fee structure",feeStructures)
-                        // Create fee balances for the student's class and current term
+                        });           
+
+                        // Creates fee balances for the student's class and current term
                         // ── Create fee balances ───────────────────────────────────────────
                         // upsert instead of create so re-provisioning a student never throws
                         for (const fee of feeStructures) {

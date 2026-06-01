@@ -227,7 +227,7 @@ export const termService = {
       const existingTerm = await prisma.term.findUnique({
         where: { academicYearId_period: { academicYearId, period } },
         select: { id: true },
-      });
+      }); 
       if (existingTerm) {
         throw new Error("Term already exist for this academic year!")
       }
