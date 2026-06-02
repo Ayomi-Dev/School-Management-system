@@ -29,6 +29,9 @@ export const createSchoolAndAdminSchema = z.object({
     .optional(),
 }); 
 
+
+export type CreatSchoolRequest = z.infer<typeof createSchoolAndAdminSchema>
+
 // ============================================================
 // ACADEMIC YEAR & TERM
 // ============================================================

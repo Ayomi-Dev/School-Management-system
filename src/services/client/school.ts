@@ -1,6 +1,8 @@
 import { getApiClient } from '@/src/config/api';
 import { API_ENDPOINTS } from '@/src/config/constants';
-import { School, CreateSchoolRequest, PaginatedResponse } from '@/src/types/api';
+import { CreateSchoolRequest, School } from '@/src/types/api';
+import { PaginatedResponse} from '@/src/types/types';
+import { CreatSchoolRequest } from '@/src/validators/schoolSchema';
 
 const client = getApiClient();
 
@@ -12,7 +14,7 @@ export const schoolService = {
     return response.data;
   },
 
-  create: async (data: CreateSchoolRequest): Promise<School> => {
+  create: async (data: CreatSchoolRequest): Promise<School> => {
     const response = await client.post(API_ENDPOINTS.SCHOOLS_CREATE, data);
     return response.data;
   },

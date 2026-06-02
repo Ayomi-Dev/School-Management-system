@@ -1,7 +1,7 @@
 import z from "zod"
  
 export const userLoginSchema = z.object({
-  userCode: z.string().min(1, "User code is required").transform((v) => v.trim().toUpperCase()),
+  userCode: z.string().min(1, "User code is required"),
   password: z.string().min(1, "Password is required"),
   email:    z.string().min(1).max(50).optional(),
 });

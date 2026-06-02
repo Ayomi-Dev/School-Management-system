@@ -52,15 +52,17 @@ export const authService = {
 
     //login service
     async login( userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
-        const user = await prisma.user.findUnique(
-            { 
-                where: { 
-                    userCode: userInput.userCode, 
-                    email: userInput.email
-                },
-                select: USER_SELECT
-            }
-        )
+        console.log("Login attempt for userCode/email:", userInput);
+        const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: userInput.userCode },
+                { userCode: userInput.userCode },
+              ],
+            },
+            select: USER_SELECT
+        });
+        
         if(!user || !user.passwordHash){
             return NextResponse.json(
                 { error: "Invalid credentials or password incorrect" },
@@ -132,10 +134,7 @@ export const authService = {
 
     async logout(userId: string) {
         await revokeAllUserTokens(userId) //deletes all refresh tokens for the user, effectively logging them out from all devices/sessions. This is a security measure to ensure that once a user logs out, any existing sessions are invalidated and cannot be used to gain unauthorized access.
-        const res = NextResponse.json({ message: "Logout successful" }, { status: 200 });
-        res.cookies.set("accessToken", "", { path: "/", expires: new Date(0) });
-        res.cookies.set("refreshToken", "", { path: "/", expires: new Date(0) });
-        return res; 
+        return { message: "Logout successful" }
     },
 
     async accountSetUp(req: NextRequest, credentials: AccountSetUpInput) {

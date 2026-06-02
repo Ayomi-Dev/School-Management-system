@@ -11,13 +11,12 @@ const page = () => {
     const { logout, user} = useAuth()
 
     const handleLogout = async() => {
-        logout()
         await logoutMutation.mutateAsync();
         router.replace('/auth/login')
     }
   return (
     <>
-        <div>This is {user?.role}</div>
+        <div>This is {user?.role.toLowerCase()}</div>
         <Button variant='primary' size='sm' onClick={handleLogout}>
             Logout
         </Button>

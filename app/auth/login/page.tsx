@@ -33,7 +33,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: UserLoginInput) => {
     await loginMutation.mutateAsync(data);
-    router.replace(`/dashboard/${user?.role.toLowerCase()}`);
   };
 
   return (

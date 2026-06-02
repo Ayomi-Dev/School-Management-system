@@ -149,7 +149,6 @@ export const refreshTokenHandler = async(req: NextRequest) => {
         //checks if the token has been revoked in the database here before proceeding to generate a new access token.
         const revoked = await isTokenRevoked(refreshToken)
         if(revoked){
-            console.log("refresh token revoked")
             return NextResponse.json(
                 { error: "Unauthorized: Refresh token revoked"}, 
                 { status: 401}

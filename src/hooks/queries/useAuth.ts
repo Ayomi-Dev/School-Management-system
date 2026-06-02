@@ -8,6 +8,7 @@ import { AccountSetupRequest } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
 import { UserLoginInput } from '@/src/validators/userLoginSchema';
+import { useRouter } from 'next/navigation';
 
 export const useLoginMutation = () => { //this is a mutation because it changes auth state
   const { setUser, setError: setAuthError } = useAuthStore();
@@ -18,6 +19,7 @@ export const useLoginMutation = () => { //this is a mutation because it changes 
       const result = await authService.login(credentials);
       return result;
     },
+    
     onSuccess: (data) => {
       // Backend handles token cookies - frontend only stores user
       setUser(data.user);
@@ -34,20 +36,33 @@ export const useLoginMutation = () => { //this is a mutation because it changes 
 
 export const useLogoutMutation = () => {
   const { clearAuth } = useAuthStore();
-  const { success } = useToast();
+  const { success, error } = useToast();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async () => {
-      await authService.logout();
+      return await authService.logout(); //clear cookies server-side, but also trigger onSuccess to clear client state regardless of server response
     },
-    onSuccess: () => {
+
+    onSuccess: () => { //clear client state on success, but also on error to ensure user is logged out locally even if server call fails
       clearAuth();
       queryClient.clear();
+
       success(SUCCESS_MESSAGES.LOGOUT_SUCCESS);
+
+      // router.replace("/auth/login"); 
+      // router.refresh();
+    },
+
+    onError: () => {
+      clearAuth();
+      queryClient.clear();
+      error("Logout failed on server, but you have been signed out locally.");
+      // router.replace("/auth/login");
+      // router.refresh();
     },
   });
 };
-
 export const useAccountSetupMutation = () => {
   const { success, error: toastError } = useToast();
 

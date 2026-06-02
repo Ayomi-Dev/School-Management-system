@@ -10,7 +10,7 @@ export default async function ProtectedLayout({
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value as string;
 
-  // No token at all → straight to login
+  // If no token at all then straight to login
   if (!accessToken) {
     console.log('No access token found, redirecting to login');
     redirect('/auth/refresh-session');

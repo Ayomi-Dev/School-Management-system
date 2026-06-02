@@ -13,6 +13,9 @@ const StudentDashboard = () => {
     const logoutMutation = useLogoutMutation()
     const { logout, user} = useAuth()
     console.log( user )
+    if(!user){
+        router.replace('/auth/refresh-session')
+    }
     
     const handleLogout = async() => {
         logout()
