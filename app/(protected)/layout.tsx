@@ -12,8 +12,7 @@ export default async function ProtectedLayout({
 
   // If no token at all then straight to login
   if (!accessToken) {
-    console.log('No access token found, redirecting to login');
-    redirect('/auth/refresh-session');
+    redirect('/auth/refresh');
   }
 
   try {
@@ -23,6 +22,6 @@ export default async function ProtectedLayout({
   } catch {
     // Token exists but is expired → give the client a chance to refresh
     // instead of immediately kicking to login
-    redirect('/auth/refresh-session');
+    redirect('/auth/refresh');
   }
 }

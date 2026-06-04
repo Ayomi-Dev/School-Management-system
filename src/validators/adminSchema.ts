@@ -14,8 +14,9 @@ export const adminCreateUserSchema = z.discriminatedUnion("role", [
   teacherSchema,
   parentSchema,
   bursarSchema,
-]);
+]); 
 
+export type CreateUserFormData = z.infer<typeof adminCreateUserSchema>
 export const provisionAdminSchema = z.object({
   role: z.string().min(1).max(20),
   firstName: z.string().min(1).max(50),

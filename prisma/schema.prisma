@@ -317,7 +317,6 @@ model Term {
 model Class {
   id         String      @id @default(auto()) @map("_id") @db.ObjectId
   schoolId   String      @map("school_id") @db.ObjectId
-  name       String
   level      ClassLevel
   order      Int
   department Department?
@@ -332,7 +331,7 @@ model Class {
   announcements      Announcement[]
   subjects           Subject[]
 
-  @@unique([schoolId, name])
+  @@unique([schoolId, level])
   @@index([schoolId])
   @@map("classes")
 }

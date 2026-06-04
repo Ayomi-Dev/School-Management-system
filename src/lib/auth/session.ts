@@ -116,9 +116,10 @@ export const getSession = async(req: NextRequest): Promise<SessionResult> => {
 }
 
 export const revokeRefreshToken = async(token: string) => { // deletes the corresponding record from your database based on the hashed token value. This ensures that the token can no longer be used to obtain new access tokens.
+    const hashedToken = hashToken(token);
     await prisma.token.delete({
         where: {
-            tokenHash: token
+            tokenHash: hashedToken
         }
     });
 }
@@ -135,53 +136,6 @@ export const isTokenRevoked = async(token: string): Promise<boolean> => { // che
         where: { tokenHash: hashedToken }
     });
     return !tokenRecord; // If no record is found, the token is revoked
-}
-
-export const refreshTokenHandler = async(req: NextRequest) => {
-    try {
-        const refreshToken = req.cookies.get("refresh_token")?.value;
-        if(!refreshToken){
-            return NextResponse.json(
-                { error: "Unauthorized: No refresh token found"}, 
-                {status: 401 }
-            );
-        }
-        //checks if the token has been revoked in the database here before proceeding to generate a new access token.
-        const revoked = await isTokenRevoked(refreshToken)
-        if(revoked){
-            return NextResponse.json(
-                { error: "Unauthorized: Refresh token revoked"}, 
-                { status: 401}
-            )
-        }
-
-        // refresh token verification 
-        const payload  = await verifyRefreshToken(refreshToken)
-        
-        if(!payload){
-            return NextResponse.json(
-                { error: "Unauthorized: Invalid refresh token"}, 
-                {status: 401 }
-            );
-        }
-
-        const {userId, role, schoolId } = payload //Extracts the user details from the refresh token's payload, which will be used to create a new access token with the same user information.
-        const newAccessToken = await signAccessToken({userId, role, schoolId}); //signs a new access token using the same user details from the refresh token. This allows the client to continue making authenticated requests without requiring the user to log in again, as long as they have a valid refresh token.
-
-        const res = NextResponse.json({ message: "Token refreshed" }, { status: 201 });
-        res.cookies.set("access_token", newAccessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge:   15 * 60,
-        }); //Reuses the same refresh token for simplicity,
-        return res; //Returns the new access token and the same payload for both access and refresh since they contain the same user info. The client can use this to update its session state.
-    } 
-    catch (error) {
-        console.log("Error refreshing token:", error);
-        return NextResponse.json ({ error: "Internal Server Error", status: 500 });
-    }
 }
 
 

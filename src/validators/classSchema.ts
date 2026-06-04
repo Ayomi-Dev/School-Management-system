@@ -1,12 +1,8 @@
+import { ClassLevel } from "@/app/generated/prisma/enums";
 import z from "zod";
 
 
-export const classLevelEnum = z.enum([
-  "CRECHE", "NURSERY1", "NURSERY2",
-  "PRIMARY1", "PRIMARY2", "PRIMARY3", "PRIMARY4", "PRIMARY5", "PRIMARY6",
-  "JSS1", "JSS2", "JSS3",
-  "SS1", "SS2", "SS3",
-]);
+export const classLevelEnum = z.enum(ClassLevel);
 
 export const createClassSchema = z.object({
   name:       z.string().min(1, "Class name is required"),
@@ -16,6 +12,7 @@ export const createClassSchema = z.object({
 });
  
 export const updateClassSchema = createClassSchema.partial();
+export type CreateClassInput = z.infer<typeof createClassSchema>
 
 
 // SUBJECT

@@ -1,4 +1,4 @@
-import { buildTokenCookies, persistRefreshToken, revokeAllUserTokens, signAccessToken } from '@/src/lib/auth/session';
+import { buildTokenCookies, isTokenRevoked, persistRefreshToken, revokeAllUserTokens, revokeRefreshToken, signAccessToken, verifyRefreshToken } from '@/src/lib/auth/session';
 import {prisma}from '@/src/lib/prisma/client';
 import { USER_SELECT } from '@/src/lib/prisma/fields';
 import { AccountSetUpInput, UserLoginInput } from '@/src/validators/authSchema';
@@ -197,6 +197,49 @@ export const authService = {
             )
         }
 
+    }, 
+
+    async refreshSession (req: NextRequest) {
+        try {
+            const refreshToken = req.cookies.get("refresh_token")?.value;
+            if(!refreshToken){
+                return NextResponse.json(
+                    { error: "Unauthorized: No refresh token found"}, 
+                    {status: 401 }
+                );
+            }
+            console.log("Received refresh token:", refreshToken);
+            //checks if the token has been revoked in the database here before proceeding to generate a new access token.
+            const revoked = await isTokenRevoked(refreshToken);
+            if(revoked){
+                return NextResponse.json(
+                    { error: "Unauthorized: Refresh token revoked" }, 
+                    { status: 401}
+                )
+            }
+            // refresh token verification 
+            const payload  = await verifyRefreshToken(refreshToken)
+            if(!payload){
+                return NextResponse.json(
+                    { error: "Unauthorized: Invalid refresh token"}, 
+                    {status: 401 }
+                );
+            }
+    
+            const {userId, role, schoolId } = payload //Extracts the user details from the refresh token's payload, which will be used to create a new access token with the same user information.
+            await revokeRefreshToken(refreshToken); //Revokes the used refresh token to prevent reuse, enhancing security by ensuring that each refresh token can only be used once.
+
+            const newAccessToken = await signAccessToken({userId, role, schoolId}); //signs a new access token using the same user details from the refresh token. This allows the client to continue making authenticated requests without requiring the user to log in again, as long as they have a valid refresh token.
+            const newRefreshToken = await persistRefreshToken(userId, {}) //Generates and stores a new refresh token in the database for the user, allowing them to continue refreshing their session in the future without needing to log in again.
+            console.log("Generated new refresh token:", newRefreshToken);
+            const res = NextResponse.json({ message: "Token refreshed" }, { status: 200 });
+            buildTokenCookies(res, newAccessToken, newRefreshToken) //Sets the new access token and refresh token as secure, HTTP-only cookies in the response, replacing the old tokens on the client side. This ensures that the client's session is seamlessly updated with the new tokens without requiring additional client-side handling.
+            return res; //Returns the new access token and the same payload for both access and refresh since they contain the same user info. The client can use this to update its session state.
+        } 
+        catch (error) {
+            console.log("Error refreshing token:", error);
+            return NextResponse.json ({ error: "Internal Server Error", status: 500 });
+        }
     }
 
 }

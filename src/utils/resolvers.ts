@@ -1,4 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
+import { ClassLevel } from "../types";
 
 // ============================================================
 // SERVER-SIDE ENTITY RESOLVER
@@ -88,18 +89,14 @@ export async function resolveTerm(
 export async function resolveClass(
   tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
   schoolId: string,
-  className: string
+  level: ClassLevel
 ) {
-  const classRecord = await prisma.class.findFirst({
-    where: { schoolId, name: className },
-    select: { id: true, name: true, level: true, department: true },
+  console.log(`Resolving class for name ${level} in school `);
+  return await prisma.class.findFirst({
+    where: { schoolId, level },
+    select: { id: true, level: true, department: true },
   });
-  if (!classRecord) {
-    throw new ResolverError(
-      `Class with name:"${classRecord}" not found in this school.`
-    );
-  }
-  return classRecord;
+  
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -81,35 +81,31 @@ export const classService = {
   async getOrCreate(
     tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
     schoolId: string,
-    name: string,
     level: ClassLevel,
     order: number,
     department?: Department,
-  ): Promise<{ id: string; name: string; level: string; isNew: boolean }> {
-    const existing = await resolveClass(tx, schoolId, name)
-    if (existing) {
+  ): Promise<{ id: string; level: string; isNew: boolean }> {
+    const classRecord = await resolveClass(tx, schoolId, level)
+    if (classRecord) {
       // Validate the level matches what we expect
-      if (existing.level !== level) {
+      if (classRecord?.level !== level) {
         throw new ResolverError(
-          `Class "${name}" exists but is level "${existing.level}", not "${level}". ` +
+          `Class "${level}" does already exist ` +
           `Fix the level mismatch or choose a different class name.`,
           409
         );
       }
-      return { ...existing, isNew: false };
+      return { ...classRecord, isNew: false };
     }
-
-    
 
     const levelClass = await prisma.class.create({
       data: {
         schoolId,
-        name,
         level,
         order,
         ...(department ? { department } : {}),
       },
-      select: { id: true, name: true, level: true },
+      select: { id: true, level: true },
     });
 
     return { ...levelClass, isNew: true };

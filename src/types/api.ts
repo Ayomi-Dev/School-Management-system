@@ -107,9 +107,8 @@ export interface Class {
 export interface CreateClassRequest {
   name: string;
   level: string;
-  classTeacherId: string;
-  academicYearId: string;
-  capacity?: number;
+  order: number,
+  department?: string
 }
 
 // Academic Year Types
