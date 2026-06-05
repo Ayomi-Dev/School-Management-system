@@ -267,5 +267,50 @@ export const adminServices = {
         }
 
 
-   }, 
+   },
+   async getUserById(id: string)  {
+        const user = await prisma.user.findUnique(
+            {
+                where: { id },
+                select: { id: true, userCode: true, firstName: true, lastName: true, role: true, status: true, createdAt: true, isActive: true, email: true }
+            }
+        )
+        if(!user){
+            return NextResponse.json(
+                { error: "Sorry, no user with this ID found."},
+                { status: 404}
+            )
+        }
+        return NextResponse.json({ user})
+   },
+
+   async getAllUsers(schoolId: string, params: { role?: string; search?: string; page?: number; limit?: number }) {
+        try{
+        const { role, search, page = 1, limit = 10 } = params;
+        const whereClause: any = { schoolId };
+        if (role) {
+            whereClause.role = role;
+        }
+        if (search) { // search across firstName, lastName, and userCode fields
+            whereClause.OR = [
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName: { contains: search, mode: 'insensitive' } },
+                { userCode: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+        const users = await prisma.user.findMany({
+            where: whereClause,
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+        return NextResponse.json({ data:users })
+        }
+        catch(error){
+        console.log("Cannot fetch users at this time");
+        return NextResponse.json(
+            { error: "An unexpected error occurred while fetching users."},
+            { status: 500 }
+        )
+        }
+    }
 }

@@ -208,7 +208,6 @@ export const authService = {
                     {status: 401 }
                 );
             }
-            console.log("Received refresh token:", refreshToken);
             //checks if the token has been revoked in the database here before proceeding to generate a new access token.
             const revoked = await isTokenRevoked(refreshToken);
             if(revoked){

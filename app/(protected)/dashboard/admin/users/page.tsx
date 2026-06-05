@@ -11,41 +11,43 @@ import { useDebounce } from '@/src/hooks/useUtils';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import CreateUserModal from './components/CreateUserModal';
 import EditUserModal from './components/EditUserModal';
+import { Role } from './components/modalHelpers';
+import { User } from '@/src/types';
 
-type UserRole = 'STUDENT' | 'TEACHER' | 'PARENT' | 'BURSAR' | 'ADMIN';
 
-export default function UsersPage() {
-  const [roleFilter, setRoleFilter] = useState<UserRole | 'ALL'>('ALL');
+export default function UsersPage() { 
+  const [roleFilter, setRoleFilter] = useState<Role | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [page, setPage] = useState(1);
 
-  // const debouncedSearch = useDebounce(search, 300);
-  // const deleteUserMutation = useDeleteUserMutation();
+  const debouncedSearch = useDebounce(search, 300);
+  const deleteUserMutation = useDeleteUserMutation();
 
-  // const { data: usersData, isLoading } = useUsersList({
-  //   role: roleFilter === 'ALL' ? undefined : roleFilter,
-  //   search: debouncedSearch,
-  //   page,
-  //   limit: 10,
-  // });
+  const { data: usersData, isLoading } = useUsersList({
+    role: roleFilter === 'ALL' ? undefined : roleFilter,
+    search: debouncedSearch,
+    page,
+    limit: 10,
+  });
 
-  // const users = useMemo(() => usersData?.data || [], [usersData]);
+  const users = useMemo(() => usersData?.data || [], [usersData]);
+  console.log("Fetched users:", users.data);
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
   };
 
-  // const handleDelete = (id: string) => {
-  //   if (confirm('Are you sure you want to delete this user?')) {
-  //     deleteUserMutation.mutate(id);
-  //   }
-  // };
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this user?')) {
+      deleteUserMutation.mutate(id);
+    }
+  };
 
-  const roles: UserRole[] = ['STUDENT', 'TEACHER', 'PARENT', 'BURSAR', 'ADMIN'];
+  const roles: Role[] = ['STUDENT', 'TEACHER', 'PARENT', 'BURSAR'];
 
   const statusColor = (status: string) => {
     const colors = {
@@ -78,22 +80,22 @@ export default function UsersPage() {
       
 
       {/* Users Table */}
-      {/* <Card>
+      <Card>
         {isLoading ? (
           <div className="flex items-center justify-center h-96">
             <Loader />
           </div>
         ) : (
           <>
-            <DataTable
-              data={users}
+            <DataTable<User>
+              data={users.data}
               columns={[
                 {
                   key: 'firstName',
                   label: 'Name',
                   render: (value, row) => (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                         {row.firstName?.[0]}{row.lastName?.[0]}
                       </div>
                       <div>
@@ -155,7 +157,7 @@ export default function UsersPage() {
             />
           </>
         )}
-      </Card> */}
+      </Card>
 
       {/* Pagination */}
       {/* {users.length > 0 && (
