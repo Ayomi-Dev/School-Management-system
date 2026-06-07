@@ -14,57 +14,45 @@ interface NavItem {
   children?: NavItem[];
 }
 
-const adminNavItems: NavItem[] = [
+const studentNavItems: NavItem[] = [
   {
     label: 'Dashboard',
-    href: '/dashboard/admin',
+    href: '/dashboard/student',
+    icon: '🎯',
+  },
+  {
+    label: 'My Profile',
+    href: '/dashboard/student/profile',
+    icon: '',
+  },
+  {
+    label: 'My Courses',
+    href: '/dashboard/student/courses',
+    icon: '📚',
+  },
+  {
+    label: 'Results',
+    href: '/dashboard/student/results',
     icon: '📊',
   },
   {
-    label: 'Users',
-    href: '/dashboard/admin/users',
-    icon: '👥',
-    children: [
-      { label: 'All Users', href: '/dashboard/admin/users', icon: '👤' },
-      { label: 'Students', href: '/dashboard/admin/users?type=STUDENT', icon: '🎓' },
-      { label: 'Teachers', href: '/dashboard/admin/users?type=TEACHER', icon: '👨‍🏫' },
-      { label: 'Parents', href: '/dashboard/admin/users?type=PARENT', icon: '👨‍👩‍👧' },
-      { label: 'Bursar', href: '/dashboard/admin/users?type=BURSAR', icon: '💼' },
-    ],
+    label: 'Assignments',
+    href: '/dashboard/student/assignments',
+    icon: '📝',
   },
   {
-    label: 'Academics',
-    href: '/dashboard/admin/academics',
-    icon: '📚',
-    children: [
-      { label: 'Classes', href: '/dashboard/admin/classes', icon: '🏫' },
-      { label: 'Subjects', href: '/dashboard/admin/subjects', icon: '📖' },
-      { label: 'Sessions', href: '/dashboard/admin/sessions', icon: '📅' },
-    ],
+    label: 'Attendance',
+    href: '/dashboard/student/attendance',
+    icon: '✓',
   },
   {
-    label: 'Timetable',
-    href: '/dashboard/admin/timetable',
-    icon: '⏰',
-  },
-  {
-    label: 'Reports',
-    href: '/dashboard/admin/reports',
-    icon: '📈',
-    children: [
-      { label: 'Academic Reports', href: '/dashboard/admin/reports/academic', icon: '📋' },
-      { label: 'Financial Reports', href: '/dashboard/admin/reports/financial', icon: '💰' },
-      { label: 'Attendance', href: '/dashboard/admin/reports/attendance', icon: '✓' },
-    ],
-  },
-  {
-    label: 'Settings',
-    href: '/dashboard/admin/settings',
-    icon: '⚙️',
+    label: 'Fees',
+    href: '/dashboard/student/fees',
+    icon: '💰',
   },
 ];
 
-export function Sidebar() {
+export function StudentSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -167,7 +155,7 @@ export function Sidebar() {
         {/* Logo Section */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">S</span>
             </div>
             <div>
@@ -178,13 +166,13 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <NavLinks items={adminNavItems} />
+        <NavLinks items={studentNavItems} />
 
         {/* Help Section */}
         <div className="absolute bottom-6 left-6 right-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm font-medium text-gray-900 mb-2">Need Help?</p>
           <p className="text-xs text-gray-600 mb-3">
-            Check our documentation or contact support
+            Contact Admin for support
           </p>
           <button className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
             Get Support

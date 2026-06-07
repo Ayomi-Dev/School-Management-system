@@ -16,6 +16,9 @@ export function Topbar() {
     await logoutMutation.mutateAsync();
     router.replace('/auth/login');
   };
+  const handleProfile = () => {
+    router.push(`/dashboard/${user?.role?.toLocaleLowerCase()}/profile`);
+  };
 
   const getInitials = () => {
     return `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase();
@@ -37,7 +40,7 @@ export function Topbar() {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 cursor-pointer">
           {/* Notifications */}
           <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Bell size={20} className="text-gray-600" />
@@ -48,9 +51,9 @@ export function Topbar() {
           <div className="relative">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-semibold">{getInitials()}</span>
               </div>
               <div className="text-left">
@@ -82,11 +85,13 @@ export function Topbar() {
                 </div>
 
                 <div className="py-2">
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={handleProfile}
+                  >
                     <User size={16} />
                     My Profile
                   </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
                     <Settings size={16} />
                     Settings
                   </button>
@@ -95,7 +100,7 @@ export function Topbar() {
                 <button
                   onClick={handleLogout}
                   disabled={logoutMutation.isPending}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 disabled:opacity-50 cursor-pointer"
                 >
                   <LogOut size={16} />
                   {logoutMutation.isPending ? 'Logging out...' : 'Logout'}

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
-import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { StudentDashboardLayout } from '@/src/components/layouts/StudentDashboardLayout';
 import {
   WelcomeCard,
   PerformanceCard,
@@ -23,7 +23,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <DashboardLayout>
+    <StudentDashboardLayout>
       <div className="space-y-6">
         {/* Welcome Section */}
         <WelcomeCard user={user} />
@@ -47,10 +47,8 @@ const StudentDashboard = () => {
           <RecentActivitiesCard />
         </div>
 
-        {/* Profile Section */}
-        <ProfileCard user={user} />
       </div>
-    </DashboardLayout>
+    </StudentDashboardLayout>
   );
 };
 
