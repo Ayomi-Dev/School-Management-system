@@ -2,11 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/src/services/client/admin';
 import { useToast } from '@/src/hooks/useToast';
 import {
-  CreateUserRequest,
   CreateClassRequest,
   CreateSubjectRequest,
   CreateAcademicYearRequest,
-  CreateTermRequest,
 } from '@/src/types/api';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
 

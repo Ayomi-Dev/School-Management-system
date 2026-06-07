@@ -18,7 +18,7 @@ interface MetricCardProps {
   value: string | number;
   icon: ReactNode;
   trend?: { value: number; isPositive: boolean };
-  color?: 'blue' | 'green' | 'orange' | 'red';
+  color?: 'blue' | 'green' | 'orange' | 'red' | "purple";
 }
 
 const colorClasses = {
@@ -26,6 +26,7 @@ const colorClasses = {
   green: 'bg-green-50 text-green-700',
   orange: 'bg-orange-50 text-orange-700',
   red: 'bg-red-50 text-red-700',
+  purple: 'bg-purple-50 text-purple-700',
 };
 
 const iconBgClasses = {
@@ -33,6 +34,7 @@ const iconBgClasses = {
   green: 'bg-green-100',
   orange: 'bg-orange-100',
   red: 'bg-red-100',
+  purple: 'bg-purple-100',
 };
 
 export function MetricCard({

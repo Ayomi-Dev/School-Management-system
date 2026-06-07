@@ -135,6 +135,10 @@ enum Relationship {
   FATHER
   GUARDIAN
 }
+enum PaymentStatus {
+  PAID
+  NOT_PAID
+}
 // ============================================================
 // SCHOOL
 // ============================================================
@@ -617,6 +621,7 @@ model FeeStructure {
   amount     Float
   isOptional Boolean  @default(false) @map("is_optional")
   createdAt  DateTime @default(now()) @map("created_at")
+  status     PaymentStatus
 
   school   School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   class    Class?       @relation(fields: [classId], references: [id])
@@ -653,6 +658,7 @@ model FeePayment {
   recordedById   String?       @map("recorded_by_id") @db.ObjectId
   note           String?
   createdAt      DateTime      @default(now()) @map("created_at")
+  status         PaymentStatus
 
   student StudentProfile @relation(fields: [studentId], references: [id])
   term    Term           @relation(fields: [termId], references: [id])

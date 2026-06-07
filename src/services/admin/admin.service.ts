@@ -9,6 +9,7 @@ import { resolveAcademicYear, resolveClass } from "@/src/utils/resolvers";
 import { classService } from "../class/class.service";
 import { _levelOrder } from "@/src/utils/levelOrder";
 import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
+import { PaginationMeta } from "@/src/types";
 
 export const adminServices = {
     //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
@@ -284,7 +285,7 @@ export const adminServices = {
         return NextResponse.json({ user})
    },
 
-   async getAllUsers(schoolId: string, params: { role?: string; search?: string; page?: number; limit?: number }) {
+   async getAllUsers(schoolId: string, params: PaginationMeta) {
         try{
         const { role, search, page = 1, limit = 10 } = params;
         const whereClause: any = { schoolId };
@@ -298,12 +299,15 @@ export const adminServices = {
                 { userCode: { contains: search, mode: 'insensitive' } },
             ];
         }
-        const users = await prisma.user.findMany({
-            where: whereClause,
-            skip: (page - 1) * limit,
-            take: limit,
-        });
-        return NextResponse.json({ data:users })
+        const [users, total] = await prisma.$transaction([
+            prisma.user.findMany({
+                where: whereClause,
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            prisma.user.count({ where: whereClause }),
+        ])
+        return NextResponse.json({ data:users, meta: { total, page, limit }})
         }
         catch(error){
         console.log("Cannot fetch users at this time");
@@ -312,5 +316,83 @@ export const adminServices = {
             { status: 500 }
         )
         }
+    },
+
+    async getStats(schoolId: string) {
+        const [
+            totalStudents,
+            totalTeachers,
+            totalParents,
+            totalClasses,
+            // activeClasses,
+            totalUsers,
+            feeStats,
+        ] = await Promise.all([
+        // Students enrolled in this school
+        prisma.studentProfile.count({
+          where: { schoolId },
+        }), 
+
+        // Teachers assigned to this school
+        prisma.teacherProfile.count({
+          where: { schoolId },
+        }), 
+
+        // Parents linked to students in this school
+        prisma.guardian.count({
+          where: {
+            students: {
+              some: { schoolId },
+            },
+          },
+        }), 
+
+        // All classes in this school
+        prisma.class.count({
+          where: { schoolId },
+        }), 
+
+        // Active classes (current academic year/term)
+        // prisma.class.count({
+        //   where: {
+        //     schoolId,
+        //     academicYear: {
+        //       isCurrent: true,
+        //     },
+        //   },
+        // }), 
+
+        // Total user accounts under this school
+        prisma.user.count({
+          where: { schoolId },
+        }), 
+
+        // Revenue: sum of all paid fees for this school
+        prisma.feeStructure.aggregate({
+          where: {
+            schoolId,
+            status: 'PAID', 
+          },
+          _sum: { amount: true },
+          _count: { id: true },
+        }),
+      ]);   
+
+      return NextResponse.json({
+        totalStudents,
+        totalTeachers,
+        totalParents,
+        totalClasses,
+        // activeClasses,
+        totalUsers,
+        totalRevenue: feeStats._sum.amount ?? 0,
+        totalPayments: feeStats._count.id,
+      },
+      { status: 201 }
+
+    );
     }
+          
+
+
 }

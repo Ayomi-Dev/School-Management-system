@@ -18,17 +18,18 @@ const QuickAction = ({ label, description, icon, href }: any) => (
 );
 
 export default function AdminDashboard() {
-  // const { data:  isLoading } = useAdminStats();
+  const { data: stats,  isLoading } = useAdminStats();
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center h-96">
-  //       <Loader />
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader />
+      </div>
+    );
+  }
 
-  // const statsData = stats?.data || {};
+  const statsData = stats?.data || {};
+  console.log("stats in AdminDashboard:", statsData)
 
   return (
     <div className="space-y-8">
@@ -39,7 +40,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Key Metrics */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Key Metrics</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           label="Total Students"
           value={statsData?.totalStudents || 0}
@@ -55,6 +57,13 @@ export default function AdminDashboard() {
           trend={{ value: 2, isPositive: true }}
         />
         <MetricCard
+          label="Total Parents"
+          value={statsData?.totalParents || 0}
+          icon="👨‍👩‍👧‍👦"
+          color="purple"
+          trend={{ value: 3, isPositive: true }}
+        />
+        <MetricCard
           label="Total Revenue"
           value={`$${statsData?.totalRevenue || 0}`}
           icon="💰"
@@ -68,7 +77,7 @@ export default function AdminDashboard() {
           color="red"
           trend={{ value: 0, isPositive: false }}
         />
-      </div> */}
+      </div>
 
       {/* Quick Actions */}
       <div>

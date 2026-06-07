@@ -31,10 +31,9 @@ export default function UsersPage() {
     search: debouncedSearch,
     page,
     limit: 10,
-  });
+  });  
 
   const users = useMemo(() => usersData?.data || [], [usersData]);
-  console.log("Fetched users:", users.data);
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
