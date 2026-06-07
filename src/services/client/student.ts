@@ -1,6 +1,7 @@
 import { getApiClient } from '@/src/config/api';
 import { API_ENDPOINTS } from '@/src/config/constants';
-import { Student, Parent, PaginatedResponse } from '@/src/types/api';
+import { PaginatedResponse } from '@/src/types';
+import { Student, Parent } from '@/src/types/api';
 
 const client = getApiClient();
 

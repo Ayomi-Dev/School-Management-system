@@ -64,11 +64,46 @@ const adminNavItems: NavItem[] = [
   },
 ];
 
+const studentNavItems: NavItem[] = [
+  {
+    label: 'Dashboard',
+    href: '/dashboard/student',
+    icon: '🎯',
+  },
+  {
+    label: 'My Courses',
+    href: '/dashboard/student/courses',
+    icon: '📚',
+  },
+  {
+    label: 'Results',
+    href: '/dashboard/student/results',
+    icon: '📊',
+  },
+  {
+    label: 'Assignments',
+    href: '/dashboard/student/assignments',
+    icon: '📝',
+  },
+  {
+    label: 'Attendance',
+    href: '/dashboard/student/attendance',
+    icon: '✓',
+  },
+  {
+    label: 'Fees',
+    href: '/dashboard/student/fees',
+    icon: '💰',
+  },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const navItems = user?.role === 'STUDENT' ? studentNavItems : adminNavItems;
 
   const toggleExpanded = (label: string) => {
     const newExpanded = new Set(expanded);
@@ -178,7 +213,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <NavLinks items={adminNavItems} />
+        <NavLinks items={navItems} />
 
         {/* Help Section */}
         <div className="absolute bottom-6 left-6 right-6 p-4 bg-blue-50 rounded-lg border border-blue-200">

@@ -94,16 +94,18 @@ export const authService = {
                 { status: 403 }
             )
         }
+        if(user.role !== "STUDENT"){
+            if (user.status === "INACTIVE" || user.status === "PENDING") {
+                return NextResponse.json(
+                  {
+                    error: "Account setup incomplete.",
+                    code:  "SETUP_REQUIRED",
+                    hint:  "Check your email for the setup link, or ask your administrator to resend it.",
+                  },
+                  { status: 403 }
+                );
+            }
 
-        if (user.status === "INACTIVE" || user.status === "PENDING") {
-            return NextResponse.json(
-              {
-                error: "Account setup incomplete.",
-                code:  "SETUP_REQUIRED",
-                hint:  "Check your email for the setup link, or ask your administrator to resend it.",
-              },
-              { status: 403 }
-            );
         }
 
         // ── 5. Reset failed counter + stamp last login ────────────────────────────────

@@ -22,6 +22,6 @@ export default async function ProtectedLayout({
   } catch {
     // Token exists but is expired → give the client a chance to refresh
     // instead of immediately kicking to login
-    redirect('/auth/refresh');
+    redirect('/auth/login');
   }
 }

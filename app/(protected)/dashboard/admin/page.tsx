@@ -27,9 +27,7 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
   const statsData = stats?.data || {};
-  console.log("stats in AdminDashboard:", statsData)
 
   return (
     <div className="space-y-8">
