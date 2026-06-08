@@ -232,7 +232,6 @@ export const authService = {
 
             const newAccessToken = await signAccessToken({userId, role, schoolId}); //signs a new access token using the same user details from the refresh token. This allows the client to continue making authenticated requests without requiring the user to log in again, as long as they have a valid refresh token.
             const newRefreshToken = await persistRefreshToken(userId, {}) //Generates and stores a new refresh token in the database for the user, allowing them to continue refreshing their session in the future without needing to log in again.
-            console.log("Generated new refresh token:", newRefreshToken);
             const res = NextResponse.json({ message: "Token refreshed" }, { status: 200 });
             buildTokenCookies(res, newAccessToken, newRefreshToken) //Sets the new access token and refresh token as secure, HTTP-only cookies in the response, replacing the old tokens on the client side. This ensures that the client's session is seamlessly updated with the new tokens without requiring additional client-side handling.
             return res; //Returns the new access token and the same payload for both access and refresh since they contain the same user info. The client can use this to update its session state.

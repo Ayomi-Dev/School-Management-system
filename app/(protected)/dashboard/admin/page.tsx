@@ -25,7 +25,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center h-96">
         <Loader />
       </div>
-    );
+    ); 
   }
   const statsData = stats?.data || {};
 

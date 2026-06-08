@@ -93,6 +93,7 @@ export const SUCCESS_MESSAGES = {
   DELETED_SUCCESS: 'Deleted successfully.',
   PASSWORD_CHANGED: 'Password changed successfully.',
   ACCOUNT_SETUP: 'Account setup completed.',
+  SESSION_REFRESHED: 'Session refreshed.',
 };
 
 // Toast Duration (ms)

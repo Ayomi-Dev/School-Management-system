@@ -8,7 +8,6 @@ import { AccountSetupRequest } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
 import { UserLoginInput } from '@/src/validators/userLoginSchema';
-import { useRouter } from 'next/navigation';
 
 export const useLoginMutation = () => { //this is a mutation because it changes auth state
   const { setUser, setError: setAuthError } = useAuthStore();
@@ -37,7 +36,6 @@ export const useLoginMutation = () => { //this is a mutation because it changes 
 export const useLogoutMutation = () => {
   const { clearAuth } = useAuthStore();
   const { success, error } = useToast();
-  const router = useRouter();
 
   return useMutation({
     mutationFn: async () => {
@@ -49,9 +47,6 @@ export const useLogoutMutation = () => {
       queryClient.clear();
 
       success(SUCCESS_MESSAGES.LOGOUT_SUCCESS);
-
-      // router.replace("/auth/login"); 
-      // router.refresh();
     },
 
     onError: () => {
@@ -63,6 +58,27 @@ export const useLogoutMutation = () => {
     },
   });
 };
+
+export const useRefreshAuthMutation = () => {
+  const { success, error: toastError } = useToast();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await authService.refresh();
+      return result;
+    },
+    onSuccess: () => {
+      success(SUCCESS_MESSAGES.SESSION_REFRESHED);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
+    },
+    onError: (error: any) => {
+      const message = error?.error || ERROR_MESSAGES.UNKNOWN_ERROR;
+      toastError(message);
+    }
+  })
+}
+
+
 export const useAccountSetupMutation = () => {
   const { success, error: toastError } = useToast();
 

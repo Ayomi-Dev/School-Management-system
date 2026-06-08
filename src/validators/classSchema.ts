@@ -5,7 +5,6 @@ import z from "zod";
 export const classLevelEnum = z.enum(ClassLevel);
 
 export const createClassSchema = z.object({
-  name:       z.string().min(1, "Class name is required"),
   level:      classLevelEnum,
   order:      z.number().int().min(1),
   department: z.enum(["ART", "COMMERCIAL", "SCIENCE"]).optional(),

@@ -105,7 +105,6 @@ export interface Class {
 }
 
 export interface CreateClassRequest {
-  name: string;
   level: string;
   order: number,
   department?: string

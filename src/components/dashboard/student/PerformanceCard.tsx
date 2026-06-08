@@ -38,7 +38,7 @@ export function PerformanceCard({ averageScore = 78, subjectsCount = 0 }: Perfor
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div
-            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full"
+            className="bg-linear-to-r from-blue-500 to-blue-600 h-3 rounded-full"
             style={{ width: `${averageScore}%` }}
           />
         </div>

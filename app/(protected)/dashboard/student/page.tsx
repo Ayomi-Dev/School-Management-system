@@ -14,8 +14,8 @@ import {
 } from '@/src/components/dashboard/student';
 
 const StudentDashboard = () => {
-  const router = useRouter();
   const { user } = useAuth();
+  const router = useRouter();
 
   if (!user) {
     router.replace('/auth/refresh');

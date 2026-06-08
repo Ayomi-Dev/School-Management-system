@@ -8,7 +8,6 @@ import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { X } from 'lucide-react';
 import { CreateClassInput, createClassSchema } from '@/src/validators/classSchema';
-import { ClassLevel } from '@/src/types';
 
  
 
@@ -32,12 +31,11 @@ export default function CreateClassModal({ onClose, onSuccess }: CreateClassModa
   const depts = ["ART", "COMMERCIAL", "SCIENCE"]
   const onSubmit = async (data: CreateClassInput) => {
     await createClassMutation.mutateAsync({
-      name: data.name,
       level: data.level,
       order: data.order,
       department: data.department 
     });
-    onSuccess();
+    onSuccess(); 
   };
 
   return (
@@ -51,22 +49,11 @@ export default function CreateClassModal({ onClose, onSuccess }: CreateClassModa
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X size={20} />
-          </button>
+          </button> 
         </div>
 
         {/* Content */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Class Name *
-            </label>
-            <Input
-              {...register('name')}
-              placeholder="e.g., Form 1A"
-              error={errors.name?.message}
-            />
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Level *

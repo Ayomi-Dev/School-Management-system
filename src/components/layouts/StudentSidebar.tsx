@@ -23,7 +23,7 @@ const studentNavItems: NavItem[] = [
   {
     label: 'My Profile',
     href: '/dashboard/student/profile',
-    icon: '',
+    icon: '👤',
   },
   {
     label: 'My Courses',

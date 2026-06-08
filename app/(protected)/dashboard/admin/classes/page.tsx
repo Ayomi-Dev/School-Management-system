@@ -18,6 +18,7 @@ export default function ClassesPage() {
   });
 
   const classes = useMemo(() => classesData?.data || [], [classesData]);
+  console.log("class all in school",classes)
 
   return (
     <div className="space-y-6">
@@ -63,9 +64,9 @@ export default function ClassesPage() {
         <div className="flex items-center justify-center h-96">
           <Loader />
         </div>
-      ) : classes.length > 0 ? (
+      ) : classes.data.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {classes.map((classItem: any) => (
+          {classes.data.map((classItem: any) => (
             <Card key={classItem.id} className="hover:shadow-lg transition-shadow">
               <div className="space-y-4">
                 {/* Class Header */}
@@ -100,7 +101,7 @@ export default function ClassesPage() {
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <Users size={16} className="text-blue-600" />
-                    <span>45 Students</span>
+                    <span>{classItem._count.enrollments}</span>
                   </div>
                 </div>
 

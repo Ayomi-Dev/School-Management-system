@@ -48,22 +48,22 @@ export const classService = {
       );
     }
 
-    const { name, level, order, department } = parsed.data;
+    const { level, order, department } = parsed.data;
 
     // Unique: one class name per school
     const existingClass = await prisma.class.findFirst({
-      where: { schoolId, name },
-      select: { id: true, name: true, level: true}
+      where: { schoolId, level },
+      select: { id: true, level: true}
     })
     if(!existingClass){
       return NextResponse.json(
-        { error: `Class "${name}" already exists in this school.` },
+        { error: `Class "${level}" already exists in this school.` },
         { status: 409 }
       );
     }
 
     const classLevel = await prisma.class.create({
-      data: { schoolId, name, level, order, department },
+      data: { schoolId, level, order, department },
     });
 
     return NextResponse.json(
@@ -133,15 +133,16 @@ export const classService = {
         return NextResponse.json({ error: "Class not found." }, { status: 404 });
       }
 
+      const {level, order, department } = parsed.data
       // If renaming, check new name isn't already taken
-      if (parsed.data.name) {
+      if (level) {
         const nameTaken = await prisma.class.findFirst({
-          where: { schoolId, name: parsed.data.name, id: { not: classId } },
+          where: { schoolId, level, id: { not: classId } },
           select: { id: true },
         });
         if (nameTaken) {
           return NextResponse.json(
-            { error: `Another class named "${parsed.data.name}" already exists.` },
+            { error: `Another class named "${level}" already exists.` },
             { status: 409 }
           );
         }
@@ -162,7 +163,7 @@ export const classService = {
   // ----------------------------------------------------------------
   // LIST CLASSES
   // ----------------------------------------------------------------
-  async classList(schoolId: string, req: NextRequest) {
+  async classList(req: NextRequest, schoolId: string,) {
     try {
       const { searchParams } = new URL(req.url);
       const level      = searchParams.get("level")      ?? undefined;
@@ -174,7 +175,7 @@ export const classService = {
 
       const classes = await prisma.class.findMany({
         where,
-        orderBy: [{ order: "asc" }, { name: "asc" }],
+        orderBy: [{ order: "asc" }, { level: "asc" }],
         include: {
           _count: {
             select: { enrollments: true, subjectTeachers: true },
