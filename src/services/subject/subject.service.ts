@@ -4,6 +4,7 @@
 // teacher service assignSubject endpoint.
 // ============================================================
 
+import { ClassLevel } from "@/app/generated/prisma/enums";
 import { prisma } from "@/src/lib/prisma/client";
 import { resolveClassByName } from "@/src/utils/resolvers";
 import { createSubjectSchema, updateSubjectSchema } from "@/src/validators/subjectSchema";
@@ -22,13 +23,13 @@ export const subjectService = {
         );
       }
 
-      const { name, code, className } = parsed.data;
+      const { name, code, level } = parsed.data;
 
       // ── Resolve the class this subject belongs to ─────────────────
-      const classRecord = await resolveClassByName(schoolId, className as string);
+      const classRecord = await resolveClassByName(schoolId, level as ClassLevel);
       if (!classRecord) {
         return NextResponse.json(
-          { error: `Class "${className}" not found in this school.` },
+          { error: `Class "${level}" not found in this school.` },
           { status: 404 }
         );
       }
@@ -44,7 +45,7 @@ export const subjectService = {
       });
       if (existing) {
         return NextResponse.json(
-          { error: `Subject "${name}" already exists for class "${className}".` },
+          { error: `Subject "${name}" already exists for class "${level}".` },
           { status: 409 }
         );
       }
@@ -126,7 +127,7 @@ export const subjectService = {
         );
       }
 
-      const { name, code, className } = parsed.data;
+      const { name, code, level } = parsed.data;
 
       // ── Verify subject belongs to this school ─────────────────────
       const subject = await prisma.subject.findFirst({
@@ -140,14 +141,14 @@ export const subjectService = {
       // ── Optionally resolve a new class ────────────────────────────
       let targetClassId = subject.classId; // default: stay in current class
 
-      if (className) {
+      if (level) {
         const classRecord = await prisma.class.findFirst({
-          where:  { schoolId, name: className },
+          where:  { schoolId, name: level },
           select: { id: true },
         });
         if (!classRecord) {
           return NextResponse.json(
-            { error: `Class "${className}" not found in this school.` },
+            { error: `Class "${level}" not found in this school.` },
             { status: 404 }
           );
         }
@@ -175,7 +176,7 @@ export const subjectService = {
         data: {
           ...(name        ? { name }               : {}),
           ...(code        ? { code }               : {}),
-          ...(className   ? { classId: targetClassId } : {}),
+          ...(level   ? { classId: targetClassId } : {}),
         },
         select: {
           id:    true,

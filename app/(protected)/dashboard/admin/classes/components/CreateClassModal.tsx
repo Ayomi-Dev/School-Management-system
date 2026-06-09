@@ -2,12 +2,11 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useCreateClassMutation } from '@/src/hooks/queries/useAdmin';
 import { Button } from '@/src/components/ui/Button';
-import { Input } from '@/src/components/ui/Input';
 import { X } from 'lucide-react';
 import { CreateClassInput, createClassSchema } from '@/src/validators/classSchema';
+import { useAuthStore } from '@/src/stores/authStore';
 
  
 
@@ -29,10 +28,10 @@ export default function CreateClassModal({ onClose, onSuccess }: CreateClassModa
   , "SS1" , "SS2" , "SS3"
   ]
   const depts = ["ART", "COMMERCIAL", "SCIENCE"]
+  
   const onSubmit = async (data: CreateClassInput) => {
     await createClassMutation.mutateAsync({
       level: data.level,
-      order: data.order,
       department: data.department 
     });
     onSuccess(); 
@@ -60,29 +59,37 @@ export default function CreateClassModal({ onClose, onSuccess }: CreateClassModa
             </label>
             <select
               {...register('level')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none
+                ${errors.level ? 'border-red-500' : 'border-gray-300'}`}
             >
               <option value="">Select level</option>
-              {levels.map(lev => (
-                <option key={lev} value={lev}>{lev}</option>
-              ))}
-              
+                {levels.map(lev => (
+                  <option key={lev} value={lev}>{lev}</option>
+                ))}
             </select>
+            {errors.level && (
+              <p className="text-red-500 text-sm mt-1">{errors.level.message}</p>
+            )}
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Department
+            </label>
             <select
-              {...register('level')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              {...register('department')}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none
+                ${errors.department ? 'border-red-500' : 'border-gray-300'}`}
             >
-              <option value="">Select Department</option>
-              {depts.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-              
+              <option value="" >Select level</option>
+                {depts.map(dep => (
+                  <option key={dep} value={dep}>{dep}</option>
+                ))}
             </select>
+            {errors.department && (
+              <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>
+            )}
           </div>
           
-
           <div className="flex gap-3">
             <Button
               type="button"
@@ -102,6 +109,7 @@ export default function CreateClassModal({ onClose, onSuccess }: CreateClassModa
             </Button>
           </div>
         </form>
+        {createClassMutation.isError && <p className="text-red-500 text-sm mt-1">{createClassMutation.isError}</p>}
       </div>
     </div>
   );

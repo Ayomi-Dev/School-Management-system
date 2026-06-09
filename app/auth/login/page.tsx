@@ -9,12 +9,13 @@ import { Button } from '@/src/components/ui/Button';
 import { useLoginMutation } from '@/src/hooks/queries/useAuth';
 import { useAuth } from '@/src/hooks/useAuth';
 import { UserLoginInput, userLoginSchema } from '@/src/validators/userLoginSchema';
+import { useAuthStore } from '@/src/stores/authStore';
 
 const isDev = process.env.NODE_ENV === 'development';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuthStore();
   const loginMutation = useLoginMutation(); 
 
   const { control, handleSubmit } = useForm<UserLoginInput>({
@@ -25,16 +26,17 @@ export default function LoginPage() {
     },
   });
 
+  
+  const onSubmit = async (data: UserLoginInput) => {
+    await loginMutation.mutateAsync(data)
+  };
+  
   useEffect(() => {
-    if (isAuthenticated && user?.role) {
+    if (user) {
       router.replace(`/dashboard/${user.role.toLowerCase()}`);
     }
-  }, [isAuthenticated, user?.role, router]);
-
-  const onSubmit = async (data: UserLoginInput) => {
-    await loginMutation.mutateAsync(data);
-  };
-
+  }, [user]);
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
       <div className="w-full max-w-md">

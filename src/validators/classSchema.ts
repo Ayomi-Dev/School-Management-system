@@ -6,8 +6,7 @@ export const classLevelEnum = z.enum(ClassLevel);
 
 export const createClassSchema = z.object({
   level:      classLevelEnum,
-  order:      z.number().int().min(1),
-  department: z.enum(["ART", "COMMERCIAL", "SCIENCE"]).optional(),
+  department: z.enum(["ART", "COMMERCIAL", "SCIENCE"]).optional().or(z.literal("")),
 });
  
 export const updateClassSchema = createClassSchema.partial();

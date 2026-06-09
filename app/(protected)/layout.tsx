@@ -6,11 +6,11 @@ export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {
+}) { 
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value as string;
 
-  // If no token at all then straight to login
+  // If no access token then straight to refresh page
   if (!accessToken) {
     redirect('/auth/refresh');
   }
@@ -22,6 +22,6 @@ export default async function ProtectedLayout({
   } catch {
     // Token exists but is expired → give the client a chance to refresh
     // instead of immediately kicking to login
-    redirect('/auth/login');
+    redirect('/auth/refresh');
   }
 }

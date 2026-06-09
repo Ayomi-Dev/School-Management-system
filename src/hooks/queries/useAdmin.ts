@@ -121,6 +121,7 @@ export const useCreateClassMutation = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.classes() });
     },
     onError: (err: any) => {
+      console.log(err)
       showError(err?.response?.data?.error || 'Failed to create class');
     },
   });

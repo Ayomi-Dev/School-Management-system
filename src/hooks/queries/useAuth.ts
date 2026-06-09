@@ -60,6 +60,7 @@ export const useLogoutMutation = () => {
 };
 
 export const useRefreshAuthMutation = () => {
+  const { setUser } = useAuthStore()
   const { success, error: toastError } = useToast();
 
   return useMutation({
@@ -67,13 +68,14 @@ export const useRefreshAuthMutation = () => {
       const result = await authService.refresh();
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setUser(data.user)
       success(SUCCESS_MESSAGES.SESSION_REFRESHED);
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
     },
     onError: (error: any) => {
       const message = error?.error || ERROR_MESSAGES.UNKNOWN_ERROR;
-      toastError(message);
+      toastError(message); 
     }
   })
 }

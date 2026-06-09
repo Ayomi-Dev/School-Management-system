@@ -7,8 +7,8 @@ import {
   CreateAcademicYearRequest,
   Term,
   CreateTermRequest,
-  PaginatedResponse,
 } from '@/src/types/api';
+import { PaginatedResponse } from '@/src/types';
 
 const client = getApiClient();
 

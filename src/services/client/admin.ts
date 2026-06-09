@@ -70,7 +70,7 @@ export const adminService = {
 
   // Academic Year Management
   getAcademicYears: (params?: { page?: number; limit?: number }) =>
-    createApiClient().get(`${API_BASE}/academic-years`, { params }),
+    createApiClient().get(`${API_BASE}/academics`, { params }),
 
   getAcademicYearById: (id: string) => createApiClient().get(`${API_BASE}/academic-years/${id}`),
 

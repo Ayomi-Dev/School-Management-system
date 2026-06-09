@@ -132,7 +132,6 @@ export const adminServices = {
                         if(!profile){
                             throw new Error("No student record found for this user")
                         }
-                        console.log("Student profile found:", profile.level);
                         const classRecord = await classService.getOrCreate(tx, schoolId, profile.level, _levelOrder(profile.level))
                         const label      = currentSession();
                         const yearRecord = await resolveAcademicYear(schoolId, label);

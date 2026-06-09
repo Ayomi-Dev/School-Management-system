@@ -6,19 +6,14 @@ import { Card } from '@/src/components/ui/Card';
 import { DataTable } from '@/src/components/ui/DataTable';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';
-import { Edit2, Trash2, Plus, Users } from 'lucide-react';
+import { Edit2, Trash2, Plus, Users, Book } from 'lucide-react';
 import CreateClassModal from './components/CreateClassModal';
 
 export default function ClassesPage() {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('');
-
-  const { data: classesData, isLoading } = useClassesList({
-    academicYearId: selectedAcademicYear || undefined,
-  });
-
+  const { data: classesData, isLoading } = useClassesList();
   const classes = useMemo(() => classesData?.data || [], [classesData]);
-  console.log("class all in school",classes)
+  const [yearId, selectYearId] = useState("")
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -38,27 +33,6 @@ export default function ClassesPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Academic Year
-            </label>
-            <select
-              value={selectedAcademicYear}
-              onChange={(e) => setSelectedAcademicYear(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            >
-              <option value="">All Years</option>
-              <option value="2023-2024">2023-2024</option>
-              <option value="2024-2025">2024-2025</option>
-              <option value="2025-2026">2025-2026</option>
-            </select>
-          </div>
-        </div>
-      </Card>
-
       {/* Classes Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center h-96">
@@ -71,28 +45,22 @@ export default function ClassesPage() {
               <div className="space-y-4">
                 {/* Class Header */}
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">{classItem.name}</h3>
-                  <p className="text-sm text-gray-600">Level: {classItem.level}</p>
+                  <h3 className="text-lg font-bold text-gray-900">{classItem.level}</h3>
+                  <p className="text-sm text-gray-600">Grade: {classItem.order}</p>
                 </div>
 
                 {/* Class Details */}
                 <div className="space-y-2 py-4 border-y border-gray-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Teacher:</span>
+                    <span className="text-sm text-gray-600">Department:</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {classItem.classTeacher?.firstName} {classItem.classTeacher?.lastName}
+                      {classItem.department || 'N/A'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Capacity:</span>
+                    <span className="text-sm text-gray-600">Students:</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {classItem.capacity || '-'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Academic Year:</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      2024-2025
+                      {classItem._count.enrollments || '-'}
                     </span>
                   </div>
                 </div>
@@ -102,6 +70,10 @@ export default function ClassesPage() {
                   <div className="flex items-center gap-2">
                     <Users size={16} className="text-blue-600" />
                     <span>{classItem._count.enrollments}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Book size={16} className="text-blue-600" />
+                    <span>{classItem._count.subjects}</span>
                   </div>
                 </div>
 

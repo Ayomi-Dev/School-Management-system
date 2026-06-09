@@ -20,43 +20,34 @@ const ROLE_DEFAULT_ROUTES: Record<string, string> = {
 export default function RefreshSessionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading, error: authError } = useAuthStore();
+  const { user, setLoading, isLoading, setError, error: authError } = useAuthStore();
   const refreshMutation = useRefreshAuthMutation(); // Directly use the service method since we're handling state manually here
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+ 
 
   const handleRefresh = async() => {
     await refreshMutation.mutateAsync()
   }
 
 
-  useEffect(() => {    
-    const callbackUrl = searchParams.get('callbackUrl'); //  Use callbackUrl if provided (exact page they were trying to reach)
-    const roleRoute = user?.role ? ROLE_DEFAULT_ROUTES[user.role] : null; // Fall back to role-based default route
-    const destination = callbackUrl ?? roleRoute ?? '/auth/login' //Fall back to /auth/login if neither is available
+  useEffect(() => {
+    const callbackUrl = searchParams.get('callbackUrl');
 
+    setLoading(true);
     handleRefresh()
     .then(() => {
-        router.replace(`${destination}`);
-    })
+        // Read user from the store AFTER refresh resolves, not before
+        const freshUser = user;
+        const roleRoute = freshUser?.role ? ROLE_DEFAULT_ROUTES[freshUser.role] : null;
+        const destination = callbackUrl ?? roleRoute ?? '/auth/login';
+        console.log(destination)
+        router.replace(destination);
+      })
     .catch(() => {
-      router.push('/auth/login');
-    })
-    // authService
-    // .refresh()
-    // .then(() => {
-    //   return;
-    // })
-    // .catch(() => {
-    //   setError("Session refresh failed. Please log in again.");
-    //   setTimeout(() => {
-    //     setLoading(false);
-    //   }, 1500)
-    // })
-    // .finally(() => {
-    //     setLoading(false);
-    // });
-    }, [searchParams, user, router]);
+        setError("Session expired. Relogin to continue");
+        router.push('/auth/login');
+      })
+    .finally(() => setLoading(false));
+  }, []); // ← empty deps, run once on mount only
 
   return (
     <div className="min-h-screen flex items-center justify-center">

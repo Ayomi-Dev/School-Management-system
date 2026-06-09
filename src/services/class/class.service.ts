@@ -4,6 +4,7 @@ import { createClassSchema, updateClassSchema, createSubjectSchema, updateSubjec
 import { resolveAcademicYear, resolveClass, ResolverError } from "@/src/utils/resolvers";
 import { ClassLevel, Department } from "@/src/types/types";
 import { currentSession } from "@/src/utils/userCode";
+import { _levelOrder } from "@/src/utils/levelOrder";
 
 // ============================================================
 // CLASS SERVICE
@@ -48,22 +49,27 @@ export const classService = {
       );
     }
 
-    const { level, order, department } = parsed.data;
+    const { level, department } = parsed.data;
 
     // Unique: one class name per school
     const existingClass = await prisma.class.findFirst({
       where: { schoolId, level },
       select: { id: true, level: true}
     })
-    if(!existingClass){
+    if(existingClass){
       return NextResponse.json(
-        { error: `Class "${level}" already exists in this school.` },
+        { error: `Class ${level} already exists in this school.` },
         { status: 409 }
       );
     }
-
+    const order = _levelOrder(level)
     const classLevel = await prisma.class.create({
-      data: { schoolId, level, order, department },
+      data: {
+        schoolId,
+        level,
+        order,
+        ...(department && { department }),
+      },
     });
 
     return NextResponse.json(
@@ -98,7 +104,7 @@ export const classService = {
       return { ...classRecord, isNew: false };
     }
 
-    const levelClass = await prisma.class.create({
+    const classLevel = await prisma.class.create({
       data: {
         schoolId,
         level,
@@ -108,7 +114,7 @@ export const classService = {
       select: { id: true, level: true },
     });
 
-    return { ...levelClass, isNew: true };
+    return { ...classLevel, isNew: true };
   },
 
   // ----------------------------------------------------------------
@@ -133,7 +139,7 @@ export const classService = {
         return NextResponse.json({ error: "Class not found." }, { status: 404 });
       }
 
-      const {level, order, department } = parsed.data
+      const {level, department } = parsed.data
       // If renaming, check new name isn't already taken
       if (level) {
         const nameTaken = await prisma.class.findFirst({
@@ -147,12 +153,19 @@ export const classService = {
           );
         }
       }
+      let updated;
+      if(department){
+        updated = await prisma.class.update({
+          where: { id: classId },
+          data: {level, department}
+        });
+      return NextResponse.json({ message: "Class updated.", data: updated });
+      }
 
-      const updated = await prisma.class.update({
-        where: { id: classId },
-        data: parsed.data,
-      });
-
+        updated = await prisma.class.update({
+          where: { id: classId },
+          data: {level}
+        });
       return NextResponse.json({ message: "Class updated.", data: updated });
     } catch (error) {
       console.error("[classService.update]", error);
@@ -177,12 +190,21 @@ export const classService = {
         where,
         orderBy: [{ order: "asc" }, { level: "asc" }],
         include: {
+          subjectTeachers: { 
+            select: { 
+              subject: true, subjectId: true, 
+              teacher: { select: {firstName: true, lastName: true}}, 
+              teacherId: true
+            }
+          },
+          enrollments: {
+            select: { academicYearId: true, academicYear: true},
+          },
           _count: {
-            select: { enrollments: true, subjectTeachers: true },
+            select: { enrollments: true, subjectTeachers: true, subjects: true },
           },
         },
       });
-
       return NextResponse.json({ data: classes });
     } catch (error) {
       console.error("[classService.list]", error);
