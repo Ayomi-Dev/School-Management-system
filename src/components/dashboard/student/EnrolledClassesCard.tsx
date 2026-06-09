@@ -51,7 +51,7 @@ export function EnrolledClassesCard({ enrolledClasses = [], subjects = [] }: Enr
         <h3 className="text-lg font-semibold text-gray-700 mb-4">Subjects</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {subjectList.map((subject) => (
-            <div key={subject} className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+            <div key={subject} className="flex items-center gap-3 p-3 bg-linear-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
               <span className="text-lg">📖</span>
               <span className="font-medium text-gray-800">{subject}</span>
             </div>

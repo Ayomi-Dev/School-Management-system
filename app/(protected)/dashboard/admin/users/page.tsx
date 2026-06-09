@@ -13,18 +13,37 @@ import CreateUserModal from './components/CreateUserModal';
 import EditUserModal from './components/EditUserModal';
 import { Role } from './components/modalHelpers';
 import { User } from '@/src/types';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 
 export default function UsersPage() { 
-  const [roleFilter, setRoleFilter] = useState<Role | 'ALL'>('ALL');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const roleFilter = (searchParams.get('type') as Role | null) ?? 'ALL';
+  // const [roleFilter, setRoleFilter] = useState<Role | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [page, setPage] = useState(1);
+  
 
   const debouncedSearch = useDebounce(search, 300);
   const deleteUserMutation = useDeleteUserMutation();
+
+
+  const setRoleFilter = (role: Role | 'ALL') => { //role setter to push  Sslectedroles to URL
+    const params = new URLSearchParams(searchParams.toString());
+    if (role === 'ALL') {
+      params.delete('type');
+    } else {
+      params.set('type', role);
+    }
+    params.delete('page'); // reset page on filter change
+    router.push(`${pathname}?${params.toString()}`);
+    setPage(1);
+  };
 
   const { data: usersData, isLoading } = useUsersList({
     role: roleFilter === 'ALL' ? undefined : roleFilter,
@@ -35,7 +54,7 @@ export default function UsersPage() {
 
   const users = useMemo(() => usersData?.data || [], [usersData]);
 
-  const handleEdit = (user: any) => {
+  const handleEdit = (user: User) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
   };
@@ -76,6 +95,42 @@ export default function UsersPage() {
       </div>
 
       {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Input
+          placeholder="Search users..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="w-64"
+        />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setRoleFilter('ALL'); setPage(1); }}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              roleFilter === 'ALL'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          {roles.map((role) => (
+            <button
+              key={role}
+              onClick={() => { setRoleFilter(role); setPage(1); }}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                roleFilter === role
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {role.charAt(0) + role.slice(1).toLowerCase()}
+            </button>
+          ))}
+        </div>
+      </div>
       
 
       {/* Users Table */}
@@ -87,7 +142,7 @@ export default function UsersPage() {
         ) : (
           <>
             <DataTable<User>
-              data={users.data}
+              data={users?.data}
               columns={[
                 {
                   key: 'firstName',
@@ -157,9 +212,9 @@ export default function UsersPage() {
           </>
         )}
       </Card>
-
+        
       {/* Pagination */}
-      {/* {users.length > 0 && (
+      {users?.data?.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
             Page {page} • Showing {users.length} users
@@ -175,12 +230,13 @@ export default function UsersPage() {
             <Button
               variant="outline"
               onClick={() => setPage(p => p + 1)}
+              disabled={page >= Math.ceil(usersData?.data?.total / 10)}
             >
               Next
             </Button>
           </div>
         </div>
-      )} */}
+      )}
 
       {/* Modals */}
       {isCreateModalOpen && (
@@ -191,7 +247,7 @@ export default function UsersPage() {
         />
       )}
 
-      {/* {isEditModalOpen && selectedUser && (
+      {isEditModalOpen && selectedUser && (
         <EditUserModal
           user={selectedUser}
           onClose={() => {
@@ -203,7 +259,7 @@ export default function UsersPage() {
             setSelectedUser(null);
           }}
         />
-      )} */}
+      )}
     </div>
   );
 }

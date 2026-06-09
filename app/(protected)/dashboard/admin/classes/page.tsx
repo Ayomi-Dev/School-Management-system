@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useClassesList, useCreateClassMutation } from '@/src/hooks/queries/useAdmin';
+import { useClassesList, useAcademicYearsList } from '@/src/hooks/queries/useAdmin';
 import { Card } from '@/src/components/ui/Card';
-import { DataTable } from '@/src/components/ui/DataTable';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';
 import { Edit2, Trash2, Plus, Users, Book } from 'lucide-react';
@@ -11,10 +10,17 @@ import CreateClassModal from './components/CreateClassModal';
 
 export default function ClassesPage() {
   const { data: classesData, isLoading } = useClassesList();
+  const { data: yearsData } = useAcademicYearsList()
   const classes = useMemo(() => classesData?.data || [], [classesData]);
-  const [yearId, selectYearId] = useState("")
+  const years = useMemo(() => yearsData?.data.data || [], [classesData]);
+  const [yearId, setYearId] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const handleYearId = (id: string) => {
+    setYearId(id)
+  }
+  
+  console.log(yearId)
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -33,6 +39,20 @@ export default function ClassesPage() {
         </Button>
       </div>
 
+      {/* Selct Academic Year */}
+      
+        <select 
+          id={yearId}
+          onChange={(e) => setYearId(e.target.id)}
+          className=" px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+        >
+          <option value="All">All Years</option>
+          {years.map((yr: any) => (
+            <option key={yr.id} value={yr.label} id={yr.id}>
+              {yr.label}
+            </option>
+          ))}
+        </select>
       {/* Classes Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center h-96">

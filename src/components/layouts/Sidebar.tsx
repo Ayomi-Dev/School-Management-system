@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useState } from 'react';
 import { ChevronDown, Menu, X } from 'lucide-react';
@@ -66,6 +66,7 @@ const adminNavItems: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams()
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -80,8 +81,25 @@ export function Sidebar() {
     setExpanded(newExpanded);
   };
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+// Replace the current isActive with this
+const isActive = (href: string) => {
+  const [hrefPath, hrefQuery] = href.split('?');
+  
+  if (!hrefQuery) { //if no query is provide with the URL
+    return pathname === hrefPath || pathname.startsWith(hrefPath + '/'); //matches URL with pure pathname 
+  }
 
+  // IF query string is provided —  pathname and the specific param are matched
+  const hrefParams = new URLSearchParams(hrefQuery);
+  const currentParams = new URLSearchParams(searchParams.toString());
+
+  return (
+    pathname === hrefPath &&
+    [...hrefParams.entries()].every(
+      ([key, val]) => currentParams.get(key) === val
+    )
+  );
+};
   const NavLinks = ({ items }: { items: NavItem[] }) => (
     <nav className="space-y-1 px-2">
       {items.map((item) => {

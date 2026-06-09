@@ -56,20 +56,16 @@ export const classService = {
       where: { schoolId, level },
       select: { id: true, level: true}
     })
-    if(existingClass){
+    if(!existingClass){
       return NextResponse.json(
-        { error: `Class ${level} already exists in this school.` },
+        { error: `Class "${level}" already exists in this school.` },
         { status: 409 }
       );
     }
     const order = _levelOrder(level)
+
     const classLevel = await prisma.class.create({
-      data: {
-        schoolId,
-        level,
-        order,
-        ...(department && { department }),
-      },
+      data: { schoolId, level, order, department },
     });
 
     return NextResponse.json(
@@ -104,7 +100,7 @@ export const classService = {
       return { ...classRecord, isNew: false };
     }
 
-    const classLevel = await prisma.class.create({
+    const levelClass = await prisma.class.create({
       data: {
         schoolId,
         level,
@@ -114,7 +110,7 @@ export const classService = {
       select: { id: true, level: true },
     });
 
-    return { ...classLevel, isNew: true };
+    return { ...levelClass, isNew: true };
   },
 
   // ----------------------------------------------------------------
@@ -153,19 +149,12 @@ export const classService = {
           );
         }
       }
-      let updated;
-      if(department){
-        updated = await prisma.class.update({
-          where: { id: classId },
-          data: {level, department}
-        });
-      return NextResponse.json({ message: "Class updated.", data: updated });
-      }
 
-        updated = await prisma.class.update({
-          where: { id: classId },
-          data: {level}
-        });
+      const updated = await prisma.class.update({
+        where: { id: classId },
+        data: parsed.data,
+      });
+
       return NextResponse.json({ message: "Class updated.", data: updated });
     } catch (error) {
       console.error("[classService.update]", error);

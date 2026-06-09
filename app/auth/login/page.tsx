@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { FormInput } from '@/src/components/forms/FormInput';
 import { Button } from '@/src/components/ui/Button';
 import { useLoginMutation } from '@/src/hooks/queries/useAuth';
-import { useAuth } from '@/src/hooks/useAuth';
 import { UserLoginInput, userLoginSchema } from '@/src/validators/userLoginSchema';
 import { useAuthStore } from '@/src/stores/authStore';
 
@@ -36,7 +35,7 @@ export default function LoginPage() {
       router.replace(`/dashboard/${user.role.toLowerCase()}`);
     }
   }, [user]);
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
       <div className="w-full max-w-md">
