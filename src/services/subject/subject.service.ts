@@ -81,19 +81,19 @@ export const subjectService = {
     try {
       const subjects = await prisma.subject.findMany({
         where:   { schoolId },
-        orderBy: [{ class: { level: "asc" } }, { name: "asc" }],
+        orderBy: [{ class: { level: "asc" } }],
         select: {
           id:   true,
           name: true,
           code: true,
           class: {
-            select: { id: true, name: true, level: true },
+            select: { id: true, level: true },
           },
           // All teacher assignments for this subject across terms
           subjectTeachers: {
             select: {
               termId:  true,
-              teacher: {
+              teacher: { 
                 select: {
                   id:             true,
                   firstName:      true,

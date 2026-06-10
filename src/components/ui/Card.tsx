@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ReactNode } from 'react';
 
 interface CardProps {
@@ -19,6 +20,7 @@ interface MetricCardProps {
   icon: ReactNode;
   trend?: { value: number; isPositive: boolean };
   color?: 'blue' | 'green' | 'orange' | 'red' | "purple";
+  href: string;
 }
 
 const colorClasses = {
@@ -38,6 +40,7 @@ const iconBgClasses = {
 };
 
 export function MetricCard({
+  href,
   label,
   value,
   icon,
@@ -46,20 +49,22 @@ export function MetricCard({
 }: MetricCardProps) {
   return (
     <Card className={colorClasses[color]}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium opacity-75">{label}</p>
-          <p className="text-3xl font-bold mt-2">{value}</p>
-          {trend && (
-            <p className={`text-xs mt-2 font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-              {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}% from last month
-            </p>
-          )}
+      <Link href={href}>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium opacity-75">{label}</p>
+            <p className="text-3xl font-bold mt-2">{value}</p>
+            {trend && (
+              <p className={`text-xs mt-2 font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}% from last month
+              </p>
+            )}
+          </div>
+          <div className={`${iconBgClasses[color]} p-3 rounded-lg text-lg`}>
+            {icon}
+          </div>
         </div>
-        <div className={`${iconBgClasses[color]} p-3 rounded-lg text-lg`}>
-          {icon}
-        </div>
-      </div>
+      </Link>
     </Card>
   );
 }

@@ -3,7 +3,6 @@
 import { MetricCard, Card } from '@/src/components/ui/Card';
 import { useAdminStats } from '@/src/hooks/queries/useAdmin';
 import { Loader } from '@/src/components/ui/Loader';
-import { Users, BookOpen, DollarSign, Clock, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 const QuickAction = ({ label, description, icon, href }: any) => (
@@ -41,6 +40,7 @@ export default function AdminDashboard() {
       <h2 className="text-xl font-bold text-gray-900 mb-4">Key Metrics</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
+          href='/dashboard/admin/users?type=STUDENT'
           label="Total Students"
           value={statsData?.totalStudents || 0}
           icon="🎓"
@@ -48,6 +48,7 @@ export default function AdminDashboard() {
           trend={{ value: 5, isPositive: true }}
         />
         <MetricCard
+          href='/dashboard/admin/users?type=TEACHER'
           label="Total Teachers"
           value={statsData?.totalTeachers || 0}
           icon="👨‍🏫"
@@ -55,6 +56,7 @@ export default function AdminDashboard() {
           trend={{ value: 2, isPositive: true }}
         />
         <MetricCard
+          href='/dashboard/admin/users?type=PARENT'
           label="Total Parents"
           value={statsData?.totalParents || 0}
           icon="👨‍👩‍👧‍👦"
@@ -62,6 +64,7 @@ export default function AdminDashboard() {
           trend={{ value: 3, isPositive: true }}
         />
         <MetricCard
+          href='/dashboard/admin/users?type=fees'
           label="Total Revenue"
           value={`$${statsData?.totalRevenue || 0}`}
           icon="💰"
@@ -69,6 +72,7 @@ export default function AdminDashboard() {
           trend={{ value: 12, isPositive: true }}
         />
         <MetricCard
+          href='/dashboard/admin/classes'
           label="Active Classes"
           value={statsData?.activeClasses || 0}
           icon="🏫"

@@ -1,7 +1,9 @@
 'use client';
 
 import { Card } from '@/src/components/ui/Card';
+import { useSubjectsList } from '@/src/hooks/queries/useAdmin';
 import { Class } from '@/src/types';
+import { useMemo } from 'react';
 
 interface EnrolledClassesCardProps {
   enrolledClasses?: Class[];
@@ -9,6 +11,8 @@ interface EnrolledClassesCardProps {
 }
 
 export function EnrolledClassesCard({ enrolledClasses = [], subjects = [] }: EnrolledClassesCardProps) {
+  const { data: subjctsData } = useSubjectsList()
+  // const enrollments = useMemo(() => enrollmentData?.data || [], [enrollmentData])
   const defaultClasses = [
     { id: '1', name: 'Senior Secondary 1 (SS1)', level: 'SS1', capacity: 45 },
     { id: '2', name: 'Science Stream', level: 'SS1', capacity: 45 },

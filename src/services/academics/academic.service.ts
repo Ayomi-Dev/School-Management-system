@@ -308,3 +308,12 @@ export const termService = {
       }   
     } 
 };  
+
+
+
+
+export const enrollmentService = {
+  async extractFromEnrollment () {
+    
+  }
+}

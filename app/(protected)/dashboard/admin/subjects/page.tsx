@@ -10,6 +10,7 @@ import { Loader } from '@/src/components/ui/Loader';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import { useDebounce } from '@/src/hooks/useUtils';
 import CreateSubjectModal from './components/CreateSubjectModal';
+import { Subject } from '@/src/types';
 
 export default function SubjectsPage() {
   const [search, setSearch] = useState('');
@@ -19,12 +20,11 @@ export default function SubjectsPage() {
   const { data: subjectsData, isLoading } = useSubjectsList({
     search: debouncedSearch,
   });
-
-  const subjects = useMemo(() => subjectsData?.data || [], [subjectsData]);
+  const subjects = useMemo(() => subjectsData?.data.data || [], [subjectsData]); //fectches the subjects data
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header */} 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Subject Management</h1>
@@ -56,7 +56,7 @@ export default function SubjectsPage() {
             <Loader />
           </div>
         ) : (
-          <DataTable
+          <DataTable<Subject>
             data={subjects}
             columns={[
               {
@@ -72,12 +72,14 @@ export default function SubjectsPage() {
               {
                 key: 'code',
                 label: 'Code',
-                render: (value) => <span className="text-sm">{value || '-'}</span>,
+                render: (value) => <span className="text-sm">{value as string}</span>,
               },
               {
-                key: 'description',
-                label: 'Description',
-                render: (value) => <span className="text-sm">{value || '-'}</span>,
+                key: 'class',
+                label: 'Class',
+                render: (_, row) => (
+                  <span className="text-sm">{row.class?.level ?? '-'}</span>
+                ),
               },
             ]}
             rowActions={() => (

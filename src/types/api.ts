@@ -93,7 +93,6 @@ export interface CreateSchoolRequest {
 // Class Types
 export interface Class {
   id: string;
-  name: string;
   level: string;
   classTeacherId: string;
   classTeacher?: User;
@@ -181,9 +180,8 @@ export interface Subject {
   id: string;
   name: string;
   code?: string;
-  description?: string;
   teachers?: Teacher[];
-  classes?: Class[];
+  class?: Class;
   schoolId: string;
   createdAt: string;
   updatedAt: string;
