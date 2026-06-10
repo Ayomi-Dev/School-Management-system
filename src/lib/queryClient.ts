@@ -87,4 +87,9 @@ export const queryKeys = {
     details: () => [...queryKeys.subjects.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.subjects.details(), id] as const,
   },
+  profile: {
+    all: ['profile'] as const,
+    byRole: (role?: string, userId?: string) =>
+      [...queryKeys.profile.all, role, userId] as const,
+  },
 };

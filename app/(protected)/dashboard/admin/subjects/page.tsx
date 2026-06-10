@@ -21,6 +21,7 @@ export default function SubjectsPage() {
     search: debouncedSearch,
   });
   const subjects = useMemo(() => subjectsData?.data.data || [], [subjectsData]); //fectches the subjects data
+  console.log(subjects)
 
   return (
     <div className="space-y-6">
@@ -59,42 +60,44 @@ export default function SubjectsPage() {
           <DataTable<Subject>
             data={subjects}
             columns={[
-              {
-                key: 'name',
-                label: 'Subject Name',
-                render: (value, row: any) => (
-                  <div>
-                    <p className="font-medium">{value as string}</p>
-                    {row.code && <p className="text-sm text-gray-500">{row.code}</p>}
-                  </div>
-                ),
-              },
-              {
-                key: 'code',
-                label: 'Code',
-                render: (value) => <span className="text-sm">{value as string}</span>,
-              },
-              {
-                key: 'class',
-                label: 'Class',
-                render: (_, row) => (
-                  <span className="text-sm">{row.class?.level ?? '-'}</span>
-                ),
-              },
-            ]}
-            rowActions={() => (
-              <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Edit2 size={18} className="text-gray-600" />
-                </button>
-                <button className="p-2 hover:bg-red-50 rounded-lg transition-colors">
-                  <Trash2 size={18} className="text-red-600" />
-                </button>
+          {
+            key: 'name',
+            label: 'Subject Name',
+            render: (_, row) => (
+              <div>
+                <p className="font-medium">{row.name}</p>
+                {row.code && <p className="text-sm text-gray-500">{row.code}</p>}
               </div>
-            )}
-            isEmpty={subjects.length === 0}
-            emptyMessage="No subjects found"
-          />
+            ),
+          },
+          {
+            key: 'code',
+            label: 'Code',
+            render: (_, row) => (
+              <span className="text-sm">{row.code ?? '-'}</span>
+            ),
+          },
+          {
+            key: 'class',
+            label: 'Class',
+            render: (_, row) => (
+              <span className="text-sm">{row.class?.level ?? '-'}</span>
+            ),
+          },
+        ]}
+          rowActions={(row) => (
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <Edit2 size={18} className="text-gray-600" />
+              </button>
+              <button className="p-2 hover:bg-red-50 rounded-lg transition-colors">
+                <Trash2 size={18} className="text-red-600" />
+              </button>
+            </div>
+          )}
+          isEmpty={subjects.length === 0}
+          emptyMessage="No subjects found"
+        />
         )}
       </Card>
 

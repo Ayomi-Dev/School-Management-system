@@ -14,30 +14,27 @@ export const studentService = {
   async getStudentById(studentProfileId: string, schoolId: string) {
     try {
         const student = await prisma.studentProfile.findFirst({
-            where: { id: studentProfileId, schoolId },
+            where: { userId: studentProfileId, schoolId },
             include: {
                 user: {
                     select: {
                         id: true, email: true, phone: true, userCode: true,
-                        status: true, lastLoginAt: true,
+                        status: true, lastLoginAt: true, role: true
                     },
                 },
                 enrollments: {
                     orderBy: { enrolledAt: "desc" },
                     include: {
-                      class: { select: { id: true, name: true, level: true } },
+                      class: { select: { id: true, level: true } },
                       academicYear: { select: { id: true, label: true } },
                     },
                 },
-                guardians: {
-                    include: {
-                        guardian: {
-                            select: {
-                              firstName: true, lastName: true, phone: true,
-                              email: true, relationship: true,
-                            },
-                        },
-                    },
+                guardian: {
+                  select: {
+                    firstName: true, lastName: true, phone: true,
+                    email: true, relationship: true,
+                  },
+                        
                 },
             },
         });

@@ -43,6 +43,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  userCode: string;
   phone?: string;
   role: Role;
   status: UserStatus;
@@ -145,16 +146,20 @@ export interface CreateTermRequest {
 }
 
 // Student Types
-export interface Student {
+export interface StudentProfile {
+  role: "STUDENT";
   id: string;
   userId: string;
   user?: User;
-  registrationNumber?: string;
+  studentNumber: string;
+  phone: string;
+  firstName: string;
+  lastName: string;
   dateOfBirth?: string;
+  guardian: ParentProfile
   gender?: Gender;
-  guardianCount: number;
   classId?: string;
-  class?: Class;
+  level: string;
   schoolId: string;
   status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED' | 'WITHDRAWN';
   createdAt: string;
@@ -162,7 +167,8 @@ export interface Student {
 }
 
 // Teacher Types
-export interface Teacher {
+export interface TeacherProfile {
+  role: "TEACHER";
   id: string;
   userId: string;
   user?: User;
@@ -180,7 +186,7 @@ export interface Subject {
   id: string;
   name: string;
   code?: string;
-  teachers?: Teacher[];
+  teacher?: TeacherProfile;
   class?: Class;
   schoolId: string;
   createdAt: string;
@@ -194,18 +200,27 @@ export interface CreateSubjectRequest {
 }
 
 // Parent Types
-export interface Parent {
+export interface ParentProfile {
+  role: "PARENT";
   id: string;
   userId: string;
   user?: User;
   relationship?: string;
   occupation?: string;
   address?: string;
-  students?: Student[];
+  students?: StudentProfile[];
   schoolId: string;
   createdAt: string;
   updatedAt: string;
 }
+export interface BursarProfile{
+  role: "BURSAR";
+  id: string;
+  userId: string;
+  user: User;
+}
+
+export type UserProfile = StudentProfile | TeacherProfile | ParentProfile | BursarProfile | null
 
 // API Response wrapper
 export function isApiError(data: unknown): data is ApiError {

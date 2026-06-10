@@ -32,7 +32,7 @@ export default function LoginPage() {
   
   useEffect(() => {
     if (user) {
-      router.replace(`/dashboard/${user.role.toLowerCase()}`);
+      router.replace(`/dashboard?${user.role.toLowerCase()}`);
     }
   }, [user]);
 

@@ -1,23 +1,25 @@
 "use client"
 
 import { StudentDashboardLayout } from '@/src/components/layouts/StudentDashboardLayout';
-import { ProfileCard } from '@/src/components/dashboard/student/ProfileCard';
-import { useAuth } from '@/src/hooks/useAuth';
+import { ProfileCard } from '@/src/components/dashboards/student/components/ProfileCard';
+import { useProfileStore } from '@/src/stores/profileStore';
 import { useRouter } from 'next/navigation';
+import { StudentProfile } from '@/src/types/api';
+import { Loader } from '@/src/components/ui/Loader';
 
-const StudentProfile = () => {
-    const { user } = useAuth()
-    const router = useRouter()
-    if(!user){
-        router.replace('/auth/refresh')
-        return null
-    }
+const StudentProfilePage = () => {
+  const { profile } = useProfileStore()
+  const router = useRouter()
+  if(!profile){
+    return <Loader />
+  }
+  console.log(profile)
 
   return (
     <StudentDashboardLayout>
-        <ProfileCard user={user} />
+        <ProfileCard profile={profile as StudentProfile} />
     </StudentDashboardLayout>
   )
 }
 
-export default StudentProfile
+export default StudentProfilePage;

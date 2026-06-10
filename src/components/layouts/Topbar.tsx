@@ -35,7 +35,7 @@ export function Topbar() {
         {/* Left Section */}
         <div className="flex items-center gap-8 flex-1">
           <h2 className="text-lg font-semibold text-gray-900">
-            Welcome, {user?.firstName}
+            Welcome, {user?.userCode}
           </h2>
         </div>
 

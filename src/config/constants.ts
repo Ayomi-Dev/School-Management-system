@@ -20,9 +20,11 @@ export const API_ENDPOINTS = {
 
   // Admin - Users
   USERS_CREATE: '/api/admin/create-user',
-  USERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/users`,
+  USERS_LIST: `/api/admin/users`,
   USERS_GET: (id: string) => `/api/users/${id}`,
-  USERS_CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`,
+  USERS_CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`, 
+  USERS_UPDATE: (id: string) => `api/admin/users/${id}`,
+  USERS_DELETE: (id: string) => `api/admin/users/${id}`,
 
   // Admin - Classes
   CLASSES_CREATE: '/api/admin/classes/create',
@@ -44,7 +46,7 @@ export const API_ENDPOINTS = {
 
   // Students
   STUDENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/students`,
-  STUDENTS_GET: (id: string) => `/api/students/${id}`,
+  STUDENTS_GET: (id: string) => `/api/students/${id}/profile`,
   STUDENTS_LINK_PARENT: (id: string) => `/api/admin/students/${id}/link`,
 
   // Teachers
@@ -54,6 +56,9 @@ export const API_ENDPOINTS = {
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,
   PARENTS_GET: (id: string) => `/api/parents/${id}`,
+
+  //Bursar
+  BURSAR_GET: (id: string) => `/api/bursar/${id}`,
 } as const;
 
 export const API_CONFIG = {

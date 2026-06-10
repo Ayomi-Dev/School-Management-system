@@ -43,6 +43,7 @@ export default function RefreshSessionPage() {
         router.replace(destination);
       })
     .catch(() => {
+        console.log("refresh failed")
         setError("Session expired. Relogin to continue");
         router.push('/auth/login');
       })
