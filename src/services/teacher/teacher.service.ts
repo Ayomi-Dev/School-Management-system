@@ -1,25 +1,26 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
-import { resolveAcademicYear, resolveClass, resolveClassByName, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveClassByName, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { getCurrentTerm } from "@/src/utils/userCode";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
 
-export const teacherServices = {
+export const teacherServices = { 
   async assignSubject(req: NextRequest, schoolId: string) {
     try {
       const body = await req.json();
       const parsed = assignSubjectToTeacherSchema.safeParse(body);
+
       if (!parsed.success) {
         return NextResponse.json(
             { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
             { status: 400 }
         );
       }
-      const { subjectName, className, teacherNumber } = parsed.data;
-      const termPeriod = getCurrentTerm()
+
+      const { subjectName, level, teacherNumber } = parsed.data;
       let teacher:     { id: string };
-      let classRecord: { id: string; name: string; level: string; department: string | null };
+      let classRecord: { id: string; level: string; department: string | null };
       let term:        { id: string };
       
       try {
@@ -27,10 +28,10 @@ export const teacherServices = {
         [teacher, classRecord, term] = await Promise.all([
           resolveTeacher(schoolId, teacherNumber),
           prisma.class.findFirst({
-              where:  { schoolId, name: className },
-              select: { id: true, name: true, level: true, department: true },
+            where:  { schoolId, level },
+            select: { id: true, name: true, level: true, department: true },
           }).then((c) => {
-              if (!c) throw new ResolverError(`Class "${className}" not found in this school.`);
+              if (!c) throw new ResolverError(`Class "${level}" not found in this school.`);
               return c;
           }),
           await resolveTerm(schoolId)
@@ -90,7 +91,7 @@ export const teacherServices = {
       });
 
       return NextResponse.json({
-        message:  `"${subjectName}" assigned to ${teacherNumber} for ${className}.`,
+        message:  `"${subjectName}" assigned to ${teacherNumber} for ${level}.`,
         data: assignment,
       });
     } 
@@ -119,17 +120,17 @@ export const teacherServices = {
         );
       }
  
-      const { subjectName, className, teacherNumber } = parsed.data;
+      const { subjectName, level, teacherNumber } = parsed.data;
 
       let teacher: { id: string };
       let subject: { id: string };
-      let classRecord: { id: string; name: string; level: string; department: string | null };
+      let classRecord: { id: string; level: string; department: string | null };
       let term:    { id: string };
  
       try {
         [teacher, classRecord, subject, term] = await Promise.all([
           resolveTeacher(schoolId, teacherNumber),
-          resolveClassByName(schoolId, className),
+          resolveClassByName(schoolId, level),
           resolveSubject(schoolId, subjectName),
           resolveTerm(schoolId)
         ]);

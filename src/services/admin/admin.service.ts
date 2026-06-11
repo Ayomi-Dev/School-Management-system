@@ -390,6 +390,26 @@ export const adminServices = {
       { status: 201 }
 
     );
+    },
+
+    async getAdminProfile(id: string, schoolId: string) {
+        const user = await prisma.user.findUnique(
+            {
+                where: { id },
+                select: { id: true, firstName: true, lastName: true, role: true },
+            }
+        )
+        if(!user || user.role !== "ADMIN"){
+            return NextResponse.json(
+                { error: "Admin record not found"},
+                { status: 404 }
+            )
+        }
+
+        return NextResponse.json(
+            { data: user },
+            { status: 200 }
+        )
     }
           
 

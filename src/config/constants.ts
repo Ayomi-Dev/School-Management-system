@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
   USERS_CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`, 
   USERS_UPDATE: (id: string) => `api/admin/users/${id}`,
   USERS_DELETE: (id: string) => `api/admin/users/${id}`,
+  GET_ADMIN_PROFILE: (id: string) => `api/admin/${id}/profile`,
 
   // Admin - Classes
   CLASSES_CREATE: '/api/admin/classes/create',

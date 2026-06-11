@@ -39,7 +39,7 @@ export function AttendanceCard({ records = [] }: AttendanceCardProps) {
     <Card className="p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">📋 Attendance Record</h2>
 
-      <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+      <div className="mb-8 p-4 bg-linear-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
         <p className="text-sm text-gray-700 font-medium mb-1">Overall Attendance</p>
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -47,7 +47,7 @@ export function AttendanceCard({ records = [] }: AttendanceCardProps) {
               <span className="text-4xl font-bold text-blue-600">{overallPercentage}%</span>
               <div className="flex-1 bg-gray-200 rounded-full h-3">
                 <div
-                  className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full"
+                  className="bg-linear-to-r from-green-500 to-blue-500 h-3 rounded-full"
                   style={{ width: `${overallPercentage}%` }}
                 />
               </div>

@@ -4,6 +4,7 @@ import { MetricCard, Card } from '@/src/components/ui/Card';
 import { useAdminStats } from '@/src/hooks/queries/useAdmin';
 import { Loader } from '@/src/components/ui/Loader';
 import Link from 'next/link';
+import { AdminProfile } from '@/src/types';
 
 const QuickAction = ({ label, description, icon, href }: any) => (
   <Link
@@ -15,8 +16,12 @@ const QuickAction = ({ label, description, icon, href }: any) => (
     <p className="text-xs text-gray-500 mt-1">{description}</p>
   </Link>
 );
+interface AdminProps {
+  profile: AdminProfile
+}
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage({ profile }: AdminProps) {
+  console.log('Admin dashboard page loaded', profile)
   const { data: stats,  isLoading } = useAdminStats();
 
   if (isLoading) {

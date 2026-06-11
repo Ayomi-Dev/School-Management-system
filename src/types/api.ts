@@ -219,8 +219,16 @@ export interface BursarProfile{
   userId: string;
   user: User;
 }
+export interface AdminProfile{
+  role: "ADMIN";
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  user: User
+}
 
-export type UserProfile = StudentProfile | TeacherProfile | ParentProfile | BursarProfile | null
+export type UserProfile = StudentProfile | TeacherProfile | ParentProfile | BursarProfile | AdminProfile | null
 
 // API Response wrapper
 export function isApiError(data: unknown): data is ApiError {

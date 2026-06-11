@@ -9,6 +9,7 @@ export const profileService = {
       TEACHER: API_ENDPOINTS.TEACHERS_GET(userId),
       BURSAR:  API_ENDPOINTS.BURSAR_GET(userId),
       PARENT:  API_ENDPOINTS.PARENTS_GET(userId),
+      ADMIN:  API_ENDPOINTS.GET_ADMIN_PROFILE(userId)
     };
     const url = endpoints[role];
     if (!url) throw new Error(`No profile endpoint for role: ${role}`);

@@ -17,7 +17,7 @@ const API_BASE = '/api/admin';
 
 export const adminService = {
   // Dashboard Stats
-  getStats: () => createApiClient().get(`${API_BASE}/stats`),
+  getStats: () => createApiClient().get(`${API_BASE}/stats`), 
 
   // User Management
   getUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) =>

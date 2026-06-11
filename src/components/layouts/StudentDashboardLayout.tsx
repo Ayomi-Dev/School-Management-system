@@ -1,6 +1,7 @@
 'use client';
 
-import { StudentSidebar } from './StudentSidebar';
+import { useProfileStore } from '@/src/stores/profileStore';
+import { StudentSidebar } from '../dashboards/student/components/StudentSidebar';
 import { Topbar } from './Topbar';
 
 interface StudentDashboardLayoutProps {
@@ -13,7 +14,7 @@ export function StudentDashboardLayout({ children }: StudentDashboardLayoutProps
       {/* Sidebar */}
       <StudentSidebar />
 
-      {/* Main Content */}
+      {/* Main Content */} 
       <div className="flex flex-col flex-1 overflow-hidden md:ml-0">
         {/* Topbar */}
         <Topbar />

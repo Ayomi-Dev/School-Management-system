@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
-import { Role, Department, EmployeeType } from "@/app/generated/prisma/enums";
+import { Role, Department, EmployeeType, ClassLevel } from "@/app/generated/prisma/enums";
 
 
 export const EmploymentType = z.enum(EmployeeType)  // Create a Zod enum from the Prisma EmployeeType enum values
 const DepartmentEnum = z.enum(Department) // Create a Zod enum from the Prisma Department enum values 
+const classLevelEnum = z.enum(ClassLevel)
 
 
 export const teacherSchema = baseSchemaForUserCreation.extend({
@@ -36,7 +37,7 @@ export const teacherSchema = baseSchemaForUserCreation.extend({
 // classId and termId resolved from route params (class name + current term)
 export const assignSubjectToTeacherSchema = z.object({
   subjectName:  z.string().min(1),    // resolved to Subject by name within school
-  className:    z.string().min(1),    // resolved to Class by name within school
+  level:    classLevelEnum,    // resolved to Class by name within school
   // termId resolved server-side from current active term unless overridden
   teacherNumber: z.string().min(1)
 });

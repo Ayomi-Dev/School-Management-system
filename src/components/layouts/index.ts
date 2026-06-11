@@ -1,3 +1,4 @@
 export { Sidebar } from './Sidebar';
 export { Topbar } from './Topbar';
-export { DashboardLayout } from './DashboardLayout';
+export { AdminDashboardLayout } from './AdminDashboardLayout';
+export { StudentDashboardLayout } from './StudentDashboardLayout';
