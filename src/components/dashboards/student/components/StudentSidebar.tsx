@@ -26,8 +26,8 @@ const studentNavItems: NavItem[] = [
     icon: '👤',
   },
   {
-    label: 'My Courses',
-    href: '/dashboard/student/courses',
+    label: 'My Subjects',
+    href: '/dashboard/student/subjects',
     icon: '📚',
   },
   {

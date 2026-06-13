@@ -15,7 +15,7 @@ export const Loader: React.FC<LoaderProps> = ({
   };
 
   const loader = (
-    <div className="flex flex-col items-center justify-center gap-3">
+    <div className="flex w-full h-screen flex-col items-center justify-center gap-3 border-2 border-amber-600">
       <svg
         className={`animate-spin text-blue-600 ${sizeClasses[size]}`}
         xmlns="http://www.w3.org/2000/svg"

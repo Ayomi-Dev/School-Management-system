@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const loginMutation = useLoginMutation(); 
+  const [error, setError] = useState<string | null>(null)
+
 
   const { control, handleSubmit } = useForm<UserLoginInput>({
     resolver: zodResolver(userLoginSchema),
@@ -27,7 +29,12 @@ export default function LoginPage() {
 
   
   const onSubmit = async (data: UserLoginInput) => {
-    await loginMutation.mutateAsync(data)
+    try {
+      setError(null)
+      await loginMutation.mutateAsync(data)
+    } catch (err: any) {
+      setError(err?.error ?? err?.message ?? 'Invalid credentials')
+    }
   };
   
   useEffect(() => {
@@ -63,12 +70,6 @@ export default function LoginPage() {
               placeholder="Enter your password"
               required
             />
-
-            {loginMutation.isError && (
-              <p className="text-sm text-red-600 text-center">
-                {(loginMutation.error as Error)?.message ?? 'Invalid credentials. Please try again.'}
-              </p>
-            )}
 
             <div className="flex justify-end">
               <a href="#" className="text-sm text-blue-600 hover:text-blue-700">

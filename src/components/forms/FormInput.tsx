@@ -34,7 +34,6 @@ export const FormInput = <TFieldValues extends FieldValues = FieldValues,
   icon,
 }: FormInputProps<TFieldValues, TName>) => {
     const { field, fieldState } = useController({ control, name });
-
     return (
       <Input
         {...field}
@@ -42,7 +41,7 @@ export const FormInput = <TFieldValues extends FieldValues = FieldValues,
         label={label}
         placeholder={placeholder}
         required={required}
-        error={fieldState.error?.message}
+        error={fieldState?.error?.message}
         helperText={helperText}
         icon={icon}
       />

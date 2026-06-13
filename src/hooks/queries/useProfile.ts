@@ -18,9 +18,9 @@ export const useProfileQuery = () => {
     },
     enabled: !!user?.role && !!user?.id, // don't fire until user is known
     });
-
-     useEffect(() => {
-    if (query.data) setProfile(query.data?.data.data);
+    
+    useEffect(() => {
+      if (query.data) setProfile(query.data?.data.data);
     }, [query.data]);
 
   useEffect(() => {

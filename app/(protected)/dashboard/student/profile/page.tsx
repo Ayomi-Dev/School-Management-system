@@ -13,7 +13,6 @@ const StudentProfilePage = () => {
   if(!profile){
     return <Loader />
   }
-  console.log(profile)
 
   return (
     <StudentDashboardLayout>

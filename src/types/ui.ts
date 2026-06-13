@@ -176,6 +176,6 @@ export interface DatePickerProps
   name: string;
   label?: string;
   error?: string;
-  value?: string | Date;
-  onChange?: (date: Date | null) => void;
+  value?: string | number | readonly string[];
+  onChange?: (date: React.ChangeEvent) => void;
 }

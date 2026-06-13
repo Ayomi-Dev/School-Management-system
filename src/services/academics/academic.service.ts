@@ -88,17 +88,17 @@ export const academicYearService = {
       tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
       schoolId: string,
       {label, startDate, endDate, isCurrent}: AcademicYearType) {
-          // Demotes existing current year if setting a new one
-          if (isCurrent) {
-            await tx.academicYear.updateMany({
-              where: { schoolId, isCurrent: true },
-              data: { isCurrent: false },
-            });
-          }
-          
-          return tx.academicYear.create({
-            data: { schoolId, label, startDate, endDate, isCurrent: isCurrent ?? false },
+        // Demotes existing current year if setting a new one
+        if (isCurrent) {
+          await tx.academicYear.updateMany({
+            where: { schoolId, isCurrent: true },
+            data: { isCurrent: false },
           });
+        }
+        
+        return tx.academicYear.create({
+          data: { schoolId, label, startDate, endDate, isCurrent: isCurrent ?? false },
+        });
     },
  
     async listAllAcademicYears(schoolId: string) {

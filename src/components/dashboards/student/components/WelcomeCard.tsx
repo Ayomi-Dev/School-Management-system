@@ -15,7 +15,7 @@ export function WelcomeCard({ profile }: WelcomeCardProps) {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-4xl font-bold mb-2">
-            🎯 {greeting}, {profile.firstName}!
+            🎯 {greeting}, {profile?.firstName}!
           </h1>
           <p className="text-blue-100 text-lg">
             Welcome back to your dashboard. You're all caught up!
