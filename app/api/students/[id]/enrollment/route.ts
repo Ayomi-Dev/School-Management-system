@@ -1,12 +1,10 @@
 import { Role } from "@/app/generated/prisma/enums";
 import { requireSchoolRoles } from "@/src/lib/middleware/requireRole";
-import { academicYearService, enrollmentService } from "@/src/services/academics/academic.service";
-import { studentService } from "@/src/services/student/student.service";
+import { enrollmentService } from "@/src/services/academics/academic.service";
 import { ParamsContext } from "@/src/types";
 import { NextRequest, NextResponse } from "next/server";
 
-
-export const GET = async(req: NextRequest, context: ParamsContext) => {
+export const GET = async(req: NextRequest, context: ParamsContext ) => {
     const auth = await requireSchoolRoles(req, ...[Role.STUDENT]);
     if(!auth.success){
         return NextResponse.json(
@@ -20,9 +18,8 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
             { status: 403 }
         )
     }
-    const { schoolId } = auth
     const { id } = await context.params
-    const result = studentService.getStudentById(id, schoolId)
-    return result
+    const { schoolId } = auth
+    const result = await enrollmentService.enrollemntList(schoolId)
+    return result;
 }
-

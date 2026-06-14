@@ -4,7 +4,8 @@ const ClassLevelEnum = z.enum(ClassLevel)
 export const createSubjectSchema = z.object({
   name: z.string().min(1, "Subject name is required"),
   code: z.string().optional(),
-  level: ClassLevelEnum.optional(), // ← optional: only pass to reclassify
+  level: ClassLevelEnum
 });
  
 export const updateSubjectSchema = createSubjectSchema.partial();
+export type CreateSubjectFormData = z.infer<typeof createSubjectSchema>;

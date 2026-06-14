@@ -109,20 +109,12 @@ export async function resolveClassByName(
   level: ClassLevel,
 ) {
   // Fall back: first class at this level (ordered by class.order)
-  const classRecord = await prisma.class.findFirst({
+  return await prisma.class.findFirst({
     where: { schoolId, level },
     orderBy: { order: "asc" },
     select: { id: true, level: true, department: true },
   });
 
-  if (!classRecord) {
-    throw new ResolverError(
-      `No class found for name "${level}" in this school. Create one first.`,
-      404
-    );
-  }
-
-  return classRecord;
 }
 
 // ─────────────────────────────────────────────────────────────

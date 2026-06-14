@@ -1,6 +1,6 @@
 // API Request/Response Types
 import { z } from 'zod';
-import { Gender, Role, UserStatus } from './types';
+import { ClassLevel, Gender, Role, UserStatus } from './types';
 
 // Pagination
 // export interface PaginatedResponse<T> {
@@ -127,6 +127,28 @@ export interface CreateAcademicYearRequest {
   endDate: string;
   isActive?: boolean;
 }
+export type EnrollmentWithDetails = {
+  id:          string;
+  enrolledAt:  string;
+  student: {
+    id:            string;
+    firstName:     string;
+    lastName:      string;
+    studentNumber: string;
+    status:        string;
+  };
+  class: {
+    id:         string;
+    level:      string;
+    department: string | null;
+    subjects:   { id: string; name: string; code: string | null }[];
+  };
+  academicYear: {
+    id:    string;
+    label: string;
+    terms: { id: string; period: string }[];
+  };
+};
 
 // Term Types
 export interface Term {
@@ -196,7 +218,7 @@ export interface Subject {
 export interface CreateSubjectRequest {
   name: string;
   code?: string;
-  description?: string;
+  level: ClassLevel
 }
 
 // Parent Types

@@ -5,72 +5,6 @@ import {  updateAcademicYearSchema } from "@/src/validators/schoolSchema";
 import { resolveTermByPeriod } from "@/src/utils/resolvers";
 
 
-// export const academicService = {
-//     async createAcademicYear(schoolId: string, payload: {
-//       label: string;
-//       startDate: Date;
-//       endDate: Date;
-//       setCurrent?: boolean;
-//     }) {
-//       return prisma.$transaction(async (tx) => {
-//         if (payload.setCurrent) {
-//           await tx.academicYear.updateMany({
-//             where: { schoolId, isCurrent: true },
-//             data: { isCurrent: false }
-//           });
-//         }
-      
-//         const year = await tx.academicYear.create({
-//           data: {
-//             schoolId,
-//             label: payload.label,
-//             startDate: payload.startDate,
-//             endDate: payload.endDate,
-//             isCurrent: payload.setCurrent ?? false
-//           }
-//         });
-      
-//         return year;
-//       });
-//     },
-  
-//     async createTerm(academicYearId: string, payload: {
-//       period: TermPeriod;
-//       startDate: Date;
-//       endDate: Date;
-//       setCurrent?: boolean;
-//     }) {
-//         return prisma.$transaction(async (tx) => {
-//             if (payload.setCurrent) { // if the new term is set to be current, set all other terms in the same academic year to not current
-//               await tx.term.updateMany({
-//                 where: { academicYearId, isCurrent: true },
-//                 data: { isCurrent: false }
-//               });
-//             }
-
-//             switch(payload.period) { // validate that the term dates fall within the academic year dates
-//                 case TermPeriod.FIRST:
-//                     payload.startDate = 
-
-
-      
-//             const term = await tx.term.create({
-//               data: {
-//                 academicYearId,
-//                 period: payload.period,
-//                 startDate: payload.startDate,
-//                 endDate: payload.endDate,
-//                 isCurrent: payload.setCurrent ?? false
-//               }
-//             });
-      
-//             return term;
-//         });
-//     }
-// };
-
-
-
 // ACADEMIC YEAR SERVICE
 // ============================================================
  interface AcademicYearType {
@@ -313,7 +247,86 @@ export const termService = {
 
 
 export const enrollmentService = {
-  async extractFromEnrollment () {
-    
-  }
+  async enrollemntList(schoolId: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [enrollments, total] = await prisma.$transaction([
+      prisma.enrollment.findMany({
+        where: {
+          class: { schoolId }, // ← correct: schoolId lives on Class
+        },
+        skip,
+        take: limit,
+        orderBy: { enrolledAt: 'desc' },
+        include: {
+          student: {
+            select: {
+              id:          true,
+              firstName:   true,
+              lastName:    true,
+              studentNumber: true,
+              status:      true,
+            },
+          },
+          class: {
+            select: {
+              id:         true,
+              level:      true,
+              department: true,
+              subjects: {
+                select: {
+                  id:   true,
+                  name: true,
+                  code: true,
+                },
+              },
+            },
+          },
+          academicYear: {
+            select: {
+              id:    true,
+              label: true,
+              terms: {
+                where:  { isCurrent: true },
+                select: { id: true, period: true },
+                take: 1,
+              },
+            },
+          },
+        },
+      }),
+      prisma.enrollment.count({
+        where: { class: { schoolId } },
+      }),
+    ]);
+    console.log("enrollment server", enrollments)
+
+    return NextResponse.json( {
+      data: enrollments,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  },
+
+  // Kept separately — used internally by student profile, not the list endpoint
+  async extractFromEnrollment(studentId: string, schoolId: string) {
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        studentId,
+        class: { schoolId }, // ← fixed: was using non-existent enrollment.schoolId
+      },
+      include: {
+        student:     { select: { id: true } },
+        class:       { select: { id: true, level: true, subjects: true } },
+        academicYear: { select: { id: true, label: true } },
+      },
+    });
+
+    return NextResponse.json({ data: enrollments });
+  },
 }
+  

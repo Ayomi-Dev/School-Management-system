@@ -5,7 +5,6 @@ import { resolveAcademicYear, resolveClass, ResolverError } from "@/src/utils/re
 import { ClassLevel, Department } from "@/src/types/types";
 import { currentSession } from "@/src/utils/userCode";
 import { _levelOrder } from "@/src/utils/levelOrder";
-import { assignSubjectsToEnrolledStudents } from "@/src/utils/assignSubjectToEnrollmet";
 
 // ============================================================
 // CLASS SERVICE
@@ -55,34 +54,24 @@ export const classService = {
     // Unique: one class name per school
     const existingClass = await prisma.class.findFirst({
       where: { schoolId, level },
-      select: { id: true, level: true, subjects: true}
+      select: { id: true, level: true}
     })
-    if(existingClass){
+    if(!existingClass){
       return NextResponse.json(
         { error: `Class "${level}" already exists in this school.` },
         { status: 409 }
       );
     }
     const order = _levelOrder(level)
-    const classLevel = await prisma.$transaction( async(tx) => {
-      const newClass = await tx.class.create({
-        data: { 
-          schoolId, 
-          level, 
-          order, 
-          ...(department && {department}) 
-        },
-        include: { subjects: { select: {id: true} }}
-      });
 
-      const subjectIds = newClass.subjects.map((subs) => subs.id)
-      const subjects = await assignSubjectsToEnrolledStudents(newClass.id, subjectIds, tx )
-      return {newClass,  subjects}
-    })
+    const classLevel = await prisma.class.create({
+      data: { schoolId, level, order, department },
+    });
+
     return NextResponse.json(
-      { message: "Class created.", data: classLevel},
+      { message: "Class created.", data: classLevel },
       { status: 201 }
-    )
+    );
   },
 
   // ----------------------------------------------------------------
@@ -163,10 +152,7 @@ export const classService = {
 
       const updated = await prisma.class.update({
         where: { id: classId },
-        data: {
-          level,
-          ...(department && { department})
-        },
+        data: parsed.data,
       });
 
       return NextResponse.json({ message: "Class updated.", data: updated });

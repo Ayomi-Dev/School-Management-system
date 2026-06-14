@@ -7,6 +7,7 @@ import {
   CreateAcademicYearRequest,
   Term,
   CreateTermRequest,
+  EnrollmentWithDetails,
 } from '@/src/types/api';
 import { PaginatedResponse } from '@/src/types';
 
@@ -80,5 +81,18 @@ export const termService = {
   create: async (data: CreateTermRequest): Promise<Term> => {
     const response = await client.post(API_ENDPOINTS.TERMS_CREATE, data);
     return response.data;
+  },
+};
+
+export const enrollmentService = {
+  list: async (schoolId: string, page = 1, limit = 20) => {
+    const response = await client.get(
+      API_ENDPOINTS.ENROLLMENTS_LIST(schoolId),
+      { params: { page, limit } }
+    );
+    return response.data as {
+      data: EnrollmentWithDetails[];
+      meta: { total: number; page: number; limit: number; totalPages: number };
+    };
   },
 };

@@ -6,9 +6,11 @@
 
 import { ClassLevel } from "@/app/generated/prisma/enums";
 import { prisma } from "@/src/lib/prisma/client";
+import { assignSubjectsToEnrolledStudents } from "@/src/utils/assignSubjectToEnrollmet";
 import { resolveClassByName } from "@/src/utils/resolvers";
 import { createSubjectSchema, updateSubjectSchema } from "@/src/validators/subjectSchema";
 import { NextRequest, NextResponse } from "next/server";
+import { classService } from "../class/class.service";
 
 export const subjectService = {
 
@@ -34,12 +36,13 @@ export const subjectService = {
         );
       }
 
+      
       // ── Guard: subject name must be unique within a class ─────────
       // Two classes can both have "Mathematics" — that's fine.
       // The same class cannot have two "Mathematics" rows.
       const existing = await prisma.subject.findUnique({
         where: {
-          classId_name: { classId: classRecord.id, name },
+          classId_name: { classId: classRecord.id  , name },
         },
         select: { id: true },
       });
@@ -53,16 +56,29 @@ export const subjectService = {
       // ── Create the subject scoped to this class ───────────────────
       // No teacher at creation time — teacher assignment happens via
       // teacherService.assignSubject which writes to SubjectTeacher
-      const subject = await prisma.subject.create({
+      const subject = await prisma.$transaction(async (tx) => {
+      // Create the subject
+      const newSubject = await tx.subject.create({
         data: { schoolId, classId: classRecord.id, name, code: code ?? null },
         select: {
           id:      true,
           name:    true,
           code:    true,
           classId: true,
-          class:   { select: { name: true, level: true } },
+          class:   { select: { level: true } },
         },
       });
+
+      //Assign this new subject to all students already in the class
+      await assignSubjectsToEnrolledStudents(
+        classRecord.id,
+        [newSubject.id],
+        tx
+      );
+
+      return newSubject;
+    });
+
 
       return NextResponse.json(
         { message: "Subject created.", data: subject },

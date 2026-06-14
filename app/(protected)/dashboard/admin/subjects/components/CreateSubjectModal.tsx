@@ -2,19 +2,12 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useCreateSubjectMutation } from '@/src/hooks/queries/useAdmin';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { X } from 'lucide-react';
+import { CreateSubjectFormData, createSubjectSchema } from '@/src/validators/subjectSchema';
 
-const createSubjectSchema = z.object({
-  name: z.string().min(2, 'Subject name is required'),
-  code: z.string().optional(),
-  description: z.string().optional(),
-});
-
-type CreateSubjectFormData = z.infer<typeof createSubjectSchema>;
 
 interface CreateSubjectModalProps {
   onClose: () => void;
@@ -31,7 +24,7 @@ export default function CreateSubjectModal({ onClose, onSuccess }: CreateSubject
     await createSubjectMutation.mutateAsync({
       name: data.name,
       code: data.code,
-      description: data.description,
+      level: data.level
     });
     onSuccess();
   };
@@ -72,16 +65,13 @@ export default function CreateSubjectModal({ onClose, onSuccess }: CreateSubject
               placeholder="e.g., MATH101"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
+              Level *
             </label>
-            <textarea
-              {...register('description')}
-              placeholder="Brief description"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-              rows={3}
+            <Input
+              {...register('level')}
+              placeholder="e.g., JSS1"
             />
           </div>
 

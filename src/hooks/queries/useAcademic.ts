@@ -5,6 +5,7 @@ import {
   classService,
   academicYearService,
   termService,
+  enrollmentService,
 } from '@/src/services/client/academic';
 import { queryKeys, queryClient } from '@/src/lib/queryClient';
 import {
@@ -119,5 +120,14 @@ export const useCreateTermMutation = () => {
     onError: (error: any) => {
       toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
     },
+  });
+};
+
+
+export const useEnrollmentList = (schoolId: string, page = 1, limit = 20) => {
+  return useQuery({
+    queryKey: ['enrollments', schoolId, page, limit],  // schoolId in key so cache is per-school
+    queryFn:  () => enrollmentService.list(schoolId, page, limit),
+    enabled:  !!schoolId,
   });
 };

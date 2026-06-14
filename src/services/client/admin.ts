@@ -11,26 +11,25 @@ import {
   CreateTermRequest,
 } from '@/src/types/api';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
-import { API_ENDPOINTS } from '@/src/config/constants';
 
 const API_BASE = '/api/admin';
 
 export const adminService = {
   // Dashboard Stats
-  getStats: () => createApiClient().get(`${API_BASE}/stats`), 
+  getStats: () => createApiClient().get(`${API_BASE}/stats`),
 
   // User Management
   getUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) =>
-    createApiClient().get(API_ENDPOINTS.USERS_LIST),
+    createApiClient().get(`${API_BASE}/users`, { params }),
 
-  getUserById: (id: string) => createApiClient().get(API_ENDPOINTS.USERS_GET(id)),
+  getUserById: (id: string) => createApiClient().get(`${API_BASE}/users/${id}`),
 
-  createUser: (data: CreateUserFormData) => createApiClient().post(API_ENDPOINTS.USERS_CREATE, data),
+  createUser: (data: CreateUserFormData) => createApiClient().post(`${API_BASE}/create-user`, data),
 
   updateUser: (id: string, data: Partial<CreateUserFormData>) =>
-    createApiClient().put(API_ENDPOINTS.USERS_UPDATE(id), data),
+    createApiClient().put(`${API_BASE}/users/${id}`, data),
 
-  deleteUser: (id: string) => createApiClient().delete(API_ENDPOINTS.USERS_DELETE(id)),
+  deleteUser: (id: string) => createApiClient().delete(`${API_BASE}/users/${id}`),
 
   bulkCreateUsers: (data: CreateUserFormData[]) =>
     createApiClient().post(`${API_BASE}/users/bulk`, data),
