@@ -95,4 +95,25 @@ export const enrollmentService = {
       meta: { total: number; page: number; limit: number; totalPages: number };
     };
   },
+  extract: async(studentId: string, academicYearId: string) => {
+    const response = await client.get(
+      API_ENDPOINTS.EXTRACT_ENROLLMENT(studentId, academicYearId), { params: { academicYearId }}
+    )
+    return response.data
+  }
 };
+// lib/api/enrollments.ts
+// export const enrollmentsApi = {
+//   getAll: async (filters?: { academicYearId?: string; classId?: string }) => {
+//     const params = new URLSearchParams(filters as Record<string, string>);
+//     const res = await axiosInstance.get(`/enrollments?${params}`);
+//     return res.data.data;
+//   },
+
+//   extractForStudent: async (studentId: string, academicYearId: string) => {
+//     const res = await axiosInstance.get(
+//       `/enrollments/${studentId}/extract?academicYearId=${academicYearId}`
+//     );
+//     return res.data.data;
+//   },
+// };

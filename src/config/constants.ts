@@ -44,12 +44,14 @@ export const API_ENDPOINTS = {
   ACADEMIC_YEARS_LIST: (schoolId: string) => `/api/admin/academics`,
   TERMS_CREATE: '/api/admin/terms/create',
   TERMS_LIST: (academicYearId: string) => `/api/admin/academic-years/${academicYearId}/terms`,
+  ENROLLMENTS_LIST: (schoolId: string ) => `api/students/${schoolId}/enrollment`,
+
 
   // Students
   STUDENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/students`,
   STUDENTS_GET: (id: string) => `/api/students/${id}/profile`,
   STUDENTS_LINK_PARENT: (id: string) => `/api/admin/students/${id}/link`,
-  ENROLLMENTS_LIST: (id: string ) => `api/students/${id}/enrollment`,
+  EXTRACT_ENROLLMENT: (id: string, academicYearId: string ) => `api/students/${id}/enrollment?academicYearId=${academicYearId} `,
 
   // Teachers
   TEACHERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/teachers`,

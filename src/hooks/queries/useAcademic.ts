@@ -131,3 +131,11 @@ export const useEnrollmentList = (schoolId: string, page = 1, limit = 20) => {
     enabled:  !!schoolId,
   });
 };
+
+export const useExtractEnrollment = (studentId: string, academicYearId: string) => {
+  return useQuery({
+    queryKey: queryKeys.enrollments.extract(studentId, academicYearId),
+    queryFn: () => enrollmentService.extract(studentId, academicYearId),
+    enabled: !!studentId && !!academicYearId,
+  })
+}

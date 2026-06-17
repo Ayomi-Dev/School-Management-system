@@ -1,7 +1,6 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { TermPeriod } from "@/app/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
-import {  updateAcademicYearSchema } from "@/src/validators/schoolSchema";
 import { resolveTermByPeriod } from "@/src/utils/resolvers";
 
 
@@ -310,23 +309,74 @@ export const enrollmentService = {
         totalPages: Math.ceil(total / limit),
       },
     });
-  },
+},
 
   // Kept separately — used internally by student profile, not the list endpoint
-  async extractFromEnrollment(studentId: string, schoolId: string) {
-    const enrollments = await prisma.enrollment.findMany({
+  async extractFromEnrollment(studentId: string, academicYearId: string, schoolId: string) {
+    console.log("student and academic ids", studentId, academicYearId)
+    const enrollment = await prisma.enrollment.findUnique({
       where: {
-        studentId,
-        class: { schoolId }, // ← fixed: was using non-existent enrollment.schoolId
+        studentId_academicYearId: { studentId, academicYearId },
       },
-      include: {
-        student:     { select: { id: true } },
-        class:       { select: { id: true, level: true, subjects: true } },
-        academicYear: { select: { id: true, label: true } },
+      select: {
+        class: {
+          select: {
+            subjects: { select: { id: true, name: true } },
+            schoolId: true
+          },
+        },
       },
     });
+    console.log("enrollment from server", enrollment)
 
-    return NextResponse.json({ data: enrollments });
+    return NextResponse.json({
+      data: { subjects: enrollment?.class.subjects ?? [] },
+    });
   },
 }
   
+// GET /api/enrollments/[studentId]/extract — subjects for one student
+// export async function GET(
+//   req: NextRequest,
+//   { params }: { params: { studentId: string } }
+// ) {
+//   const { searchParams } = new URL(req.url);
+//   const academicYearId = searchParams.get("academicYearId");
+
+//   if (!academicYearId) {
+//     return NextResponse.json(
+//       { message: "academicYearId is required" },
+//       { status: 400 }
+//     );
+//   }
+
+//   const enrollment = await prisma.enrollment.findUnique({
+//     where: {
+//       studentId_academicYearId: {
+//         studentId: params.studentId,
+//         academicYearId,
+//       },
+//     },
+//     select: {
+//       id: true,
+//       class: {
+//         select: {
+//           id: true,
+//           name: true,
+//           level: true,
+//           subjects: { select: { id: true, name: true } },
+//         },
+//       },
+//       academicYear: { select: { id: true, label: true } },
+//     },
+//   });
+
+//   if (!enrollment) {
+//     return NextResponse.json(
+//       { message: "No enrollment found" },
+//       { status: 404 }
+//     );
+//   }
+
+//   return NextResponse.json({ data: enrollment });
+// }

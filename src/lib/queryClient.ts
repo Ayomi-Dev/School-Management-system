@@ -92,4 +92,9 @@ export const queryKeys = {
     byRole: (role?: string, userId?: string) =>
       [...queryKeys.profile.all, role, userId] as const,
   },
+  enrollments: {
+    all: ['enrollments'] as const,
+    lists: () => [...queryKeys.enrollments.all, 'list'] as const,
+    extract: (studentId: string, academicYearId: string) =>
+      [...queryKeys.enrollments.all, studentId, academicYearId] as const,  }
 };

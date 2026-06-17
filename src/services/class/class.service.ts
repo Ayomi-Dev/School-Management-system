@@ -65,8 +65,13 @@ export const classService = {
     const order = _levelOrder(level)
 
     const classLevel = await prisma.class.create({
-      data: { schoolId, level, order, department },
-    });
+      data: { 
+        schoolId, 
+        level, order, 
+        ...(department ? { department } : {}),
+      }
+    })
+    ;
 
     return NextResponse.json(
       { message: "Class created.", data: classLevel },
@@ -88,15 +93,10 @@ export const classService = {
     department?: Department,
   ): Promise<{ id: string; level: string; isNew: boolean }> {
     const classRecord = await resolveClass(tx, schoolId, level)
-    if (classRecord) {
+    console.log("resolving class")
+    if (classRecord?.level === level) {
       // Validate the level matches what we expect
-      if (classRecord?.level !== level) {
-        throw new ResolverError(
-          `Class "${level}" does already exist ` +
-          `Fix the level mismatch or choose a different class name.`,
-          409
-        );
-      }
+      console.log("class exist but code didnt break")
       return { ...classRecord, isNew: false };
     }
 
@@ -152,7 +152,10 @@ export const classService = {
 
       const updated = await prisma.class.update({
         where: { id: classId },
-        data: parsed.data,
+        data: {
+          level,
+          ...(department && { department })
+        }
       });
 
       return NextResponse.json({ message: "Class updated.", data: updated });
