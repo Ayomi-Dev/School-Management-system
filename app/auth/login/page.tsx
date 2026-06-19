@@ -15,10 +15,10 @@ const isDev = process.env.NODE_ENV === 'development';
 export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  console.log(user)
   const loginMutation = useLoginMutation(); 
-  const logout = useLogoutMutation()
+  // const logout = useLogoutMutation()
   const [error, setError] = useState<string | null>(null)
+  const { logout } = useAuthStore()
 
 
   const { control, handleSubmit } = useForm<UserLoginInput>({
@@ -44,6 +44,10 @@ export default function LoginPage() {
       router.replace(`/dashboard/${user.role.toLowerCase()}`);
     }
   }, [user]);
+
+  const handlelog = async() => {
+     logout()
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
@@ -78,6 +82,8 @@ export default function LoginPage() {
                 Forgot password?
               </a>
             </div>
+
+            <p onClick={handlelog}>LOGOUT</p>
 
             <Button
               type="submit"

@@ -7,6 +7,7 @@ import { queryKeys, queryClient } from '@/src/lib/queryClient';
 import { CreateUserRequest } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
+import { teacherService } from '@/src/services/client/teacher';
 
 // Users
 export const useUsersList = (
@@ -51,7 +52,7 @@ export const useCreateUserMutation = () => {
     onError: (error: any) => {
       toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
     },
-  });
+  }); 
 };
 
 export const useSearchUsers = (schoolId: string, query: string, role?: string) => {
@@ -128,5 +129,14 @@ export const useSearchParents = (schoolId: string, query: string) => {
     queryKey: ['parents', schoolId, 'search', query],
     queryFn: () => parentService.search(schoolId, query),
     enabled: !!schoolId && query.length > 0,
+  });
+};
+
+
+export const useMyClass = () => {
+  return useQuery({
+    queryKey: queryKeys.teachers.myClass(), // add `myClass: () => ['myClass'] as const` to queryKeys
+    queryFn: () => teacherService.getMyClass(),
+    staleTime: 5 * 60 * 1000, // class assignment rarely changes mid-session
   });
 };

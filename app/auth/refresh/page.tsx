@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { authService } from '@/src/services/client/auth';
 import { useAuthStore } from '@/src/stores/authStore';
 import { Loader } from '@/src/components/ui/Loader';
 import { useRefreshAuthMutation } from '@/src/hooks/queries/useAuth';

@@ -143,7 +143,7 @@ export async function resolveSubject(schoolId: string, subjectName: string) {
 export async function resolveTeacher(schoolId: string, employeeNumber: string) {
   const teacher = await prisma.teacherProfile.findFirst({
     where: { schoolId, employeeNumber },
-    select: { id: true, firstName: true, lastName: true, employeeNumber: true },
+    select: { id: true, firstName: true, lastName: true, employeeNumber: true, classAssignment: true },
   });
 
   if (!teacher) {

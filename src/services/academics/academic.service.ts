@@ -329,9 +329,10 @@ export const enrollmentService = {
     });
     console.log("enrollment from server", enrollment)
 
-    return NextResponse.json({
-      data: { subjects: enrollment?.class.subjects ?? [] },
-    });
+    return NextResponse.json(
+      { data: enrollment },
+      { status: 200 }
+  );
   },
 }
   

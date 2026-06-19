@@ -3,17 +3,26 @@
 import { useState, useMemo } from 'react';
 import { useClassesList, useCreateClassMutation } from '@/src/hooks/queries/useAdmin';
 import { Card } from '@/src/components/ui/Card';
-import { DataTable } from '@/src/components/ui/DataTable';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';
-import { Edit2, Trash2, Plus, Users, Book } from 'lucide-react';
+import { Edit2, Trash2, Plus, Users, Book, UserCog } from 'lucide-react';
 import CreateClassModal from './components/CreateClassModal';
+import AssignClassTeacherModal from './components/AssignClassTeacherModal';
 
 export default function ClassesPage() {
   const { data: classesData, isLoading } = useClassesList();
-  const classes = useMemo(() => classesData?.data || [], [classesData]);
+  const classes = useMemo(() => classesData?.data.data || [], [classesData]);
+  console.log(classes)
   const [yearId, selectYearId] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Tracks which class is currently being assigned a teacher.
+  // Holding the whole record (not just the id) lets the modal show
+  // "Assign teacher to JSS 2A" without an extra lookup.
+  const [classToAssign, setClassToAssign] = useState<{
+    id: string;
+    level: string;
+  } | null>(null);
 
   return (
     <div className="space-y-6">
@@ -38,15 +47,31 @@ export default function ClassesPage() {
         <div className="flex items-center justify-center h-96">
           <Loader />
         </div>
-      ) : classes.data.length > 0 ? (
+      ) : classes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {classes.data.map((classItem: any) => (
+          {classes.map((classItem: any) => (
             <Card key={classItem.id} className="hover:shadow-lg transition-shadow">
               <div className="space-y-4">
                 {/* Class Header */}
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{classItem.level}</h3>
-                  <p className="text-sm text-gray-600">Grade: {classItem.order}</p>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{classItem.level}</h3>
+                    <p className="text-sm text-gray-600">Grade: {classItem.order}</p>
+                  </div>
+                  {classItem.teacherAssignments ? (
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                        Class Teacher
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {/* {classItem.classTeacher.firstName} {classItem.classTeacher.lastName} */}
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-wide text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+                      Unassigned
+                    </span>
+                  )}
                 </div>
 
                 {/* Class Details */}
@@ -78,13 +103,24 @@ export default function ClassesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-gray-200">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Edit2 size={16} /> Edit
+                <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => setClassToAssign({ id: classItem.id, level: classItem.level })}
+                  >
+                    <UserCog size={16} />
+                    {classItem.teacherAssignment ? 'Reassign Teacher' : 'Assign Teacher'}
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-red-600">
-                    <Trash2 size={16} /> Delete
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Edit2 size={16} /> Edit
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 text-red-600">
+                      <Trash2 size={16} /> Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -105,11 +141,20 @@ export default function ClassesPage() {
         </Card>
       )}
 
-      {/* Modal */}
+      {/* Create Class Modal */}
       {isCreateModalOpen && (
         <CreateClassModal
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => setIsCreateModalOpen(false)}
+        />
+      )}
+
+      {/* Assign Class Teacher Modal */}
+      {classToAssign && (
+        <AssignClassTeacherModal
+          classLevel={classToAssign.level}
+          onClose={() => setClassToAssign(null)}
+          onSuccess={() => setClassToAssign(null)}
         />
       )}
     </div>

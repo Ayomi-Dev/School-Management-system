@@ -39,3 +39,36 @@ export interface PaginatedResponse<T> {
 export type ServiceResult<T> =
   | { success: true; data: T }
   | { success: false; error: string; statusCode: number };
+
+  
+export interface TeacherListItem {
+  id: string;
+  employeeNumber: string;
+  firstName: string;
+  lastName: string;
+  department: string | null;
+  user: {
+    email: string;
+    userCode: string;
+    status: string;
+  };
+}
+ 
+export interface TeachersListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  department?: string;
+}
+ 
+export interface TeachersListResponse {
+  data:{
+    data: TeacherListItem[]
+  } ;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}

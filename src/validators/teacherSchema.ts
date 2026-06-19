@@ -48,6 +48,7 @@ export const assignSubjectToTeacherSchema = z.object({
 // Class teacher assignment:
 // Route: POST /schools/:schoolId/classes/:className/teacher
 export const assignClassTeacherSchema = z.object({
+  level: classLevelEnum,
   teacherEmployeeNumber: z.string().min(1),
   isClassTeacher:        z.boolean().default(false),
   // academicYearLabel optional — falls back to current active year

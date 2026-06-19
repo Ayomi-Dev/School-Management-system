@@ -42,20 +42,6 @@ export const useClassDetail = (id: string) => {
   });
 };
 
-export const useCreateClassMutation = () => {
-  const { success, error: toastError } = useToast();
-
-  return useMutation({
-    mutationFn: (data: CreateClassRequest) => classService.create(data),
-    onSuccess: () => {
-      success(SUCCESS_MESSAGES.CREATED_SUCCESS);
-      queryClient.invalidateQueries({ queryKey: queryKeys.classes.all });
-    },
-    onError: (error: any) => {
-      toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
-    },
-  });
-};
 
 // Academic Years
 export const useAcademicYearsList = (schoolId: string, page = 1, limit = 20) => {
@@ -83,21 +69,7 @@ export const useActiveAcademicYear = (schoolId: string) => {
   });
 };
 
-export const useCreateAcademicYearMutation = () => {
-  const { success, error: toastError } = useToast();
 
-  return useMutation({
-    mutationFn: (data: CreateAcademicYearRequest) =>
-      academicYearService.create(data),
-    onSuccess: () => {
-      success(SUCCESS_MESSAGES.CREATED_SUCCESS);
-      queryClient.invalidateQueries({ queryKey: queryKeys.academicYears.all });
-    },
-    onError: (error: any) => {
-      toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
-    },
-  });
-};
 
 // Terms
 export const useTermsList = (academicYearId: string, page = 1, limit = 20) => {

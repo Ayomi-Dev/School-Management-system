@@ -1,6 +1,6 @@
 import React from 'react'
-import { StudentSidebar } from '@/src/components/dashboards/student/components/StudentSidebar'
 import { Topbar } from '@/src/components/layouts'
+import { TeacherSidebar } from '@/src/components/dashboards/teacher/SideBar'
 interface LayoutProps {
     children: React.ReactNode
 }
@@ -8,7 +8,7 @@ const TeacherDashboardLayout = ( { children } : LayoutProps) => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <StudentSidebar />
+      <TeacherSidebar />
 
       {/* Main Content */} 
       <div className="flex flex-col flex-1 overflow-hidden md:ml-0">

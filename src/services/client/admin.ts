@@ -1,15 +1,12 @@
 import { createApiClient } from '@/src/config/api';
+import { TeachersListParams, TeachersListResponse } from '@/src/types';
 import {
-  User,
-  Class,
   CreateClassRequest,
-  Subject,
   CreateSubjectRequest,
-  AcademicYear,
   CreateAcademicYearRequest,
-  Term,
   CreateTermRequest,
 } from '@/src/types/api';
+import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/src/utils/teacher';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
 
 const API_BASE = '/api/admin';
@@ -23,6 +20,7 @@ export const adminService = {
     createApiClient().get(`${API_BASE}/users`, { params }),
 
   getUserById: (id: string) => createApiClient().get(`${API_BASE}/users/${id}`),
+  getAdmin: (id: string) => createApiClient().get(`${API_BASE}${id}/profile`),
 
   createUser: (data: CreateUserFormData) => createApiClient().post(`${API_BASE}/create-user`, data),
 
@@ -49,7 +47,10 @@ export const adminService = {
   deleteClass: (id: string) => createApiClient().delete(`${API_BASE}/classes/${id}`),
   getClassStudents: (classId: string) =>
 
-    createApiClient().get(`${API_BASE}/classes/${classId}/students`),
+  createApiClient().get(`${API_BASE}/classes/${classId}/students`),
+  assignTeacherToCLass: (payload: AssignClassTeacherPayload) => createApiClient().post(`${API_BASE}/teachers/assign-class`, payload),
+
+ 
 
   // Subject Management
   getSubjects: (params?: { page?: number; limit?: number; search?: string }) =>
@@ -65,8 +66,8 @@ export const adminService = {
 
   deleteSubject: (id: string) => createApiClient().delete(`${API_BASE}/subjects/${id}`),
 
-  assignTeacherToSubject: (subjectId: string, teacherId: string) =>
-    createApiClient().post(`${API_BASE}/subjects/${subjectId}/assign`, { teacherId }),
+  assignSubjectToTeacher: (payload: AssignSubjectTeacherPayload) =>
+  createApiClient().post(`${API_BASE}/teachers/assign-subjects`, payload),
 
   // Academic Year Management
   getAcademicYears: (params?: { page?: number; limit?: number }) =>
@@ -134,4 +135,7 @@ export const adminService = {
   getRoles: () => createApiClient().get(`${API_BASE}/roles`),
 
   getPermissions: () => createApiClient().get(`${API_BASE}/permissions`),
+
+  //teachers
+  getTeachers: (params?: TeachersListParams ): Promise<TeachersListResponse> => createApiClient().get(`${API_BASE}/teachers`, { params })
 };

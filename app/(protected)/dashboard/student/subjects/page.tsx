@@ -31,9 +31,9 @@ export default function SubjectsPage() {
   const { data: enrollmentData, isLoading: isSubjectsLoading, isError } = useExtractEnrollment(profile?.id as string, yearId);
 
   // Flatten defensively in case the API ever returns nested arrays
-  const subjects = enrollmentData?.data.subjects ?? [];
-  const selectedClass = enrollmentData?.class;
-  console.log("subjects:", subjects)
+  const subjects = enrollmentData?.data?.class.subjects ?? [];
+  const selectedClass = enrollmentData?.data.class;
+  console.log("selectedclass:")
 
   const isLoading = isYearsLoading || (isSubjectsLoading && !!yearId);
 

@@ -410,8 +410,6 @@ export const adminServices = {
             { data: user },
             { status: 200 }
         )
-    }
-          
-
+    },
 
 }

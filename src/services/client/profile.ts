@@ -15,4 +15,4 @@ export const profileService = {
     if (!url) throw new Error(`No profile endpoint for role: ${role}`);
     return createApiClient().get(url); // your existing axios instance
   }
-};
+}; 

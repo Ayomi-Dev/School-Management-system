@@ -328,7 +328,7 @@ model Class {
 
   school             School                   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   enrollments        Enrollment[]
-  teacherAssignments TeacherClassAssignment[]
+  teacherAssignments TeacherClassAssignment[]     
   classSessions      ClassSession[]
   subjectTeachers    SubjectTeacher[]
   feeStructures      FeeStructure[]
@@ -465,7 +465,7 @@ model TeacherProfile {
 
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   school            School                   @relation(fields: [schoolId], references: [id])
-  classAssignments  TeacherClassAssignment[]
+  classAssignment  TeacherClassAssignment?
   subjectTeachers   SubjectTeacher[]
   classSessions     ClassSession[]
   attendancesMarked Attendance[]             @relation("AttendanceMarkedBy")
@@ -478,16 +478,18 @@ model TeacherProfile {
 
 model TeacherClassAssignment {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  teacherId        String   @map("teacher_id") @db.ObjectId
+  teacherId        String   @unique @map("teacher_id") @db.ObjectId
   classId        String   @map("class_id") @db.ObjectId
   academicYearId String   @map("academic_year_id") @db.ObjectId
   isClassTeacher Boolean  @default(false) @map("is_class_teacher")
   assignedAt     DateTime @default(now()) @map("assigned_at")
 
   teacher TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  class Class        @relation(fields: [classId], references: [id])
+  class Class       @relation(fields: [classId], references: [id])
 
   @@unique([teacherId, classId, academicYearId])
+  @@index([classId, academicYearId])
+  @@index([teacherId, academicYearId])
   @@map("teacher_class_assignments")
 }
 

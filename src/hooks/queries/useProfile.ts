@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 export const useProfileQuery = () => {
   const user = useAuthStore((s) => s.user);
-  const { setProfile, setProfileError, profile } = useProfileStore();
+  const { setProfile, setProfileError  } = useProfileStore();
   const query = useQuery({
     queryKey: queryKeys.profile.byRole(user?.role, user?.id),
     queryFn: async () => {

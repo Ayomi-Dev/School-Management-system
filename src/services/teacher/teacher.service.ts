@@ -1,11 +1,34 @@
 import { prisma } from "@/src/lib/prisma/client";
+import { ClassLevel, Department, TermPeriod } from "@/src/types";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
 import { resolveAcademicYear, resolveClassByName, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
-import { getCurrentTerm } from "@/src/utils/userCode";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
 
 export const teacherServices = { 
+  async getTeacherById (teacherId: string, schoolId: string) {
+    try {
+      const teacher = await prisma.teacherProfile.findFirst(
+        {
+          where: { userId: teacherId, schoolId },
+          select: { id: true, firstName: true, }
+        }
+      )
+      if(!teacher){
+        return NextResponse.json({ error: "Teacher not found." }, { status: 404 });
+      }
+      return NextResponse.json({ data: teacher });
+    } 
+    catch (error) {
+      console.error("[teacherServices.getTeacherById]", error);
+      return NextResponse.json(
+        { error: "Unexpected error" },
+        { status: 500 }
+      )
+    }
+  },
+
+
   async assignSubject(req: NextRequest, schoolId: string) {
     try {
       const body = await req.json();
@@ -29,7 +52,7 @@ export const teacherServices = {
           resolveTeacher(schoolId, teacherNumber),
           prisma.class.findFirst({
             where:  { schoolId, level },
-            select: { id: true, name: true, level: true, department: true },
+            select: { id: true, level: true, department: true },
           }).then((c) => {
               if (!c) throw new ResolverError(`Class "${level}" not found in this school.`);
               return c;
@@ -124,7 +147,7 @@ export const teacherServices = {
 
       let teacher: { id: string };
       let subject: { id: string };
-      let classRecord: { id: string; level: string; department: string | null };
+      let classRecord: { id: string; };
       let term:    { id: string };
  
       try {
@@ -170,7 +193,7 @@ export const teacherServices = {
   // Body: { teacherEmployeeNumber, isClassTeacher, academicYearLabel? }
   // className from route param; academicYearLabel defaults to current.
   // ----------------------------------------------------------------
-  async assignClassTeacher(req: NextRequest, schoolId: string, className: string) {
+  async assignClassTeacher(req: NextRequest, schoolId: string) {
     try {
       const body = await req.json();
       const parsed = assignClassTeacherSchema.safeParse(body);
@@ -181,39 +204,29 @@ export const teacherServices = {
         );
       }
  
-      const { teacherEmployeeNumber, isClassTeacher, academicYearLabel } = parsed.data;
+      const { teacherEmployeeNumber, isClassTeacher, academicYearLabel, level } = parsed.data;
  
-      let teacher:      { id: string };
-      let classRecord:          { id: string; name: string };
+      let teacher:      { id: string  };
+      let classRecord:  { level: ClassLevel; id: string; department: Department | null; } | null
       let academicYear: { id: string; label: string };
  
       try {
-        [teacher, academicYear] = await Promise.all([
+        [teacher, classRecord, academicYear] = await Promise.all([
           resolveTeacher(schoolId, teacherEmployeeNumber),
+          resolveClassByName(schoolId, level),
           resolveAcademicYear(schoolId, academicYearLabel),
         ]);
  
-        const c = await prisma.class.findFirst({
-          where: { schoolId, name: className },
-          select: { id: true, name: true },
-        });
-        if (!c) throw new ResolverError(`Class "${className}" not found.`);
-        classRecord = c;
+        if (!classRecord) throw new ResolverError(`Class "${level}" not found.`);
       } catch (err) {
         if (err instanceof ResolverError) {
           return NextResponse.json({ error: err.message }, { status: err.statusCode });
         }
         throw err;
       }
- 
+      
       const assignment = await prisma.teacherClassAssignment.upsert({
-        where: {
-          teacherId_classId_academicYearId: {
-            teacherId:      teacher.id,
-            classId:        classRecord.id,
-            academicYearId: academicYear.id,
-          },
-        },
+        where: { teacherId: teacher.id},
         create: {
           teacherId:      teacher.id,
           classId:        classRecord.id,
@@ -222,9 +235,8 @@ export const teacherServices = {
         },
         update: { isClassTeacher },
       });
- 
       return NextResponse.json({
-        message: `${teacherEmployeeNumber} assigned to ${classRecord.name} (${academicYear.label}).`,
+        message: `${teacherEmployeeNumber} assigned to ${classRecord.level} (${academicYear.label}).`,
         data: assignment,
       });
     } catch (error) {
@@ -237,7 +249,7 @@ export const teacherServices = {
   // GET TEACHER ASSIGNMENTS (timetable view)
   // GET /schools/:schoolId/teachers/:employeeNumber/assignments?termPeriod=FIRST
   // ----------------------------------------------------------------
-  async getAssignments(schoolId: string, employeeNumber: string, termPeriod?: string) {
+  async getAssignments(schoolId: string, employeeNumber: string, termPeriod?: TermPeriod) {
     try {
       let teacher: { id: string; firstName: string; lastName: string; employeeNumber: string };
       try {
@@ -253,19 +265,19 @@ export const teacherServices = {
       let termId: string | undefined;
       if (termPeriod) {
         try {
-          const term = await resolveTermByPeriod(schoolId, termPeriod as any);
+          const term = await resolveTermByPeriod(schoolId, termPeriod);
           termId = term.id;
         } catch {
           // Non-fatal — just return all if term not found
         }
       }
  
-      const [subjectAssignments, classAssignments] = await Promise.all([
+      const [subjectAssignments, classAssignment] = await Promise.all([
         prisma.subjectTeacher.findMany({
           where: { teacherId: teacher.id, ...(termId ? { termId } : {}) },
           include: {
             subject: { select: { name: true, code: true } },
-            class:   { select: { name: true, level: true } },
+            class:   { select: { level: true } },
             term:    {
               select: {
                 period: true,
@@ -275,14 +287,14 @@ export const teacherServices = {
           },
           orderBy: { assignedAt: "desc" },
         }),
-        prisma.teacherClassAssignment.findMany({
+        prisma.teacherClassAssignment.findFirst({
           where: { teacherId: teacher.id },
-          include: { class: { select: { name: true, level: true } } },
+          include: { class: { select: { level: true } } },
         }),
       ]);
  
       return NextResponse.json({
-        data: { teacher, subjectAssignments, classAssignments },
+        data: { teacher, subjectAssignments, classAssignment },
       });
     } catch (error) {
       console.error("[teacherService.getAssignments]", error);
@@ -300,10 +312,8 @@ export const teacherServices = {
       const page       = Math.max(1, parseInt(searchParams.get("page")  ?? "1",  10));
       const limit      = Math.min(100, parseInt(searchParams.get("limit") ?? "20", 10));
       const search     = searchParams.get("search")     ?? undefined;
-      const department = searchParams.get("department") ?? undefined;
  
-      const where: any = { schoolId, deletedAt: null };
-      if (department) where.department = department;
+      const where: any = { schoolId };
       if (search) {
         where.OR = [
           { firstName:      { contains: search, mode: "insensitive" } },
@@ -323,7 +333,7 @@ export const teacherServices = {
           },
         }),
       ]);
- 
+      console.log("teachers", teachers)
       return NextResponse.json({
         data: teachers,
         meta: buildPaginationMeta(total, page, limit),

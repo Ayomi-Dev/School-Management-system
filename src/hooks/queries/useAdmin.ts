@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '@/src/services/client/admin';
 import { useToast } from '@/src/hooks/useToast';
 import {
@@ -7,6 +7,8 @@ import {
   CreateAcademicYearRequest,
 } from '@/src/types/api';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
+import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/src/utils/teacher';
+import { TeachersListParams } from '@/src/types';
 
 const queryKeys = {
   admin: ['admin'],
@@ -23,6 +25,7 @@ const queryKeys = {
   timetable: (classId?: string) => [...queryKeys.admin, 'timetable', classId],
   reports: () => [...queryKeys.admin, 'reports'],
   settings: () => [...queryKeys.admin, 'settings'],
+  teachers: () => [...queryKeys.admin, 'subjects']
 };
 
 // Stats Queries
@@ -47,6 +50,14 @@ export const useUserById = (id: string) => {
   return useQuery({
     queryKey: queryKeys.userById(id),
     queryFn: () => adminService.getUserById(id),
+    enabled: !!id,
+  });
+};
+
+export const useAdminById = (id: string) => {
+  return useQuery({
+    queryKey: queryKeys.userById(id),
+    queryFn: () => adminService.getAdmin(id),
     enabled: !!id,
   });
 };
@@ -126,6 +137,27 @@ export const useCreateClassMutation = () => {
   });
 };
 
+export const useAssignClassTeacherMutation = () => {
+  const queryClient = useQueryClient();
+  const { success } = useToast()
+  return useMutation({
+    mutationFn: (payload: AssignClassTeacherPayload) => adminService.assignTeacherToCLass(payload),
+    onSuccess: () => {
+      success('Teacher assigned to class')
+    }
+  })
+}
+
+export const useTeachersList = (params?: TeachersListParams) => {
+  return useQuery({
+    queryKey: [...queryKeys.teachers(), params],
+    queryFn: () => adminService.getTeachers(params),
+    staleTime: 2 * 60 * 1000,
+    placeholderData: keepPreviousData, // avoids list flicker between keystrokes
+  });
+};
+
+
 // Subject Queries
 export const useSubjectsList = (params?: { page?: number; limit?: number; search?: string }) => {
   return useQuery({
@@ -151,6 +183,22 @@ export const useCreateSubjectMutation = () => {
   });
 };
 
+export const useAssignSubjectTeacherMutation = () => {
+  const queryClient = useQueryClient();
+  const { success } = useToast()
+ 
+  return useMutation({
+    mutationFn: (payload: AssignSubjectTeacherPayload) =>
+      adminService.assignSubjectToTeacher(payload),
+    onSuccess: () => {
+      // Subject list includes subjectTeachers — refetch so the "Teacher"
+      // column reflects the new assignment without a manual page refresh.
+      success('Teacher assigned successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.subjects() });
+    },
+  });
+};
+
 // Academic Year Queries
 export const useAcademicYearsList = (params?: { page?: number; limit?: number }) => {
   return useQuery({
@@ -159,6 +207,7 @@ export const useAcademicYearsList = (params?: { page?: number; limit?: number })
     staleTime: 5 * 60 * 1000,
   });
 };
+
 
 export const useCreateAcademicYearMutation = () => {
   const queryClient = useQueryClient();

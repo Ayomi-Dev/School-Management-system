@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
   // Teachers
   TEACHERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/teachers`,
   TEACHERS_GET: (id: string) => `/api/teachers/${id}`,
+  TEACHER_GET_ME: ( ) => `/api/teachers/class`,
 
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,
