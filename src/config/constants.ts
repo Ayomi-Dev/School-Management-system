@@ -57,6 +57,9 @@ export const API_ENDPOINTS = {
   TEACHERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/teachers`,
   TEACHERS_GET: (id: string) => `/api/teachers/${id}`,
   TEACHER_GET_ME: ( ) => `/api/teachers/class`,
+  GET_DAILY_ROSTER: (classId: string) => `/api/teachers/class/${classId}/attendance`,
+  MARK_ATTENDANCE: (classId: string) => `/api/teachers/class/${classId}/attendance`,
+  GET_ATTENDANCE_HISTORY: (classId: string) => `api/teachers/class/${classId}/attendance/history`,
 
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,

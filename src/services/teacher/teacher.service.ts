@@ -2,6 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { ClassLevel, Department, TermPeriod } from "@/src/types";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
 import { resolveAcademicYear, resolveClassByName, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
+import { markAttendanceSchema } from "@/src/validators/attendanceSchema";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -343,4 +344,302 @@ export const teacherServices = {
       return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
     }
   },
-};
+
+  async manageAttendance(req: NextRequest, userId: string,  classId: string) {
+    try {
+      const teacherProfile = await prisma.teacherProfile.findUnique(
+          {
+              where: { userId },
+              select: { id: true, schoolId: true }
+          }
+      );
+      if(!teacherProfile){
+          return NextResponse.json(
+              { error: "No teacher record found" },
+              { status: 404 }
+          )
+      }
+       // Authorization: only the class's assigned teacher can mark its attendance.
+      const assignment = await prisma.teacherClassAssignment.findUnique({
+        where: { teacherId: teacherProfile.id },
+        select: { classId: true },
+      });
+      if (!assignment || assignment.classId !== classId) {
+        return NextResponse.json(
+          { error: 'You are not the class teacher for this class.' },
+          { status: 403 },
+        );
+      }
+  
+      // Resolve target date — default to today, normalized to midnight so the
+      // unique constraint (classId, date, label) matches consistently across
+      // requests made at different times of the same day.
+      const { searchParams } = new URL(req.url);
+      const dateParam = searchParams.get('date');
+      const targetDate = dateParam ? new Date(dateParam) : new Date();
+      targetDate.setHours(0, 0, 0, 0);
+      const term = await prisma.term.findFirst({
+        where: {  isCurrent: true },
+        select: { id: true, academicYearId: true },
+      });
+      if (!term) {
+        return NextResponse.json({ error: 'No active term found for this school.' }, { status: 400 });
+      }
+   
+      // Find-or-create today's session for this class.
+      const session = await prisma.classSession.upsert({
+        where: {
+          classId_date_label: {
+            classId,
+            date: targetDate,
+            label: 'daily',
+          },
+        },
+        create: {
+          classId,
+          termId: term.id,
+          teacherId: teacherProfile.id,
+          date: targetDate,
+          label: 'daily',
+          isCompleted: false,
+        },
+        update: {}, // session already exists for today — leave as-is
+        select: { id: true, isCompleted: true, date: true },
+      });
+   
+      // Enrolled students for this class in the current academic year.
+      const enrollments = await prisma.enrollment.findMany({
+        where: { classId, academicYearId: term.academicYearId },
+        select: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              studentNumber: true, // adjust field name if different on StudentProfile
+            },
+          },
+        },
+        orderBy: { student: { lastName: 'asc' } },
+      });
+   
+      if (enrollments.length === 0) {
+        return NextResponse.json({
+          data: { session, roster: [] },
+        });
+      }
+   
+      // Existing attendance rows for this session, keyed by studentId for
+      // quick lookup while building the roster below.
+      const existingAttendance = await prisma.attendance.findMany({
+        where: { sessionId: session.id },
+        select: { id: true, studentId: true, status: true, remark: true },
+      });
+      const attendanceByStudent = new Map(existingAttendance.map((a) => [a.studentId, a]));
+   
+      // Students enrolled but with no Attendance row yet (first time this
+      // session has been opened) — create UNMARKED rows for them now so the
+      // roster is always complete.
+      const missingStudentIds = enrollments
+        .map((e) => e.student.id)
+        .filter((id) => !attendanceByStudent.has(id));
+   
+      if (missingStudentIds.length > 0) {
+        await prisma.attendance.createMany({
+          data: missingStudentIds.map((studentId) => ({
+            sessionId: session.id,
+            studentId,
+            status: 'UNMARKED' as const,
+          })),
+        });
+   
+        // Re-fetch only the newly created rows to merge into the map —
+        // avoids a second full table scan.
+        const created = await prisma.attendance.findMany({
+          where: { sessionId: session.id, studentId: { in: missingStudentIds } },
+          select: { id: true, studentId: true, status: true, remark: true },
+        });
+        created.forEach((a) => attendanceByStudent.set(a.studentId, a));
+      }
+   
+      const roster = enrollments.map(({ student }) => {
+        const attendance = attendanceByStudent.get(student.id)!;
+        return {
+          attendanceId: attendance.id,
+          studentId: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          admissionNumber: student.studentNumber,
+          status: attendance.status,
+          remark: attendance.remark,
+        };
+      });
+   
+      return NextResponse.json({
+        data: { session, roster },
+      });
+      
+    } 
+  catch (error) {
+    console.error('[attendanceService.getDailyRoster]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+  },
+  async updateAttendance(req: NextRequest, teacherId: string, classId: string) {
+    try{
+      const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      select: { id: true },
+    });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+    const assignment = await prisma.teacherClassAssignment.findUnique({
+      where: { teacherId: teacher.id },
+      select: { classId: true },
+    });
+    if (!assignment || assignment.classId !== classId) {
+      return NextResponse.json(
+        { error: 'You are not the class teacher for this class.' },
+        { status: 403 },
+      );
+    }
+ 
+    const body = await req.json();
+    const parsed = markAttendanceSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
+    }
+    const { sessionId, entries } = parsed.data;
+ 
+    // Confirm the session actually belongs to this class — prevents a
+    // crafted request from writing attendance into another class's session
+    // by guessing/reusing a sessionId.
+    const session = await prisma.classSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, classId: true },
+    });
+    if (!session || session.classId !== classId) {
+      return NextResponse.json({ error: 'Session not found for this class.' }, { status: 404 });
+    }
+ 
+    const updated = await prisma.$transaction(async (tx) => {
+      const writes = await Promise.all(
+        entries.map((entry) =>
+          tx.attendance.update({
+            where: { id: entry.attendanceId },
+            data: {
+              status: entry.status,
+              remark: entry.remark ?? null,
+              markedById: teacher.id,
+            },
+          }),
+        ),
+      );
+ 
+      await tx.classSession.update({
+        where: { id: sessionId },
+        data: { isCompleted: true },
+      });
+ 
+      return writes;
+    });
+ 
+    return NextResponse.json({
+      message: `Attendance saved for ${updated.length} student(s).`,
+      data: { updatedCount: updated.length },
+    });
+  } 
+  catch (error) {
+    console.error('[attendanceService.markAttendance]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+    
+  },
+   async attendanceHistory(req: NextRequest, teacherId: string, classId: string) {
+    try{
+      const teacher = await prisma.teacherProfile.findUnique({
+        where: { userId: teacherId },
+        select: { id: true },
+      });
+      if (!teacher) {
+        return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+      }
+    
+      const assignment = await prisma.teacherClassAssignment.findUnique({
+        where: { teacherId: teacher.id },
+        select: { classId: true },
+      });
+      if (!assignment || assignment.classId !== classId) {
+        return NextResponse.json(
+          { error: 'You are not the class teacher for this class.' },
+          { status: 403 },
+        );
+      }
+    
+      const { searchParams } = new URL(req.url);
+      const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+      const limit = Math.min(100, parseInt(searchParams.get('limit') ?? '20', 10));
+      const from = searchParams.get('from');
+      const to = searchParams.get('to');
+    
+      const where: any = { classId, label: 'daily' };
+      if (from || to) {
+        where.date = {};
+        if (from) where.date.gte = new Date(from);
+        if (to) where.date.lte = new Date(to);
+      }
+    
+      const [total, sessions] = await Promise.all([
+        prisma.classSession.count({ where }),
+        prisma.classSession.findMany({
+          where,
+          orderBy: { date: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: {
+            id: true,
+            date: true,
+            isCompleted: true,
+            attendances: {
+              select: { status: true },
+            },
+          },
+        }),
+      ]);
+    
+      const data = sessions.map((session) => {
+        const counts = { PRESENT: 0, ABSENT: 0, LATE: 0, UNMARKED: 0 };
+        session.attendances.forEach((a) => {
+          counts[a.status as keyof typeof counts] += 1;
+        });
+      
+        return {
+          sessionId: session.id,
+          date: session.date,
+          isCompleted: session.isCompleted,
+          totalStudents: session.attendances.length,
+          counts,
+        };
+      });
+    
+      return NextResponse.json({
+        data,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } 
+    catch (error) {
+      console.error('[attendanceService.getHistory]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+   }
+}

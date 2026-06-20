@@ -163,6 +163,8 @@ model School {
   feeStructures   FeeStructure[]
   announcements   Announcement[]
   notifications   Notification[]
+  assessmentConfit AssessmentConfig?
+  gradeScales GradeScale[]
   createdById  String?            @map("created_by_id") @db.ObjectId
   createdBy   SuperAdminProfile? @relation("SchoolCreatedBy", fields:   [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction )
 
@@ -583,6 +585,34 @@ model Score {
   @@unique([studentId, subjectId, termId])
   @@index([termId, subjectId])
   @@map("scores")
+}
+
+model GradeScale {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  schoolId  String   @map("school_id") @db.ObjectId
+  minScore  Float    @map("min_score")
+  maxScore  Float    @map("max_score")
+  grade     String
+  remark    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@map("grade_scales")
+}
+
+model AssessmentConfig {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  schoolId     String   @unique @map("school_id") @db.ObjectId
+  caMaxScore   Float    @default(40) @map("ca_max_score")
+  examMaxScore Float    @default(60) @map("exam_max_score")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@map("assessment_configs")
 }
 
 model ReportCard {

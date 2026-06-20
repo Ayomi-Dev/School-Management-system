@@ -300,3 +300,51 @@ export interface TeacherComboboxProps {
   placeholder?: string;
 }
 
+export type AttendanceStatus = 'UNMARKED' | 'PRESENT' | 'ABSENT' | 'LATE';
+ 
+export interface RosterEntry {
+  attendanceId: string;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  status: AttendanceStatus;
+  remark: string | null;
+}
+ 
+export interface DailyRosterResponse {
+  session: {
+    id: string;
+    isCompleted: boolean;
+    date: string;
+  };
+  roster: RosterEntry[];
+}
+ 
+export interface MarkAttendanceEntry {
+  attendanceId: string;
+  status: Exclude<AttendanceStatus, 'UNMARKED'>;
+  remark?: string;
+}
+ 
+export interface MarkAttendancePayload {
+  sessionId: string;
+  entries: MarkAttendanceEntry[];
+}
+ 
+export interface AttendanceHistoryEntry {
+  sessionId: string;
+  date: string;
+  isCompleted: boolean;
+  totalStudents: number;
+  counts: { PRESENT: number; ABSENT: number; LATE: number; UNMARKED: number };
+}
+ 
+export interface AttendanceHistoryParams {
+  classId: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+}
+

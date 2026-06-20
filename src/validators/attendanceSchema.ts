@@ -11,18 +11,18 @@ export const createClassSessionSchema = z.object({
   date: z.coerce.date(),
   label: z.string().optional(),
 });
-export const markAttendanceSchema = z.object({
-  sessionId: z.string().min(1),
-  records: z
-    .array(
-      z.object({
-        studentId: z.string().min(1),
-        status: z.enum(["PRESENT", "ABSENT", "LATE", "UNMARKED"]),
-        remark: z.string().optional(),
-      })
-    )
-    .min(1),
-});
+// export const markAttendanceSchema = z.object({
+//   sessionId: z.string().min(1),
+//   records: z
+//     .array(
+//       z.object({
+//         studentId: z.string().min(1),
+//         status: z.enum(["PRESENT", "ABSENT", "LATE", "UNMARKED"]),
+//         remark: z.string().optional(),
+//       })
+//     )
+//     .min(1),
+// });
 
 export const attendanceQuerySchema = z.object({
   classId: z.string().optional(),
@@ -34,3 +34,16 @@ export const attendanceQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+
+export const markAttendanceSchema = z.object({
+  sessionId: z.string().min(1),
+  entries: z
+    .array(
+      z.object({
+        attendanceId: z.string().min(1),
+        status: z.enum(['PRESENT', 'ABSENT', 'LATE']),
+        remark: z.string().optional(),
+      }),
+    )
+    .min(1, 'At least one attendance entry is required.'),
+});
