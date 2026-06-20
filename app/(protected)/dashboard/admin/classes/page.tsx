@@ -12,9 +12,9 @@ import AssignClassTeacherModal from './components/AssignClassTeacherModal';
 export default function ClassesPage() {
   const { data: classesData, isLoading } = useClassesList();
   const classes = useMemo(() => classesData?.data.data || [], [classesData]);
-  console.log(classes)
-  const [yearId, selectYearId] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  console.log(classes)
+
 
   // Tracks which class is currently being assigned a teacher.
   // Holding the whole record (not just the id) lets the modal show

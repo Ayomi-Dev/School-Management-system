@@ -147,7 +147,7 @@ export const teacherServices = {
 
       let teacher: { id: string };
       let subject: { id: string };
-      let classRecord: { id: string; };
+      let classRecord: { id: string; level: string; department: string | null } | null;
       let term:    { id: string };
  
       try {
@@ -169,7 +169,7 @@ export const teacherServices = {
         where: {
           teacherId: teacher.id,
           subjectId: subject.id,
-          classId:   classRecord.id,
+          classId:   classRecord?.id,
           termId:    term.id,
         },
         select: { id: true },

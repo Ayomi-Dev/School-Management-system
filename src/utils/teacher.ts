@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useDebounce } from "../hooks/useUtils";
-import { useTeachersList } from "../hooks/queries/useAdmin";
+import { ClassLevel, TeacherProfile } from "../types";
+
 
 export interface NavItem {
   label: string;
@@ -19,11 +18,39 @@ export interface NavSection {
  * Represents one class assignment from TeacherClassAssignment.
  * Fetch this from /api/teacher/me/classes and store in Zustand.
  * The selected classId drives all scoped nav hrefs below.
+ * 
  */
-export interface AssignedClass {
+export interface SubjectAssignmentType {
+  id: string;
+  assignedAt: string;
+  class: {
+    level: ClassLevel
+  }
+  subject: {
+    name: string;
+    code: string;
+  }
+  subjectId: string;
+  teacherId: string;
+}
+export interface ClassAssignmentType{
+  academicYearId: string;
+  class: {
+    level: ClassLevel
+  }
   classId: string;
-  level: string;
+  id: string;
   isClassTeacher: boolean;
+  teacherId: string;
+  assignedAt: string
+}
+
+export interface AssignedClass {
+  data: {
+    teacher: TeacherProfile;
+    subjectAssignment: SubjectAssignmentType[];
+    classAssignment: ClassAssignmentType
+  }
 }
 export interface AssignClassTeacherPayload {
   teacherEmployeeNumber: string;

@@ -192,7 +192,9 @@ export const classService = {
           enrollments: {
             select: { academicYearId: true, academicYear: true},
           },
-          teacherAssignments: { select: {id: true, teacherId: true}},
+          teacherAssignments: { 
+            select: {id: true, teacherId: true, teacher: true}
+          },
           _count: {
             select: { enrollments: true, subjectTeachers: true, subjects: true },
           },

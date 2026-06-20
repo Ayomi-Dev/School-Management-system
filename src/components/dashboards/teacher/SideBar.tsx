@@ -12,11 +12,11 @@ export function TeacherSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // A teacher has exactly one class assignment now (TeacherClassAssignment
+  // A teacher has exactly one class assignment (TeacherClassAssignment
   // is 1:1), so we fetch it directly on mount instead of receiving it as a
   // prop. No class switcher needed — there's nothing to switch between.
   const { data: assignedClass, isLoading } = useMyClass();
-  console.log(assignedClass)
+  const classAssignedToTeacher = assignedClass?.data
 
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -33,7 +33,7 @@ export function TeacherSidebar() {
     pathname === href || pathname.startsWith(href + '/');
 
   const sections: NavSection[] = assignedClass
-    ? [...buildClassNavSections(assignedClass.classId), personalNavSection]
+    ? [...buildClassNavSections(classAssignedToTeacher?.classAssignment.classId as string), personalNavSection]
     : [personalNavSection];
 
   // ─── NAV LINKS ──────────────────────────────────────────────────────────────
@@ -159,10 +159,10 @@ export function TeacherSidebar() {
           ) : assignedClass ? (
             <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
               <p className="text-[10px] uppercase tracking-widest text-emerald-600 font-semibold">
-                {assignedClass.isClassTeacher ? 'Class Teacher' : 'Assigned Class'}
+                {classAssignedToTeacher?.classAssignment.isClassTeacher ? 'Class Teacher' : 'Assigned Class'}
               </p>
               <p className="text-sm font-medium text-gray-900 truncate">
-                {assignedClass.level}
+                {classAssignedToTeacher?.classAssignment.class.level}
               </p>
             </div>
           ) : null}

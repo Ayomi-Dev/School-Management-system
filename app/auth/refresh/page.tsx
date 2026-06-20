@@ -20,7 +20,7 @@ export default function RefreshSessionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, setLoading, isLoading, setError, error: authError } = useAuthStore();
-  const refreshMutation = useRefreshAuthMutation(); // Directly use the service method since we're handling state manually here
+  const refreshMutation = useRefreshAuthMutation(); // Directly uses the service method since we're handling state manually here
  
 
   const handleRefresh = async() => {
