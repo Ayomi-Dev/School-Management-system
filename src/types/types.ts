@@ -72,3 +72,50 @@ export interface TeachersListResponse {
     totalPages: number;
   };
 }
+export interface ScoreRosterEntry {
+  scoreId: string | null;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  caScore: number | null;
+  examScore: number | null;
+  totalScore: number | null;
+  grade: string | null;
+  gradeRemark: string | null;
+  isPublished: boolean;
+}
+ 
+export interface ScoreRosterResponse {
+  termId: string;
+  termLabel: string;
+  assessmentConfig: { caMaxScore: number; examMaxScore: number };
+  roster: ScoreRosterEntry[];
+}
+ 
+export type ScoreField = 'caScore' | 'examScore';
+ 
+export interface SaveScoresPayload {
+  field: ScoreField;
+  entries: { studentId: string; value: number }[];
+}
+ 
+export interface ScoreHistoryEntry {
+  id: string;
+  caScore: number | null;
+  examScore: number | null;
+  totalScore: number | null;
+  grade: string | null;
+  gradeRemark: string | null;
+  isPublished: boolean;
+  updatedAt: string;
+  term: { id: string; label: string };
+  student: { id: string; firstName: string; lastName: string; admissionNumber: string };
+}
+ 
+export interface ScoreHistoryParams {
+  subjectId: string;
+  classId: string;
+  page?: number;
+  limit?: number;
+}

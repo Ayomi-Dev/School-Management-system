@@ -51,7 +51,7 @@ export const API_ENDPOINTS = {
   STUDENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/students`,
   STUDENTS_GET: (id: string) => `/api/students/${id}/profile`,
   STUDENTS_LINK_PARENT: (id: string) => `/api/admin/students/${id}/link`,
-  EXTRACT_ENROLLMENT: (id: string, academicYearId: string ) => `api/students/${id}/enrollment?academicYearId=${academicYearId} `,
+  EXTRACT_ENROLLMENT: (id: string, academicYearId: string ) => `/api/students/${id}/enrollment?academicYearId=${academicYearId} `,
 
   // Teachers
   TEACHERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/teachers`,
@@ -60,6 +60,10 @@ export const API_ENDPOINTS = {
   GET_DAILY_ROSTER: (classId: string) => `/api/teachers/class/${classId}/attendance`,
   MARK_ATTENDANCE: (classId: string) => `/api/teachers/class/${classId}/attendance`,
   GET_ATTENDANCE_HISTORY: (classId: string) => `api/teachers/class/${classId}/attendance/history`,
+  SAVE_SCORES: (classId: string, subjectId: string) => `/api/teachers/class/${classId}/subjects/${subjectId}/scores`,
+  GET_SCORE_HISTORY: (subjectId: string) => `/api/teachers/subjects/${subjectId}/scores/history`,
+  GET_SCORE_ROSTER: (classId: string, subjectId: string) => `api/teachers/class/${classId}/subjects/${subjectId}/scores`,
+  GET_MY_SUBJECTS: ( classId: string) => `/api/teachers/class/${classId}/subjects`,
 
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,

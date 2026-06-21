@@ -270,3 +270,59 @@ export async function resolveActiveContext(schoolId: string) {
 
   return { year, term };
 }
+
+
+
+
+// ─── lib/grading/resolveScoreAccess.ts ──────────────────────────────────────
+//
+// A teacher can enter/view scores for a (classId, subjectId) pair if EITHER:
+//   1. They are the SubjectTeacher for that exact subject+class, OR
+//   2. They are the TeacherClassAssignment holder for that class (i.e. the
+//      class/form teacher) — regardless of which subject, since class
+//      teachers have oversight + entry rights across all subjects for
+//      their own class.
+//
+// This is intentionally a single shared resolver rather than two separate
+// inline checks per route, so the OR-condition can't drift out of sync
+// across the roster/save/history endpoints.
+//
+// Returns a reason string ('subject' | 'class') alongside the boolean so
+// callers can log/distinguish how access was granted if useful later
+// (e.g. flagging in an audit trail whether a class teacher edited a
+// subject they don't personally teach).
+
+
+export type ScoreAccessReason = 'subject' | 'class' | null;
+
+export interface ScoreAccessResult {
+  allowed: boolean;
+  reason: ScoreAccessReason;
+}
+
+export async function resolveScoreAccess(
+  teacherId: string,
+  classId: string,
+  subjectId: string,
+): Promise<ScoreAccessResult> {
+  const [subjectAssignment, classAssignment] = await Promise.all([
+    prisma.subjectTeacher.findFirst({
+      where: { teacherId, classId, subjectId },
+      select: { id: true },
+    }),
+    prisma.teacherClassAssignment.findUnique({
+      where: { teacherId },
+      select: { classId: true },
+    }),
+  ]);
+
+  if (subjectAssignment) {
+    return { allowed: true, reason: 'subject' };
+  }
+
+  if (classAssignment && classAssignment.classId === classId) {
+    return { allowed: true, reason: 'class' };
+  }
+
+  return { allowed: false, reason: null };
+}

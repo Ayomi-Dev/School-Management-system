@@ -1,8 +1,10 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { ClassLevel, Department, TermPeriod } from "@/src/types";
+import { computeTotalAndGrade, resolveAssessmentConfig } from "@/src/utils/grading";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
-import { resolveAcademicYear, resolveClassByName, ResolverError, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveClassByName, ResolverError, resolveScoreAccess, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { markAttendanceSchema } from "@/src/validators/attendanceSchema";
+import { saveScoresSchema } from "@/src/validators/scoreSchema";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -561,6 +563,7 @@ export const teacherServices = {
     
   },
    async attendanceHistory(req: NextRequest, teacherId: string, classId: string) {
+    console.log("teacher id", teacherId)
     try{
       const teacher = await prisma.teacherProfile.findUnique({
         where: { userId: teacherId },
@@ -574,12 +577,14 @@ export const teacherServices = {
         where: { teacherId: teacher.id },
         select: { classId: true },
       });
+      console.log("assign found", assignment, classId)
       if (!assignment || assignment.classId !== classId) {
         return NextResponse.json(
           { error: 'You are not the class teacher for this class.' },
           { status: 403 },
         );
       }
+      console.log("forbiddden error in attendance history")
     
       const { searchParams } = new URL(req.url);
       const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
@@ -641,5 +646,431 @@ export const teacherServices = {
       console.error('[attendanceService.getHistory]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-   }
+   },
+
+   async getScoreRoster( teacherId: string, classId: string, subjectId: string){
+    console.log("getting scores")
+      try{
+         const teacher = await prisma.teacherProfile.findUnique({
+            where: { userId: teacherId },
+            select: { id: true, schoolId: true },
+          });
+          if (!teacher) {
+            return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+          }
+ 
+    /// Authorization: allowed if the teacher is either the SubjectTeacher
+    // for this exact subject+class, OR the class teacher for this class
+    // (class teachers have entry/oversight rights across all subjects for
+    // their own class, not just ones they personally teach).
+    const access = await resolveScoreAccess(teacher.id, classId, subjectId);
+    if (!access.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            'You are not assigned to teach this subject in this class, and are not the class teacher.',
+        },
+        { status: 403 },
+      );
+    }
+ 
+    const term = await prisma.term.findFirst({
+      where: { isCurrent: true },
+      select: { id: true, academicYearId: true, period: true },
+    });
+    if (!term) {
+      return NextResponse.json({ error: 'No active term found for this school.' }, { status: 400 });
+    }
+ 
+    const enrollments = await prisma.enrollment.findMany({
+      where: { classId, academicYearId: term.academicYearId },
+      select: {
+        student: {
+          select: { id: true, firstName: true, lastName: true, studentNumber: true },
+        },
+      },
+      orderBy: { student: { lastName: 'asc' } },
+    });
+ 
+    const studentIds = enrollments.map((e) => e.student.id);
+    console.log("student ids", studentIds)
+ 
+    const scores = await prisma.score.findMany({
+      where: { studentId: { in: studentIds }, subjectId, termId: term.id },
+      select: {
+        id: true,
+        studentId: true,
+        caScore: true,
+        examScore: true,
+        totalScore: true,
+        grade: true,
+        gradeRemark: true,
+        isPublished: true,
+      },
+    });
+    const scoresByStudent = new Map(scores.map((s) => [s.studentId, s]));
+ 
+    const roster = enrollments.map(({ student }) => {
+      const score = scoresByStudent.get(student.id);
+      return {
+        scoreId: score?.id ?? null, // null means no Score row exists yet
+        studentId: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        admissionNumber: student.studentNumber,
+        caScore: score?.caScore ?? null,
+        examScore: score?.examScore ?? null,
+        totalScore: score?.totalScore ?? null,
+        grade: score?.grade ?? null,
+        gradeRemark: score?.gradeRemark ?? null,
+        isPublished: score?.isPublished ?? false,
+      };
+    });
+ 
+    const assessmentConfig = await resolveAssessmentConfig(teacher.schoolId);
+ 
+    return NextResponse.json({
+      data: {
+        termId: term.id,
+        termLabel: term.period,
+        assessmentConfig,
+        roster,
+      },
+    });
+  } catch (error) {
+    console.error('[scoreService.getRoster]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+      
+   },
+
+   async updateScoreRoster(req: NextRequest, teacherId: string, classId:string, subjectId: string) {
+      try{
+        const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      select: { id: true, schoolId: true },
+    });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+     // Authorization: allowed if the teacher is either the SubjectTeacher
+    // for this exact subject+class, OR the class teacher for this class.
+    // See resolveScoreAccess for the full rationale — kept as one shared
+    // resolver so this can't drift from the GET roster endpoint's check.
+    const access = await resolveScoreAccess(teacher.id, classId, subjectId);
+    if (!access.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            'You are not assigned to teach this subject in this class, and are not the class teacher.',
+        },
+        { status: 403 },
+      );
+    }
+ 
+    const term = await prisma.term.findFirst({
+      where: { isCurrent: true },
+      select: { id: true },
+    });
+    if (!term) {
+      return NextResponse.json({ error: 'No active term found for this school.' }, { status: 400 });
+    }
+ 
+    const body = await req.json();
+    const parsed = saveScoresSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
+    }
+    const { field, entries } = parsed.data;
+ 
+    // Validate against the school's configured ceiling for this field
+    // (CA max / Exam max) before writing anything.
+    const { caMaxScore, examMaxScore } = await resolveAssessmentConfig(teacher.schoolId);
+    const ceiling = field === 'caScore' ? caMaxScore : examMaxScore;
+ 
+    const overLimit = entries.filter((e) => e.value > ceiling);
+    if (overLimit.length > 0) {
+      return NextResponse.json(
+        {
+          error: `${entries.length === overLimit.length ? 'Scores' : 'Some scores'} exceed the maximum of ${ceiling} for ${
+            field === 'caScore' ? 'CA' : 'Exam'
+          }.`,
+          details: { invalidStudentIds: overLimit.map((e) => e.studentId) },
+        },
+        { status: 400 },
+      );
+    }
+ 
+    // Confirm every studentId is actually enrolled in this class for the
+    // current term — guards against writing scores for students who
+    // transferred out or were never in this class.
+    const validEnrollments = await prisma.enrollment.findMany({
+      where: {
+        studentId: { in: entries.map((e) => e.studentId) },
+        classId,
+      },
+      select: { studentId: true },
+    });
+    const validStudentIds = new Set(validEnrollments.map((e) => e.studentId));
+    const invalidEntries = entries.filter((e) => !validStudentIds.has(e.studentId));
+    if (invalidEntries.length > 0) {
+      return NextResponse.json(
+        { error: 'One or more students are not enrolled in this class.' },
+        { status: 400 },
+      );
+    }
+ 
+    // Block edits to any score the school has already published — a
+    // published result has been finalized and shared with students/parents,
+    // so silently overwriting it here would be invisible and confusing.
+    // The whole batch is rejected rather than partially applied, so the
+    // teacher gets one clear error instead of a half-saved grid.
+    const publishedConflicts = await prisma.score.findMany({
+      where: {
+        studentId: { in: entries.map((e) => e.studentId) },
+        subjectId,
+        termId: term.id,
+        isPublished: true,
+      },
+      select: { studentId: true },
+    });
+    if (publishedConflicts.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Some scores are already published and cannot be edited. Contact an admin to unpublish first.',
+          details: { studentIds: publishedConflicts.map((c) => c.studentId) },
+        },
+        { status: 409 },
+      );
+    }
+ 
+    const results = await prisma.$transaction(async (tx) => {
+      const written = [];
+ 
+      for (const entry of entries) {
+        // Upsert by the (studentId, subjectId, termId) composite unique
+        // key — creates the Score row on first entry, updates it after.
+        const existing = await tx.score.upsert({
+          where: {
+            studentId_subjectId_termId: {
+              studentId: entry.studentId,
+              subjectId,
+              termId: term.id,
+            },
+          },
+          create: {
+            studentId: entry.studentId,
+            subjectId,
+            termId: term.id,
+            enteredById: teacher.id,
+            [field]: entry.value,
+          },
+          update: {
+            [field]: entry.value,
+            enteredById: teacher.id,
+          },
+          select: { id: true, caScore: true, examScore: true },
+        });
+ 
+        // Recompute total + grade now that this field has changed.
+        const { totalScore, grade, gradeRemark } = await computeTotalAndGrade(
+          teacher.schoolId,
+          existing.caScore,
+          existing.examScore,
+        );
+ 
+        const updated = await tx.score.update({
+          where: { id: existing.id },
+          data: { totalScore, grade, gradeRemark },
+          select: { id: true, studentId: true, totalScore: true, grade: true },
+        });
+ 
+        written.push(updated);
+      }
+ 
+      return written;
+    });
+ 
+    return NextResponse.json({
+      message: `${results.length} ${field === 'caScore' ? 'CA' : 'Exam'} score(s) saved.`,
+      data: { updated: results },
+    });
+  } catch (error) {
+    console.error('[scoreService.saveScores]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+      
+   },
+  
+   async getScoreHistory(req: NextRequest, teacherId: string, subjectId: string) {
+      try {
+        const teacher = await prisma.teacherProfile.findUnique({
+          where: { userId: teacherId },
+          select: { id: true },
+        });
+        if (!teacher) {
+          return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+        }
+      
+        const { searchParams } = new URL(req.url);
+        const classId = searchParams.get('classId');
+        const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+        const limit = Math.min(100, parseInt(searchParams.get('limit') ?? '20', 10));
+
+        if (!classId) {
+          return NextResponse.json({ error: 'classId is required.' }, { status: 400 });
+        }
+      
+    //Authorization: allowed if the teacher has EVER been assigned to this
+    //subject+class combo (any term — broader than "currently assigned",
+    //since history should remain visible after a reassignment), OR if
+    //they are the CURRENT class teacher for this class. Class teachers
+    //get oversight across all subjects for their own class, including
+    //history, even for subjects they've never personally taught.
+        const [everTaught, classAssignment] = await Promise.all([
+          prisma.subjectTeacher.findFirst({
+            where: { teacherId: teacher.id, classId, subjectId },
+            select: { id: true },
+          }),
+          prisma.teacherClassAssignment.findUnique({
+            where: { teacherId: teacher.id },
+            select: { classId: true },
+          }),
+        ]);
+      
+        const isClassTeacher = classAssignment?.classId === classId;
+      
+        if (!everTaught && !isClassTeacher) {
+           return NextResponse.json(
+          {
+            error:
+              'You have not been assigned to teach this subject in this class, and are not the class teacher.',
+            },
+            { status: 403 },
+          );
+        }
+      
+    //Students who have ever been enrolled in this class — scores are
+    //joined against term, not the live current-enrollment list, since
+    //history should show what happened even for students who've since
+    //moved on.
+        const where = {
+          subjectId,
+          student: {
+            enrollments: { some: { classId } },
+          },
+        };
+      
+        const [total, scores] = await Promise.all([
+      prisma.score.count({ where }),
+      prisma.score.findMany({
+        where,
+        orderBy: [{ term: { startDate: 'desc' } }, { student: { lastName: 'asc' } }],
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          caScore: true,
+          examScore: true,
+          totalScore: true,
+          grade: true,
+          gradeRemark: true,
+          isPublished: true,
+          updatedAt: true,
+          term: { select: { id: true, label: true } },
+          student: {
+            select: { id: true, firstName: true, lastName: true, admissionNumber: true },
+          },
+        },
+      }),
+        ]);
+      
+        return NextResponse.json({
+          data: scores,
+          meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+        });
+      } 
+      catch (error) {
+        console.error('[scoreService.getHistory]', error);
+        return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+      }
+    },
+    async getMySubjects(teacherId: string, classId: string) {
+      try{
+        const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId},
+      select: { id: true },
+    });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+    const classAssignment = await prisma.teacherClassAssignment.findUnique({
+      where: { teacherId: teacher.id },
+      select: { classId: true },
+    });
+    const isClassTeacher = classAssignment?.classId === classId;
+ 
+    if (isClassTeacher) {
+      // Full subject list for the class — including subjects with no
+      // teacher assigned at all, so the class teacher can fill the gap.
+      const subjects = await prisma.subject.findMany({
+        where: { classId },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          subjectTeachers: {
+            select: {
+              teacher: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
+            take: 1, // current model is one teacher per subject per class
+          },
+        },
+        orderBy: { name: 'asc' },
+      });
+ 
+      const data = subjects.map((s) => ({
+        subjectId: s.id,
+        name: s.name,
+        code: s.code,
+        assignedTeacher: s.subjectTeachers[0]?.teacher
+          ? `${s.subjectTeachers[0].teacher.firstName} ${s.subjectTeachers[0].teacher.lastName}`
+          : null,
+        isPersonallyAssigned: s.subjectTeachers[0]?.teacher?.id === teacher.id,
+      }));
+ 
+      return NextResponse.json({ data, meta: { accessLevel: 'class_teacher' } });
+    }
+ 
+    // Not the class teacher — only subjects this teacher personally teaches
+    // in this class.
+    const assignments = await prisma.subjectTeacher.findMany({
+      where: { teacherId: teacher.id, classId },
+      select: {
+        subject: { select: { id: true, name: true, code: true } },
+      },
+      orderBy: { subject: { name: 'asc' } },
+    });
+ 
+    const data = assignments.map((a) => ({
+      subjectId: a.subject.id,
+      name: a.subject.name,
+      code: a.subject.code,
+      assignedTeacher: null, // not relevant in this view — it's always "you"
+      isPersonallyAssigned: true,
+    }));
+ 
+    return NextResponse.json({ data, meta: { accessLevel: 'subject_teacher' } });
+  } catch (error) {
+    console.error('[teacherService.getMySubjectsForClass]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+    }
 }

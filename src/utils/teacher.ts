@@ -348,3 +348,17 @@ export interface AttendanceHistoryParams {
   limit?: number;
 }
 
+
+export interface MySubjectListEntry {
+  subjectId: string;
+  name: string;
+  code: string | null;
+  assignedTeacher: string | null;
+  isPersonallyAssigned: boolean;
+}
+ 
+export interface MySubjectsResponse {
+  data: MySubjectListEntry[];
+  meta: { accessLevel: 'class_teacher' | 'subject_teacher' };
+}
+
