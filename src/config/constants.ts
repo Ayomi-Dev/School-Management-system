@@ -67,7 +67,7 @@ export const API_ENDPOINTS = {
   GET_SCORE_ROSTER: (classId: string, subjectId: string) => `api/teachers/class/${classId}/subjects/${subjectId}/scores`,
   GET_MY_SUBJECTS: ( classId: string) => `/api/teachers/class/${classId}/subjects`,
   ASSIGN_TEACHER_TO_CLASS: `/api/teachers/assign-class`,
-
+  GET_MY_STUDENTS: (classId: string) => `/api/teachers/class/${classId}/students`,
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,
   PARENTS_GET: (id: string) => `/api/parents/${id}`,

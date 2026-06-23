@@ -32,7 +32,6 @@ export function ScoreEntryGrid({ classId, subjectId, field, label }: ScoreEntryG
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const roster = data?.data.roster ?? [];
-  console.log(data)
   const maxScore =
     field === 'caScore'
       ? data?.data.assessmentConfig.caMaxScore

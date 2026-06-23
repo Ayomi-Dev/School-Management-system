@@ -218,8 +218,9 @@ export const classService = {
     try {
       const classLevel = await prisma.class.findFirst({
         where: { id: classId, schoolId },
-        select: { id: true, name: true, level: true, department: true },
+        select: { id: true, level: true, department: true },
       });
+      console.log("class record:", classLevel)
       if (!classLevel) {
         return NextResponse.json({ error: "Class not found." }, { status: 404 });
       }

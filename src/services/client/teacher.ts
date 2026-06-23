@@ -1,7 +1,7 @@
 import { getApiClient } from "@/src/config/api";
 import { API_ENDPOINTS } from "@/src/config/constants";
-import { PaginatedResponse, SaveScoresPayload, ScoreHistoryEntry, ScoreHistoryParams, ScoreRosterResponse, TeacherProfile } from "@/src/types";
-import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MySubjectsResponse } from "@/src/utils/teacher";
+import { PaginatedResponse, SaveScoresPayload, ScoreHistoryEntry, ScoreHistoryParams, ScoreRosterResponse, StudentProfile, TeacherProfile } from "@/src/types";
+import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudents, MySubjectsResponse } from "@/src/utils/teacher";
 
 
 
@@ -70,6 +70,10 @@ export const teacherService = {
     getMySubjectsForClass: async(classId: string): Promise<MySubjectsResponse> => {
       const response = await client.get(API_ENDPOINTS.GET_MY_SUBJECTS(classId))
       return response.data  
+    }, 
+    getStudentsForMyClass: async(classId: string) => {
+      const response = await client.get(API_ENDPOINTS.GET_MY_STUDENTS(classId));
+      return response.data
     }
 }
 

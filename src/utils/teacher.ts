@@ -1,4 +1,4 @@
-import { ClassLevel, TeacherProfile } from "../types";
+import { ClassLevel, StudentProfile, TeacherProfile } from "../types";
 
 
 export interface NavItem {
@@ -338,5 +338,8 @@ export interface MySubjectListEntry {
 export interface MySubjectsResponse {
   data: MySubjectListEntry[];
   meta: { accessLevel: 'class_teacher' | 'subject_teacher' };
+}
+export  interface MyStudents {
+  data: StudentProfile[]
 }
 

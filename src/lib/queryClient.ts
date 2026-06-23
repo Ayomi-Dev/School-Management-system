@@ -78,7 +78,8 @@ export const queryKeys = {
       [...queryKeys.teachers.lists(), schoolId, { filters }] as const,
     details: () => [...queryKeys.teachers.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.teachers.details(), id] as const,
-    myClass: () => ['myClass'] as const
+    myClass: () => ['myClass'] as const,
+    myStudents: () => ['myStudent'] as const
   },
   subjects: {
     all: ['subjects'] as const,
