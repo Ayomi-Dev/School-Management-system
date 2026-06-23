@@ -198,6 +198,21 @@ export const useAssignSubjectTeacherMutation = () => {
     },
   });
 };
+export const useRemoveSubjectTeacherMutation = () => {
+  const queryClient = useQueryClient();
+  const { success } = useToast()
+ 
+  return useMutation({
+    mutationFn: (payload: AssignSubjectTeacherPayload) =>
+      adminService.removeSubjectAssignment(payload),
+    onSuccess: () => {
+      // Subject list includes subjectTeachers — refetch so the "Teacher"
+      // column reflects the new assignment without a manual page refresh.
+      success('Teacher unassigned successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.subjects() });
+    },
+  });
+};
 
 // Academic Year Queries
 export const useAcademicYearsList = (params?: { page?: number; limit?: number }) => {

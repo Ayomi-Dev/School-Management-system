@@ -1,4 +1,5 @@
 import { createApiClient } from '@/src/config/api';
+import { API_ENDPOINTS } from '@/src/config/constants';
 import { TeachersListParams, TeachersListResponse } from '@/src/types';
 import {
   CreateClassRequest,
@@ -17,44 +18,42 @@ export const adminService = {
 
   // User Management
   getUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) =>
-    createApiClient().get(`${API_BASE}/users`, { params }),
+    createApiClient().get(API_ENDPOINTS.USERS_LIST, { params }),
 
-  getUserById: (id: string) => createApiClient().get(`${API_BASE}/users/${id}`),
-  getAdmin: (id: string) => createApiClient().get(`${API_BASE}${id}/profile`),
+  getUserById: (id: string) => createApiClient().get(API_ENDPOINTS.USERS_GET(id)),
+  getAdmin: (id: string) => createApiClient().get(API_ENDPOINTS.GET_ADMIN_PROFILE(id)),
 
-  createUser: (data: CreateUserFormData) => createApiClient().post(`${API_BASE}/create-user`, data),
+  createUser: (data: CreateUserFormData) => createApiClient().post(API_ENDPOINTS.USERS_CREATE, data),
 
   updateUser: (id: string, data: Partial<CreateUserFormData>) =>
-    createApiClient().put(`${API_BASE}/users/${id}`, data),
+    createApiClient().put(API_ENDPOINTS.USERS_UPDATE(id), data),
 
-  deleteUser: (id: string) => createApiClient().delete(`${API_BASE}/users/${id}`),
+  deleteUser: (id: string) => createApiClient().delete(API_ENDPOINTS.USERS_DELETE(id)),
 
   bulkCreateUsers: (data: CreateUserFormData[]) =>
     createApiClient().post(`${API_BASE}/users/bulk`, data),
 
 
   // Classes Management
-  getClasses: (params?: { academicYearId?: string; page?: number; limit?: number }) =>
-    createApiClient().get(`${API_BASE}/classes`, { params }),
+  getClasses: ( params?: { academicYearId?: string; page?: number; limit?: number }) =>
+    createApiClient().get(API_ENDPOINTS.CLASSES_LIST, { params }),
 
-  getClassById: (id: string) => createApiClient().get(`${API_BASE}/classes/${id}`),
+  getClassById: (id: string) => createApiClient().get(API_ENDPOINTS.CLASSES_GET(id)),
 
-  createClass: (data: CreateClassRequest) => createApiClient().post(`${API_BASE}/classes`, data),
+  createClass: (data: CreateClassRequest) => createApiClient().post(API_ENDPOINTS.CLASSES_CREATE, data),
 
   updateClass: (id: string, data: Partial<CreateClassRequest>) =>
     createApiClient().put(`${API_BASE}/classes/${id}`, data),
 
-  deleteClass: (id: string) => createApiClient().delete(`${API_BASE}/classes/${id}`),
-  getClassStudents: (classId: string) =>
-
-  createApiClient().get(`${API_BASE}/classes/${classId}/students`),
-  assignTeacherToCLass: (payload: AssignClassTeacherPayload) => createApiClient().post(`${API_BASE}/teachers/assign-class`, payload),
+  deleteClass: (id: string) => createApiClient().delete(API_ENDPOINTS.CLASSES_DELETE(id)),
+  getClassStudents: (classId: string) => createApiClient().get(`${API_BASE}/classes/${classId}/students`),
+  assignTeacherToCLass: (payload: AssignClassTeacherPayload) => createApiClient().post(API_ENDPOINTS.ASSIGN_TEACHER_TO_CLASS, payload),
 
  
 
   // Subject Management
   getSubjects: (params?: { page?: number; limit?: number; search?: string }) =>
-    createApiClient().get(`${API_BASE}/subjects`, { params }),
+    createApiClient().get(API_ENDPOINTS.SUBJECTS_LIST, { params }),
 
   getSubjectById: (id: string) => createApiClient().get(`${API_BASE}/subjects/${id}`),
 
@@ -66,8 +65,8 @@ export const adminService = {
 
   deleteSubject: (id: string) => createApiClient().delete(`${API_BASE}/subjects/${id}`),
 
-  assignSubjectToTeacher: (payload: AssignSubjectTeacherPayload) =>
-  createApiClient().post(`${API_BASE}/teachers/assign-subjects`, payload),
+  assignSubjectToTeacher: (payload: AssignSubjectTeacherPayload) => createApiClient().post(API_ENDPOINTS.SUBJECTS_ASSIGN_TEACHER, payload),
+  removeSubjectAssignment: (payLoad: AssignSubjectTeacherPayload) => createApiClient().post(API_ENDPOINTS.SUBJECTS_REMOVE_TEACHER, payLoad),
 
   // Academic Year Management
   getAcademicYears: (params?: { page?: number; limit?: number }) =>

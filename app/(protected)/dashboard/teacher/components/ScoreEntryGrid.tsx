@@ -25,7 +25,6 @@ interface ScoreEntryGridProps {
  * field it was given.
  */
 export function ScoreEntryGrid({ classId, subjectId, field, label }: ScoreEntryGridProps) {
-  console.log( classId, subjectId)
   const { data, isLoading, error } = useScoreRoster(classId, subjectId);
   const { mutate: save, isPending: isSaving } = useSaveScores(classId, subjectId);
 

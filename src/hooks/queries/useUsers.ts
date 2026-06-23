@@ -135,7 +135,7 @@ export const useSearchParents = (schoolId: string, query: string) => {
 
 export const useMyClass = () => {
   return useQuery({
-    queryKey: queryKeys.teachers.myClass(), // add `myClass: () => ['myClass'] as const` to queryKeys
+    queryKey: queryKeys.teachers.myClass(),
     queryFn: () => teacherService.getMyClass(),
     staleTime: 5 * 60 * 1000, // class assignment rarely changes mid-session
   });

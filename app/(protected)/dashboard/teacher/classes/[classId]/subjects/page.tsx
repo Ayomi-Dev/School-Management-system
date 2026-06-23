@@ -21,8 +21,8 @@ export default function MySubjectsPage() {
   const subjects = data?.data ?? [];
   const isClassTeacher = data?.meta.accessLevel === 'class_teacher';
 
-  const goToScores = () => {
-    router.push(`/dashboard/teacher/classes/${classId}/subjects/scores/ca`);
+  const goToScores = (subjectId: string) => {
+    router.push(`/dashboard/teacher/classes/${classId}/subjects/${subjectId}/scores/ca`);
   };
 
   if (isLoading) {
@@ -73,7 +73,7 @@ export default function MySubjectsPage() {
           {subjects.map((subject) => (
             <button
               key={subject.subjectId}
-              onClick={() => goToScores()}
+              onClick={() => goToScores(subject.subjectId)}
               className="text-left"
             >
               <Card className="hover:shadow-lg hover:border-emerald-300 transition-all cursor-pointer h-full">

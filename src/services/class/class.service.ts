@@ -223,7 +223,7 @@ export const classService = {
       if (!classLevel) {
         return NextResponse.json({ error: "Class not found." }, { status: 404 });
       }
-
+ 
       // Resolve academic year
       const yearLabel = currentSession()
       const academicYear = await resolveAcademicYear(schoolId, yearLabel)

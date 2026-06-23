@@ -13,7 +13,7 @@ export async function assignSubjectsToEnrolledStudents(
       school: {
         select: {
           academicYears: {
-            where: { isCurrent: true }, // adjust to your AcademicYear active flag
+            where: { isCurrent: true }, //active academic years
             select: {
               terms: {
                 where: { isCurrent: true },
@@ -37,15 +37,12 @@ export async function assignSubjectsToEnrolledStudents(
   });
 
   if (enrollments.length === 0) return;
-  const scores = enrollments.flatMap(({ studentId }) =>
-    subjectIds.map((subjectId) => ({ studentId, subjectId, termId: activeTerm.id }))
-  );
 
   await tx.score.createMany({
     data: enrollments.flatMap(({ studentId }) =>
-        subjectIds.map((subjectId) => (
-            { studentId, subjectId, termId: activeTerm.id }))
-        ),
+      subjectIds.map((subjectId) => (
+        { studentId, subjectId, termId: activeTerm.id }))
+      ),
   });
 }
 

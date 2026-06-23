@@ -64,7 +64,7 @@ export interface AssignClassTeacherPayload {
 // switches context. All class-scoped routes include the classId as a path
 // segment so pages can read it via params without needing global state.
 
-export function buildClassNavSections(classId: string): NavSection[] {
+export function buildClassNavSections(classId: string,): NavSection[] {
   const base = `/dashboard/teacher/classes/${classId}`;
 
   return [
@@ -159,28 +159,6 @@ export function buildClassNavSections(classId: string): NavSection[] {
           label: 'My Subjects',
           href: `${base}/subjects`,
           icon: '📚',
-          children: [
-            {
-              label: 'Score Entry',
-              href: `${base}/subjects/scores`,
-              icon: '🎯',
-            },
-            {
-              label: 'CA Scores',
-              href: `${base}/subjects/scores/ca`,
-              icon: '📝',
-            },
-            {
-              label: 'Exam Scores',
-              href: `${base}/subjects/scores/exam`,
-              icon: '📄',
-            },
-            {
-              label: 'Score History',
-              href: `${base}/subjects/scores/history`,
-              icon: '🕓',
-            },
-          ],
         },
         {
           label: 'Assignments',

@@ -29,13 +29,14 @@ export const API_ENDPOINTS = {
 
   // Admin - Classes
   CLASSES_CREATE: '/api/admin/classes/create',
-  CLASSES_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/classes`,
+  CLASSES_LIST:  `/api/admin/classes`,
   CLASSES_GET: (id: string) => `/api/admin/classes/${id}`,
   CLASSES_UPDATE: (id: string) => `/api/admin/classes/${id}`,
+  CLASSES_DELETE: (id: string) => `/api/admin/classes/${id}`,
 
   // Admin - Subjects
   SUBJECTS_CREATE: '/api/admin/subjects/create',
-  SUBJECTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/subjects`,
+  SUBJECTS_LIST: `/api/admin/subjects`,
   SUBJECTS_ASSIGN_TEACHER: '/api/admin/teachers/assign-subjects',
   SUBJECTS_REMOVE_TEACHER: '/api/admin/teachers/remove-subject',
 
@@ -44,7 +45,8 @@ export const API_ENDPOINTS = {
   ACADEMIC_YEARS_LIST: (schoolId: string) => `/api/admin/academics`,
   TERMS_CREATE: '/api/admin/terms/create',
   TERMS_LIST: (academicYearId: string) => `/api/admin/academic-years/${academicYearId}/terms`,
-  ENROLLMENTS_LIST: (schoolId: string ) => `api/students/${schoolId}/enrollment`,
+  ENROLLMENTS_LIST: (schoolId: string ) => `/api/students/${schoolId}/enrollment`,
+  GET_STATS: `/api/admin/stats`,
 
 
   // Students
@@ -56,7 +58,7 @@ export const API_ENDPOINTS = {
   // Teachers
   TEACHERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/teachers`,
   TEACHERS_GET: (id: string) => `/api/teachers/${id}`,
-  TEACHER_GET_ME: ( ) => `/api/teachers/class`,
+  TEACHER_GET_MY_CLASS: ( ) => `/api/teachers/class`,
   GET_DAILY_ROSTER: (classId: string) => `/api/teachers/class/${classId}/attendance`,
   MARK_ATTENDANCE: (classId: string) => `/api/teachers/class/${classId}/attendance`,
   GET_ATTENDANCE_HISTORY: (classId: string) => `api/teachers/class/${classId}/attendance/history`,
@@ -64,6 +66,7 @@ export const API_ENDPOINTS = {
   GET_SCORE_HISTORY: (subjectId: string) => `/api/teachers/subjects/${subjectId}/scores/history`,
   GET_SCORE_ROSTER: (classId: string, subjectId: string) => `api/teachers/class/${classId}/subjects/${subjectId}/scores`,
   GET_MY_SUBJECTS: ( classId: string) => `/api/teachers/class/${classId}/subjects`,
+  ASSIGN_TEACHER_TO_CLASS: `/api/teachers/assign-class`,
 
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,

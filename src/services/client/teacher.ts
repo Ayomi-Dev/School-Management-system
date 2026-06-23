@@ -13,7 +13,7 @@ export const teacherService = {
         return response.data
     },
     getMyClass: async (): Promise<AssignedClass> => {
-        const response = await client.get(API_ENDPOINTS.TEACHER_GET_ME());
+        const response = await client.get(API_ENDPOINTS.TEACHER_GET_MY_CLASS());
         return response.data
     },
     getDailyRoster: async (classId: string, date?: string): Promise<{ data: DailyRosterResponse }> => {

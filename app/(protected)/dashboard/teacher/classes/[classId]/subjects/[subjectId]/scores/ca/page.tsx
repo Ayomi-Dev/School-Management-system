@@ -1,6 +1,7 @@
 'use client';
 
 import { ScoreEntryGrid } from '@/app/(protected)/dashboard/teacher/components/ScoreEntryGrid';
+import { useMyClass } from '@/src/hooks/queries/useUsers';
 import { useParams } from 'next/navigation';
 
 export default function CAScoresPage() {
