@@ -15,9 +15,7 @@ const StudentProfilePage = () => {
   }
 
   return (
-    <StudentDashboardLayout>
-        <ProfileCard profile={profile as StudentProfile} />
-    </StudentDashboardLayout>
+    <ProfileCard profile={profile as StudentProfile} />
   )
 }
 

@@ -11,11 +11,15 @@ export const generateReportCardSchema = z.object({
   classId: z.string().optional(),
 });
 
-export const updateReportCardSchema = z.object({
-  teacherRemark: z.string().optional(),
-  principalRemark: z.string().optional(),
-  status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
-});
+export const updateReportCardSchema= z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('remark'),
+    teacherRemark: z.string().min(1, 'Remark cannot be empty.'),
+  }),
+  z.object({
+    action: z.literal('publish'),
+  }),
+]);
 
 export const compileSchema = z.object({
   studentId: z.string().min(1),

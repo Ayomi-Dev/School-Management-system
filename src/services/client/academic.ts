@@ -19,7 +19,7 @@ export const classService = {
     page = 1,
     limit = 20
   ): Promise<PaginatedResponse<Class>> => {
-    const response = await client.get(API_ENDPOINTS.CLASSES_LIST(schoolId), {
+    const response = await client.get(API_ENDPOINTS.CLASSES_LIST, {
       params: { page, limit },
     });
     return response.data;
@@ -102,18 +102,3 @@ export const enrollmentService = {
     return response.data
   }
 };
-// lib/api/enrollments.ts
-// export const enrollmentsApi = {
-//   getAll: async (filters?: { academicYearId?: string; classId?: string }) => {
-//     const params = new URLSearchParams(filters as Record<string, string>);
-//     const res = await axiosInstance.get(`/enrollments?${params}`);
-//     return res.data.data;
-//   },
-
-//   extractForStudent: async (studentId: string, academicYearId: string) => {
-//     const res = await axiosInstance.get(
-//       `/enrollments/${studentId}/extract?academicYearId=${academicYearId}`
-//     );
-//     return res.data.data;
-//   },
-// };

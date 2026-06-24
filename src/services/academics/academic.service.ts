@@ -312,8 +312,7 @@ export const enrollmentService = {
 },
 
   // Kept separately — used internally by student profile, not the list endpoint
-  async extractFromEnrollment(studentId: string, academicYearId: string, schoolId: string) {
-    console.log("student and academic ids", studentId, academicYearId)
+  async extractFromEnrollment(studentId: string, academicYearId: string,) {
     const enrollment = await prisma.enrollment.findUnique({
       where: {
         studentId_academicYearId: { studentId, academicYearId },
@@ -321,14 +320,12 @@ export const enrollmentService = {
       select: {
         class: {
           select: {
-            subjects: { select: { id: true, name: true } },
-            schoolId: true
+            subjects: { select: { id: true, name: true, scores: { select: { totalScore: true}} } },
+            schoolId: true, level: true
           },
         },
       },
     });
-    console.log("enrollment from server", enrollment)
-
     return NextResponse.json(
       { data: enrollment },
       { status: 200 }

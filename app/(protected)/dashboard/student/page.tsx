@@ -6,16 +6,40 @@ import {
   TimetableCard,
   AttendanceCard,
   RecentActivitiesCard,
+  EnrolledClassesCard,
 } from '@/src/components/dashboards/student/components';
-import { StudentProfile } from '@/src/types';
+import { Class, StudentProfile, Subject } from '@/src/types';
 import { useProfileStore } from '@/src/stores/profileStore';
 import { Loader } from '@/src/components/ui/Loader';
+import { useAuthStore } from '@/src/stores/authStore';
+import { useEffect, useState } from 'react';
+import { useAcademicYearsList, useExtractEnrollment } from '@/src/hooks/queries/useAcademic';
 
 
 const StudentDashboardPage = ( ) => {
-    const { profile } = useProfileStore()
+    const { profile } = useProfileStore();
+      const schoolId = useAuthStore((state) => state.user?.schoolId ?? '');
+    
+      const [yearId, setYearId] = useState<string>('');
+    
+      const { data: yearsData, isLoading: isYearsLoading } =
+        useAcademicYearsList(schoolId);
+      const years = yearsData?.data ?? [];
+    
+      // Auto-selects the current academic year once years load
+      useEffect(() => {
+        if (!yearId && years.length > 0) {
+          const currentYear = years.find((yr) => yr.isCurrent) ?? years[0];
+          if (currentYear) setYearId(currentYear.id);
+        }
+      }, [years, yearId]);
+    
+      const { data: enrollmentData, isLoading: isSubjectsLoading, isError } = useExtractEnrollment(profile?.id as string, yearId);
+    
+      // Flatten defensively in case the API ever returns nested arrays
+      const subjects = (enrollmentData?.data?.class.subjects ?? []) as Subject[];
+      const selectedClass =( enrollmentData?.data.class) as Class
 
-    if(!profile) return <Loader />
 
   return (
     <div className="space-y-6">
@@ -24,10 +48,10 @@ const StudentDashboardPage = ( ) => {
       {/* Main Grid - Performance and Classes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <PerformanceCard />
+            <PerformanceCard subjects={subjects} />
           </div>
           <div>
-            {/* <EnrolledClassesCard /> */}
+            <EnrolledClassesCard subjects={subjects} enrolledClass={selectedClass} />
           </div>
       </div>
       {/* Timetable Section */}

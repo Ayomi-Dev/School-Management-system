@@ -1,6 +1,5 @@
 import { Role } from "@/app/generated/prisma/enums";
 import { requireSchoolRoles } from "@/src/lib/middleware/requireRole";
-import { prisma } from "@/src/lib/prisma/client";
 import { enrollmentService } from "@/src/services/academics/academic.service";
 import { ParamsContext } from "@/src/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -37,6 +36,6 @@ export const GET = async(req: NextRequest, context: ParamsContext ) => {
     const { id } = await context.params
     
     console.log("school id:", schoolId, "studentid:", id)
-    const result = await enrollmentService.extractFromEnrollment(id, academicYearId, schoolId )
+    const result = await enrollmentService.extractFromEnrollment(id, academicYearId )
     return result;
 }

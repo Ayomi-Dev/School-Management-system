@@ -216,6 +216,7 @@ export interface Subject {
   schoolId: string;
   createdAt: string;
   updatedAt: string;
+  scores: { totalScore: number}[]
 }
 
 export interface CreateSubjectRequest {
@@ -251,6 +252,86 @@ export interface AdminProfile{
   firstName: string;
   lastName: string;
   user: User
+}
+
+export type ReportCardStatus = 'DRAFT' | 'PUBLISHED';
+ 
+export interface CompiledCardSummary {
+  reportCardId: string;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  studentNumber: string;
+  status: ReportCardStatus;
+  totalScore: number | null;
+  average: number | null;
+  position: number | null;
+  hasTeacherRemark: boolean;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+ 
+export interface PendingStudent {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  studentNumber: string;
+}
+ 
+export interface ReportCardListResponse {
+  data: {
+    compiled: CompiledCardSummary[];
+    pending: PendingStudent[];
+    meta: {
+      termId: string;
+      classCount: number;
+      compiledCount: number;
+      publishedCount: number;
+    };
+  };
+}
+ 
+export interface ScoreEntry {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string | null;
+  caScore: number | null;
+  examScore: number | null;
+  totalScore: number | null;
+  grade: string | null;
+  gradeRemark: string | null;
+}
+ 
+export interface AttendanceSummary {
+  total: number;
+  present: number;
+  absent: number;
+  late: number;
+}
+ 
+export interface ReportCardDetail {
+  reportCard: {
+    id: string;
+    status: ReportCardStatus;
+    totalScore: number | null;
+    average: number | null;
+    position: number | null;
+    classSnapshot: string | null;
+    teacherRemark: string | null;
+    principalRemark: string | null;
+    publishedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  student: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    studentNumber: string;
+    gender: string;
+  };
+  scores: ScoreEntry[];
+  attendanceSummary: AttendanceSummary;
 }
 
 export type UserProfile = StudentProfile | TeacherProfile | ParentProfile | BursarProfile | AdminProfile | null

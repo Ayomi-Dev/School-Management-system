@@ -16,7 +16,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const loginMutation = useLoginMutation(); 
-  // const logout = useLogoutMutation()
   const [error, setError] = useState<string | null>(null)
   const { logout } = useAuthStore()
 
