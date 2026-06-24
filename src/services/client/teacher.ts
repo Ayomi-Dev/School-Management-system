@@ -79,6 +79,14 @@ export const teacherService = {
       const response = await client.get(API_ENDPOINTS.GET_SCORE_SHEET(classId))
       return response.data
 
+    },
+    getReportCards: async(classId: string) => {
+      const response = await client.get(API_ENDPOINTS.GET_REPORT_CARDS(classId))
+      return response.data
+    },
+    compileReportCards: async(classId: string) => {
+      const response = await client.post(API_ENDPOINTS.COMPILE_REPORT_CARDS(classId))
+      return response.data
     }
 }
 

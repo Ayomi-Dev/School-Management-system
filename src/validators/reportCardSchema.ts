@@ -16,3 +16,7 @@ export const updateReportCardSchema = z.object({
   principalRemark: z.string().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
 });
+
+export const compileSchema = z.object({
+  studentId: z.string().min(1),
+});

@@ -4,6 +4,7 @@ import { computeTotalAndGrade, resolveAssessmentConfig } from "@/src/utils/gradi
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
 import { resolveAcademicYear, resolveClassByName, ResolverError, resolveScoreAccess, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { markAttendanceSchema } from "@/src/validators/attendanceSchema";
+import { compileSchema } from "@/src/validators/reportCardSchema";
 import { saveScoresSchema } from "@/src/validators/scoreSchema";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
@@ -1189,6 +1190,219 @@ export const teacherServices = {
     });
   } catch (error) {
     console.error('[scoreService.getScoreSheet]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+    
+  },
+
+  async compileReportCards(req: NextRequest, teacherId: string, classId: string) {
+    try{
+      const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      select: { id: true, schoolId: true },
+    });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+    // Authorization: class teacher only
+    const classAssignment = await prisma.teacherClassAssignment.findUnique({
+      where: { teacherId: teacher.id },
+      select: { classId: true },
+    });
+    if (classAssignment?.classId !== classId) {
+      return NextResponse.json(
+        { error: 'Only the class teacher can compile report cards.' },
+        { status: 403 },
+      );
+    }
+ 
+    const body = await req.json();
+    const parsed = compileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
+    }
+    const { studentId } = parsed.data;
+ 
+    // Resolve active term + academic year + class snapshot in parallel
+    const [term, classRecord] = await Promise.all([
+      prisma.term.findFirst({
+        where: {isCurrent: true },
+        select: { id: true, academicYearId: true },
+      }),
+      prisma.class.findUnique({
+        where: { id: classId },
+        select: { level: true },
+      }),
+    ]);
+    if (!term) {
+      return NextResponse.json(
+        { error: 'No active term found for this school.' },
+        { status: 400 },
+      );
+    }
+    if (!classRecord) {
+      return NextResponse.json({ error: 'Class not found.' }, { status: 404 });
+    }
+ 
+    // Confirm student is enrolled in this class for the current academic year
+    const enrollment = await prisma.enrollment.findFirst({
+      where: { studentId, classId, academicYearId: term.academicYearId },
+      select: { id: true },
+    });
+    if (!enrollment) {
+      return NextResponse.json(
+        { error: 'Student is not enrolled in this class for the current academic year.' },
+        { status: 400 },
+      );
+    }
+ 
+    // Gather complete scores (both CA + Exam non-null) for this student
+    // in this term, scoped to subjects belonging to this class only.
+    const scores = await prisma.score.findMany({
+      where: {
+        studentId,
+        termId: term.id,
+        subject: { classId },
+        caScore: { not: null },
+        examScore: { not: null },
+      },
+      select: {
+        subjectId: true,
+        caScore: true,
+        examScore: true,
+        totalScore: true,
+        grade: true,
+        gradeRemark: true,
+        subject: { select: { name: true, code: true } },
+      },
+    });
+ 
+    if (scores.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'No complete scores found for this student. Both CA and Exam must be entered for at least one subject before compiling.',
+        },
+        { status: 400 },
+      );
+    }
+ 
+    // Aggregate totals
+    const totalScore = scores.reduce((sum, s) => sum + (s.totalScore ?? 0), 0);
+    const average = Math.round((totalScore / scores.length) * 10) / 10;
+ 
+    // Attendance summary — fresh join, not persisted on the card
+    const sessions = await prisma.classSession.findMany({
+      where: { classId, termId: term.id, label: 'daily' },
+      select: { id: true },
+    });
+    const sessionIds = sessions.map((s) => s.id);
+ 
+    const attendanceRows = await prisma.attendance.findMany({
+      where: { studentId, sessionId: { in: sessionIds } },
+      select: { status: true },
+    });
+    const attendanceSummary = {
+      total: sessions.length,
+      present: attendanceRows.filter((a) => a.status === 'PRESENT').length,
+      absent: attendanceRows.filter((a) => a.status === 'ABSENT').length,
+      late: attendanceRows.filter((a) => a.status === 'LATE').length,
+    };
+ 
+    // Upsert the report card — preserve any existing teacherRemark/
+    // principalRemark the teacher already wrote on a prior compile.
+    const reportCard = await prisma.reportCard.upsert({
+      where: { studentId_termId: { studentId, termId: term.id } },
+      create: {
+        studentId,
+        termId: term.id,
+        academicYearId: term.academicYearId,
+        classSnapshot: classRecord.level,
+        totalScore,
+        average,
+        status: 'DRAFT',
+        pdfUrl: null, // stubbed — PDF generation is a future feature
+      },
+      update: {
+        // Recompile updates totals + snapshot but never overwrites a
+        // remark the teacher already wrote — they'd have to clear it
+        // explicitly on the edit page.
+        totalScore,
+        average,
+        classSnapshot: classRecord.level,
+        status: 'DRAFT', // recompiling always resets a PUBLISHED card to DRAFT
+        publishedAt: null,
+      },
+    });
+ 
+    // Recompute class positions — must happen after this student's card
+    // is upserted so their new totalScore is reflected in the ranking.
+    // Fetch all compiled cards for this class+term, sort by totalScore
+    // descending, assign positions 1..n with tie-sharing (two students
+    // with the same total both get the same position).
+    const allCards = await prisma.reportCard.findMany({
+      where: {
+        termId: term.id,
+        student: { enrollments: { some: { classId, academicYearId: term.academicYearId } } },
+      },
+      select: { id: true, totalScore: true },
+      orderBy: { totalScore: 'desc' },
+    });
+ 
+    // Assign positions with tie-sharing (dense rank would skip numbers;
+    // standard competition rank shares the position for ties).
+    let currentPosition = 1;
+    let previousScore: number | null = null;
+    const positionUpdates = allCards.map((card, index) => {
+      if (card.totalScore !== previousScore) {
+        currentPosition = index + 1;
+        previousScore = card.totalScore;
+      }
+      return prisma.reportCard.update({
+        where: { id: card.id },
+        data: { position: currentPosition },
+      });
+    });
+    await prisma.$transaction(positionUpdates);
+ 
+    // Refetch the card with its fresh position for the response
+    const finalCard = await prisma.reportCard.findUnique({
+      where: { id: reportCard.id },
+      select: {
+        id: true,
+        status: true,
+        totalScore: true,
+        average: true,
+        position: true,
+        classSnapshot: true,
+        teacherRemark: true,
+        principalRemark: true,
+      },
+    });
+ 
+    return NextResponse.json({
+      message: `Report card compiled for student.`,
+      data: {
+        reportCard: finalCard,
+        scores: scores.map((s) => ({
+          subjectId: s.subjectId,
+          subjectName: s.subject.name,
+          subjectCode: s.subject.code,
+          caScore: s.caScore,
+          examScore: s.examScore,
+          totalScore: s.totalScore,
+          grade: s.grade,
+          gradeRemark: s.gradeRemark,
+        })),
+        attendanceSummary,
+      },
+    });
+  } catch (error) {
+    console.error('[reportCardService.compile]', error);
     return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
   }
     

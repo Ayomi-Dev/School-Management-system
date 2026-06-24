@@ -5,12 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { Loader } from '@/src/components/ui/Loader';
 import { Card } from '@/src/components/ui/Card';
 import { Search, ArrowUpDown, FileSpreadsheet } from 'lucide-react';
-import {
-  useScoreSheet,
-} from '@/src/hooks/queries/useScores';
+import {useScoreSheet} from '@/src/hooks/queries/useScores';
 import { ScoreSheetCell, ScoreSheetStudent, ScoreSheetSubject } from '@/src/utils/teacher';
 
-// ─── score cell ──────────────────────────────────────────────────────────────
 
 function ScoreCell({ cell }: { cell: ScoreSheetCell | null }) {
   if (!cell || (cell.caScore === null && cell.examScore === null)) {
