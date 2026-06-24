@@ -1406,5 +1406,121 @@ export const teacherServices = {
     return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
   }
     
+  },
+
+  async getReportCards(req: NextRequest, teacherId: string, classId: string){
+    try{
+        const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      select: { id: true, schoolId: true },
+    });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+    const classAssignment = await prisma.teacherClassAssignment.findUnique({
+      where: { teacherId: teacher.id },
+      select: { classId: true },
+    });
+    if (classAssignment?.classId !== classId) {
+      return NextResponse.json(
+        { error: 'Only the class teacher can view report cards.' },
+        { status: 403 },
+      );
+    }
+ 
+    const term = await prisma.term.findFirst({
+      where: { isCurrent: true },
+      select: { id: true, academicYearId: true },
+    });
+    if (!term) {
+      return NextResponse.json(
+        { error: 'No active term found for this school.' },
+        { status: 400 },
+      );
+    }
+ 
+    // All enrolled students for this class this year
+    const enrollments = await prisma.enrollment.findMany({
+      where: { classId, academicYearId: term.academicYearId },
+      select: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            studentNumber: true,
+          },
+        },
+      },
+      orderBy: { student: { lastName: 'asc' } },
+    });
+ 
+    const studentIds = enrollments.map((e) => e.student.id);
+ 
+    // Compiled cards for these students in this term
+    const cards = await prisma.reportCard.findMany({
+      where: { studentId: { in: studentIds }, termId: term.id },
+      select: {
+        id: true,
+        studentId: true,
+        status: true,
+        totalScore: true,
+        average: true,
+        position: true,
+        teacherRemark: true,
+        publishedAt: true,
+        updatedAt: true,
+      },
+    });
+    const cardByStudent = new Map(cards.map((c) => [c.studentId, c]));
+ 
+    const compiled = enrollments
+      .filter((e) => cardByStudent.has(e.student.id))
+      .map(({ student }) => {
+        const card = cardByStudent.get(student.id)!;
+        return {
+          reportCardId: card.id,
+          studentId: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          studentNumber: student.studentNumber,
+          status: card.status,
+          totalScore: card.totalScore,
+          average: card.average,
+          position: card.position,
+          hasTeacherRemark: !!card.teacherRemark,
+          publishedAt: card.publishedAt,
+          updatedAt: card.updatedAt,
+        };
+      })
+      // Sort by position (compiled cards are ranked)
+      .sort((a, b) => (a.position ?? 999) - (b.position ?? 999));
+ 
+    const pending = enrollments
+      .filter((e) => !cardByStudent.has(e.student.id))
+      .map(({ student }) => ({
+        studentId: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        studentNumber: student.studentNumber,
+      }));
+ 
+    return NextResponse.json({
+      data: {
+        compiled,
+        pending,
+        meta: {
+          termId: term.id,
+          classCount: enrollments.length,
+          compiledCount: compiled.length,
+          publishedCount: compiled.filter((c) => c.status === 'PUBLISHED').length,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('[reportCardService.list]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
   }
 }
