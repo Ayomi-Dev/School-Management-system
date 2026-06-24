@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginSchema } from "@/src/validators/authSchema";
 import { authService } from "@/src/services/auth/auth.service";
+import { testDb } from "@/src/utils/test";
 
 
 export const POST = async( req: NextRequest) => {

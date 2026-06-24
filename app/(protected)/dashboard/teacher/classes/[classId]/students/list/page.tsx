@@ -9,7 +9,7 @@ import {
   Search,
   Users,
 } from 'lucide-react';
-import { Student, StudentCard } from '../../../../components/studentList';
+import { StudentCard } from '../../../../components/studentList';
 
 
 
@@ -23,7 +23,7 @@ export default function StudentListPage() {
   const { data: studentsData, isLoading, error } = useMyClassStudents(classId);
 
   const classInfo = studentsData?.data.class;
-  const students: Student[] = studentsData?.data.students ?? [];
+  const students = studentsData?.data.students ?? [];
   const studentCount = studentsData?.data.studentCount ?? 0;
   const academicYear = studentsData?.data.academicYear;
 

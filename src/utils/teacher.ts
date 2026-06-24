@@ -78,7 +78,7 @@ export function buildClassNavSections(classId: string): NavSection[] {
         },
         {
           label: 'Students',
-          href: `${base}/students`,
+          href: `${base}/students/list`,
           icon: '👥',
           children: [
             {
@@ -95,7 +95,7 @@ export function buildClassNavSections(classId: string): NavSection[] {
         },
         {
           label: 'Attendance',
-          href: `${base}/attendance`,
+          href: `${base}/attendance/mark`,
           icon: '✅',
           children: [
             {
@@ -117,7 +117,7 @@ export function buildClassNavSections(classId: string): NavSection[] {
         },
         {
           label: 'Report Cards',
-          href: `${base}/report-cards`,
+          href: `${base}/report-cards/compile`,
           icon: '🗂️',
           children: [
             {
@@ -344,8 +344,21 @@ export interface MySubjectsResponse {
   data: MySubjectListEntry[];
   meta: { accessLevel: 'class_teacher' | 'subject_teacher' };
 }
-export  interface MyStudents {
-  data: StudentProfile[]
+export  interface MyStudentsResponse {
+  data: {
+    students: StudentProfile[];
+    studentCount: number;
+    class: {
+      id: string;
+      level: ClassLevel;
+      department?: string
+    };
+    academicYear: {
+      id: string;
+      label: string;
+      isCurrent: boolean
+    }
+  }
 }
 
  

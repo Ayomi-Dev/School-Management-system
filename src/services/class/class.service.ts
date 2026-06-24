@@ -220,7 +220,6 @@ export const classService = {
         where: { id: classId, schoolId },
         select: { id: true, level: true, department: true },
       });
-      console.log("class record:", classLevel)
       if (!classLevel) {
         return NextResponse.json({ error: "Class not found." }, { status: 404 });
       }

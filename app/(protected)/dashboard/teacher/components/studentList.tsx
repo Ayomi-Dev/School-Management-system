@@ -1,4 +1,5 @@
 
+import { StudentProfile } from "@/src/types";
 import { BookOpen, CalendarCheck, ChevronRight, ClipboardList } from "lucide-react";
 export interface Student {
   id: string;
@@ -10,7 +11,7 @@ export interface Student {
   user: { userCode: string; status: string };
 }
 interface StudentCardProps {
-  student: Student;
+  student: StudentProfile;
   classId: string;
   onViewProfile: (studentId: string) => void;
   onScores: (studentId: string) => void;

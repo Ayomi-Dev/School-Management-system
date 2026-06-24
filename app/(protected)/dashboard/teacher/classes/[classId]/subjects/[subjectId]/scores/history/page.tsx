@@ -15,7 +15,6 @@ export default function ScoreHistoryPage() {
   const { data, isLoading } = useScoreHistory({ classId, subjectId, page, limit: 20 });
   const records = data?.data ?? [];
   const meta = data?.meta; 
-  console.log(data)
 
   return (
     <div className="space-y-6">
@@ -56,9 +55,9 @@ export default function ScoreHistoryPage() {
                     <p className="font-medium text-gray-900">
                       {record.student.firstName} {record.student.lastName}
                     </p>
-                    <p className="text-xs text-gray-500">{record.student.admissionNumber}</p>
+                    <p className="text-xs text-gray-500">{record.student.studentNumber}</p>
                   </td>
-                  <td className="px-5 py-3 text-gray-700">{record.term.label}</td>
+                  <td className="px-5 py-3 text-gray-700">{record.term.period}</td>
                   <td className="px-5 py-3 text-gray-700">{record.caScore ?? '—'}</td>
                   <td className="px-5 py-3 text-gray-700">{record.examScore ?? '—'}</td>
                   <td className="px-5 py-3 font-medium text-gray-900">

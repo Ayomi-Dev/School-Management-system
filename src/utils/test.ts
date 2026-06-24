@@ -1,6 +1,6 @@
 import { prisma } from "@/src/lib/prisma/client";
 
-const testDb = async() => {
+export const testDb = async() => {
     try {
         await prisma.$connect();
         console.log("DB connected successfully")

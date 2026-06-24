@@ -988,7 +988,6 @@ export const teacherServices = {
             },
           }),
         ]);
-        console.log("total scores", scores, total)
       
         return NextResponse.json({
           data: scores,

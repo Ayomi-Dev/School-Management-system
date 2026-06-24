@@ -109,8 +109,8 @@ export interface ScoreHistoryEntry {
   gradeRemark: string | null;
   isPublished: boolean;
   updatedAt: string;
-  term: { id: string; label: string };
-  student: { id: string; firstName: string; lastName: string; admissionNumber: string };
+  term: { id: string; period: TermPeriod };
+  student: { id: string; firstName: string; lastName: string; studentNumber: string };
 }
  
 export interface ScoreHistoryParams {
