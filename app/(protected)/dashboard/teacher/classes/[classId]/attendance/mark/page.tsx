@@ -27,7 +27,7 @@ export default function MarkAttendancePage() {
   // today's date server-side when no date param is sent.
   const dateParam = searchParams.get('date') ?? undefined;
 
-  const { data, isLoading, error } = useDailyRoster(classId, dateParam);
+  const { data: attendanceData, isLoading, error } = useDailyRoster(classId, dateParam);
   const { mutate: saveMutate, isPending: isSaving } = useMarkAttendance(classId);
 
   // Local draft state: studentId -> { status, remark }. Seeded from the
@@ -40,17 +40,17 @@ export default function MarkAttendancePage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (data?.data.roster) {
+    if (attendanceData?.data.roster) {
       const seeded: typeof draft = {};
-      data.data.roster.forEach((entry) => {
+      attendanceData.data.roster.forEach((entry) => {
         seeded[entry.studentId] = { status: entry.status, remark: entry.remark ?? '' };
       });
       setDraft(seeded);
     }
-  }, [data]);
+  }, [attendanceData]);
 
-  const roster: RosterEntry[] = data?.data.roster ?? [];
-  const sessionId = data?.data.session.id;
+  const roster: RosterEntry[] = attendanceData?.data.roster ?? [];
+  const sessionId = attendanceData?.data.session.id;
 
   const unmarkedCount = useMemo(
     () => Object.values(draft).filter((d) => d.status === 'UNMARKED').length,
@@ -65,7 +65,7 @@ export default function MarkAttendancePage() {
     setDraft((prev) => ({ ...prev, [studentId]: { ...prev[studentId], remark } }));
   };
 
-  const markAllPresent = () => {
+  const markAllPresent = () => { //marks all students in the class present
     setDraft((prev) => {
       const next = { ...prev };
       Object.keys(next).forEach((id) => {
@@ -75,7 +75,7 @@ export default function MarkAttendancePage() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = () => {  //saves attendance data
     if (!sessionId) return;
     setSaveMessage(null);
 
@@ -130,8 +130,8 @@ export default function MarkAttendancePage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mark Attendance</h1>
           <p className="text-gray-600 mt-1">
-            {data?.data.session.date
-              ? new Date(data.data.session.date).toLocaleDateString('en-US', {
+            {attendanceData?.data.session.date
+              ? new Date(attendanceData.data.session.date).toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',

@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@/src/components/ui/Card';
 import { Loader } from '@/src/components/ui/Loader';
 import { BookOpen, ChevronRight, UserCheck } from 'lucide-react';
-import { useMySubjectsForClass } from '@/src/hooks/queries/useScores';
+import { useMySubjectsForClass } from '@/src/hooks/queries/useTeacher';
 
 /**
  * The missing link between the sidebar nav and the CA/Exam score pages.
@@ -22,7 +22,9 @@ export default function MySubjectsPage() {
   const isClassTeacher = data?.meta.accessLevel === 'class_teacher';
 
   const goToScores = (subjectId: string) => {
-    router.push(`/dashboard/teacher/classes/${classId}/subjects/${subjectId}/scores/ca`);
+    // Routes to the subject score landing page — teacher picks CA or Exam
+    // from there, rather than being dropped directly into one column.
+    router.push(`/dashboard/teacher/classes/${classId}/subjects/${subjectId}/scores`);
   };
 
   if (isLoading) {
@@ -32,7 +34,7 @@ export default function MySubjectsPage() {
       </div>
     );
   }
- 
+
   if (error) {
     return (
       <Card>

@@ -63,11 +63,15 @@ export const API_ENDPOINTS = {
   MARK_ATTENDANCE: (classId: string) => `/api/teachers/class/${classId}/attendance`,
   GET_ATTENDANCE_HISTORY: (classId: string) => `api/teachers/class/${classId}/attendance/history`,
   SAVE_SCORES: (classId: string, subjectId: string) => `/api/teachers/class/${classId}/subjects/${subjectId}/scores`,
-  GET_SCORE_HISTORY: (subjectId: string) => `/api/teachers/subjects/${subjectId}/scores/history`,
+  GET_SCORE_HISTORY: (classId: string, subjectId: string) => `/api/teachers/class/${classId}/subjects/${subjectId}/scores/history`,
   GET_SCORE_ROSTER: (classId: string, subjectId: string) => `api/teachers/class/${classId}/subjects/${subjectId}/scores`,
   GET_MY_SUBJECTS: ( classId: string) => `/api/teachers/class/${classId}/subjects`,
   ASSIGN_TEACHER_TO_CLASS: `/api/teachers/assign-class`,
   GET_MY_STUDENTS: (classId: string) => `/api/teachers/class/${classId}/students`,
+  GET_SCORE_SHEET: (classId: string) => `/api/teachers/class/${classId}/scores/sheet`,
+
+
+
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,
   PARENTS_GET: (id: string) => `/api/parents/${id}`,

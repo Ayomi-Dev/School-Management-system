@@ -18,7 +18,7 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
     return result;
 }
 
-export const PATCH = async(req: NextRequest, context: ParamsContext) => {
+export const PATCH = async(req: NextRequest, context: ClassParamsContext) => {
     const auth = await requireSchoolRoles(req, ...[Role.TEACHER])
     if(!auth.success){
         return NextResponse.json(
@@ -26,7 +26,7 @@ export const PATCH = async(req: NextRequest, context: ParamsContext) => {
             { status: auth.status }
         )
     }
-    const classId = (await context.params).id
+    const { classId } = await context.params
     const result = await teacherServices.updateAttendance(req, auth.userId, classId)
     return result;
 }

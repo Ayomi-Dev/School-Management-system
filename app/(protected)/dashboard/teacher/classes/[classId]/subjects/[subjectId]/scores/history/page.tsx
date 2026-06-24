@@ -14,7 +14,8 @@ export default function ScoreHistoryPage() {
 
   const { data, isLoading } = useScoreHistory({ classId, subjectId, page, limit: 20 });
   const records = data?.data ?? [];
-  const meta = data?.meta;
+  const meta = data?.meta; 
+  console.log(data)
 
   return (
     <div className="space-y-6">

@@ -492,7 +492,7 @@ export const teacherServices = {
     try{
       const teacher = await prisma.teacherProfile.findUnique({
       where: { userId: teacherId },
-      select: { id: true },
+      select: { id: true, userId: true },
     });
     if (!teacher) {
       return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
@@ -502,6 +502,7 @@ export const teacherServices = {
       where: { teacherId: teacher.id },
       select: { classId: true },
     });
+    console.log(" ids :", teacher.id, teacherId, classId, assignment)
     if (!assignment || assignment.classId !== classId) {
       return NextResponse.json(
         { error: 'You are not the class teacher for this class.' },
@@ -905,7 +906,7 @@ export const teacherServices = {
       }
   },
 
-  async getScoreHistory(req: NextRequest, teacherId: string, subjectId: string) {
+  async getScoreHistory(req: NextRequest, teacherId: string, subjectId: string, classId: string) {
       try {
         const teacher = await prisma.teacherProfile.findUnique({
           where: { userId: teacherId },
@@ -916,7 +917,6 @@ export const teacherServices = {
         }
       
         const { searchParams } = new URL(req.url);
-        const classId = searchParams.get('classId');
         const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
         const limit = Math.min(100, parseInt(searchParams.get('limit') ?? '20', 10));
 
@@ -965,28 +965,29 @@ export const teacherServices = {
         };
       
         const [total, scores] = await Promise.all([
-      prisma.score.count({ where }),
-      prisma.score.findMany({
-        where,
-        orderBy: [{ term: { startDate: 'desc' } }, { student: { lastName: 'asc' } }],
-        skip: (page - 1) * limit,
-        take: limit,
-        select: {
-          id: true,
-          caScore: true,
-          examScore: true,
-          totalScore: true,
-          grade: true,
-          gradeRemark: true,
-          isPublished: true,
-          updatedAt: true,
-          term: { select: { id: true, label: true } },
-          student: {
-            select: { id: true, firstName: true, lastName: true, admissionNumber: true },
-          },
-        },
-      }),
+          prisma.score.count({ where }),
+          prisma.score.findMany({
+            where,
+            orderBy: [{ term: { startDate: 'desc' } }, { student: { lastName: 'asc' } }],
+            skip: (page - 1) * limit,
+            take: limit,
+            select: {
+              id: true,
+              caScore: true,
+              examScore: true,
+              totalScore: true,
+              grade: true,
+              gradeRemark: true,
+              isPublished: true,
+              updatedAt: true,
+              term: { select: { id: true, period: true } },
+              student: {
+                select: { id: true, firstName: true, lastName: true, studentNumber: true },
+              },
+            },
+          }),
         ]);
+        console.log("total scores", scores, total)
       
         return NextResponse.json({
           data: scores,
@@ -998,6 +999,7 @@ export const teacherServices = {
         return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
       }
   },
+  
   async getMySubjects(teacherId: string, classId: string) {
       try{
         const teacher = await prisma.teacherProfile.findUnique({
@@ -1072,5 +1074,123 @@ export const teacherServices = {
         console.error('[teacherService.getMySubjectsForClass]', error);
         return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
       }
+  },
+
+  async getScoreSheet(teacherId: string, classId: string) {
+    try{
+       const teacher = await prisma.teacherProfile.findUnique({
+        where: { userId: teacherId},
+        select: { id: true, schoolId: true },
+      });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+    // Authorization: class teacher only — this is a privileged cross-subject
+    // view. Subject teachers use the per-subject roster endpoint instead.
+    const classAssignment = await prisma.teacherClassAssignment.findUnique({
+      where: { teacherId: teacher.id },
+      select: { classId: true },
+    });
+    if (classAssignment?.classId !== classId) {
+      return NextResponse.json(
+        { error: 'Only the class teacher can view the full score sheet.' },
+        { status: 403 },
+      );
+    }
+ 
+    const term = await prisma.term.findFirst({
+      where: { isCurrent: true },
+      select: { id: true, academicYearId: true, period: true },
+    });
+    if (!term) {
+      return NextResponse.json(
+        { error: 'No active term found for this school.' },
+        { status: 400 },
+      );
+    }
+ 
+    // Fetch subjects, enrollments, and scores in parallel — independent
+    // queries, no reason to sequence them.
+    const [subjects, enrollments, scores] = await Promise.all([
+      prisma.subject.findMany({
+        where: { classId },
+        select: { id: true, name: true, code: true },
+        orderBy: { name: 'asc' },
+      }),
+      prisma.enrollment.findMany({
+        where: { classId, academicYearId: term.academicYearId },
+        select: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              studentNumber: true,
+            },
+          },
+        },
+        orderBy: { student: { lastName: 'asc' } },
+      }),
+      prisma.score.findMany({
+        where: {
+          termId: term.id,
+          subject: { classId },
+        },
+        select: {
+          studentId: true,
+          subjectId: true,
+          caScore: true,
+          examScore: true,
+          totalScore: true,
+          grade: true,
+          isPublished: true,
+        },
+      }),
+    ]);
+ 
+    // Index scores by `${studentId}:${subjectId}` for O(1) lookup
+    // while building the matrix below.
+    const scoreIndex = new Map(
+      scores.map((s) => [`${s.studentId}:${s.subjectId}`, s]),
+    );
+ 
+    const students = enrollments.map(({ student }) => ({
+      studentId: student.id,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      studentNumber: student.studentNumber,
+      scores: Object.fromEntries(
+        subjects.map((subject) => {
+          const key = `${student.id}:${subject.id}`;
+          const score = scoreIndex.get(key);
+          return [
+            subject.id,
+            score
+              ? {
+                  caScore: score.caScore,
+                  examScore: score.examScore,
+                  totalScore: score.totalScore,
+                  grade: score.grade,
+                  isPublished: score.isPublished,
+                }
+              : null,
+          ];
+        }),
+      ),
+    }));
+ 
+    return NextResponse.json({
+      data: {
+        subjects: subjects.map((s) => ({ id: s.id, name: s.name, code: s.code })),
+        students,
+        meta: { termId: term.id, term: term.period },
+      },
+    });
+  } catch (error) {
+    console.error('[scoreService.getScoreSheet]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+    
   }
 }

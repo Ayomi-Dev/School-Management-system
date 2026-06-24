@@ -98,5 +98,9 @@ export const queryKeys = {
     all: ['enrollments'] as const,
     lists: () => [...queryKeys.enrollments.all, 'list'] as const,
     extract: (studentId: string, academicYearId: string) =>
-      [...queryKeys.enrollments.all, studentId, academicYearId] as const,  }
+      [...queryKeys.enrollments.all, studentId, academicYearId] as const,  },
+    scoresheet: {
+      sheet: (classId: string) => ['scoreSheet', classId] as const,
+    }
 };
+

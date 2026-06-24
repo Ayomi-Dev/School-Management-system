@@ -8,6 +8,8 @@ export const scoreKeys = {
     [...scoreKeys.all, 'roster', classId, subjectId] as const,
   history: (subjectId: string, classId: string, params?: Omit<ScoreHistoryParams, 'subjectId' | 'classId'>) =>
     [...scoreKeys.all, 'history', subjectId, classId, params] as const,
+  sheet: (classId: string) => ['scoreSheet', classId] as const,
+
 };
 
 
@@ -55,12 +57,12 @@ export const useScoreHistory = (params: ScoreHistoryParams) => {
   });
 };
 
-export const useMySubjectsForClass = (classId: string) => {
+export const useScoreSheet = (classId: string) => {
   return useQuery({
-    queryKey: ['teacher', 'mySubjects', classId],
-    queryFn: () => teacherService.getMySubjectsForClass(classId),
+    queryKey: scoreKeys.sheet(classId),
+    queryFn: () => teacherService.getScoreSheet(classId),
     enabled: !!classId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 60 * 1000, // 1 min — sheet is heavy, don't refetch on every focus
   });
 };
  

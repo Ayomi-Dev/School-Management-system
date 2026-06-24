@@ -1,4 +1,4 @@
-import { ClassLevel, StudentProfile, TeacherProfile } from "../types";
+import { ClassLevel, StudentProfile, TeacherProfile, TermPeriod } from "../types";
 
 
 export interface NavItem {
@@ -64,7 +64,7 @@ export interface AssignClassTeacherPayload {
 // switches context. All class-scoped routes include the classId as a path
 // segment so pages can read it via params without needing global state.
 
-export function buildClassNavSections(classId: string,): NavSection[] {
+export function buildClassNavSections(classId: string): NavSection[] {
   const base = `/dashboard/teacher/classes/${classId}`;
 
   return [
@@ -159,6 +159,11 @@ export function buildClassNavSections(classId: string,): NavSection[] {
           label: 'My Subjects',
           href: `${base}/subjects`,
           icon: '📚',
+        },
+        {
+          label: 'Scores',
+          href: `${base}/scores/sheet`,
+          icon: '🕓',
         },
         {
           label: 'Assignments',
@@ -343,3 +348,34 @@ export  interface MyStudents {
   data: StudentProfile[]
 }
 
+ 
+export interface ScoreSheetSubject {
+  id: string;
+  name: string;
+  code: string | null;
+}
+ 
+export interface ScoreSheetCell {
+  caScore: number | null;
+  examScore: number | null;
+  totalScore: number | null;
+  grade: string | null;
+  isPublished: boolean;
+}
+ 
+export interface ScoreSheetStudent {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  studentNumber: string;
+  scores: Record<string, ScoreSheetCell | null>; // keyed by subjectId
+}
+ 
+export interface ScoreSheetResponse {
+  data: {
+    subjects: ScoreSheetSubject[];
+    students: ScoreSheetStudent[];
+    meta: { termId: string, term: TermPeriod };
+  };
+}
+ 

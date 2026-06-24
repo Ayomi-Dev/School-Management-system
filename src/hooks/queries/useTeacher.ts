@@ -18,3 +18,13 @@ export const useMyClassStudents = (classId: string) => {
         enabled: !!classId,
     })
 }
+
+export const useMySubjectsForClass = (classId: string) => {
+  return useQuery({
+    queryKey: ['teacher', 'mySubjects', classId],
+    queryFn: () => teacherService.getMySubjectsForClass(classId),
+    enabled: !!classId,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+ 

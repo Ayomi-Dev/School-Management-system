@@ -1,7 +1,7 @@
 import { getApiClient } from "@/src/config/api";
 import { API_ENDPOINTS } from "@/src/config/constants";
 import { PaginatedResponse, SaveScoresPayload, ScoreHistoryEntry, ScoreHistoryParams, ScoreRosterResponse, StudentProfile, TeacherProfile } from "@/src/types";
-import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudents, MySubjectsResponse } from "@/src/utils/teacher";
+import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudents, MySubjectsResponse, ScoreSheetResponse } from "@/src/utils/teacher";
 
 
 
@@ -50,13 +50,14 @@ export const teacherService = {
     },
  
     getScoreHistory: async({
+      classId,
       subjectId,
       ...params
       }: ScoreHistoryParams): Promise<{
         data: ScoreHistoryEntry[];
         meta: { total: number; page: number; limit: number; totalPages: number };
       }> => {
-         const response = await client.get(API_ENDPOINTS.GET_SCORE_HISTORY(subjectId), { params })
+         const response = await client.get(API_ENDPOINTS.GET_SCORE_HISTORY(classId, subjectId), { params })
         return response.data
     },
     getScoreRoster: async(
@@ -64,16 +65,20 @@ export const teacherService = {
       subjectId: string, 
       ): Promise<{ data: ScoreRosterResponse }> => {
       const response = await client.get(API_ENDPOINTS.GET_SCORE_ROSTER(classId, subjectId),)
-      console.log("get roster")
       return response.data
     },
     getMySubjectsForClass: async(classId: string): Promise<MySubjectsResponse> => {
       const response = await client.get(API_ENDPOINTS.GET_MY_SUBJECTS(classId))
       return response.data  
     }, 
-    getStudentsForMyClass: async(classId: string) => {
+    getStudentsForMyClass: async(classId: string): Promise<MyStudents> => {
       const response = await client.get(API_ENDPOINTS.GET_MY_STUDENTS(classId));
       return response.data
+    },
+    getScoreSheet: async(classId: string): Promise<ScoreSheetResponse> => {
+      const response = await client.get(API_ENDPOINTS.GET_SCORE_SHEET(classId))
+      return response.data
+
     }
 }
 
