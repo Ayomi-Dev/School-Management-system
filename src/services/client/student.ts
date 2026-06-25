@@ -1,7 +1,7 @@
 import { getApiClient } from '@/src/config/api';
 import { API_ENDPOINTS } from '@/src/config/constants';
 import { PaginatedResponse } from '@/src/types';
-import { StudentProfile, ParentProfile } from '@/src/types/api';
+import { StudentProfile, ParentProfile, StudentAcademicSummaryResponse } from '@/src/types/api';
 
 const client = getApiClient();
 
@@ -29,6 +29,15 @@ export const studentService = {
     });
     return response.data;
   },
+
+  getAcademicSummary: async (studentId: string, schoolId: string, termId?: string) => {
+    const res = await client.get<StudentAcademicSummaryResponse>(
+      API_ENDPOINTS.GET_ACADEMIC_SUMMARY(studentId),
+      { params: { schoolId, ...(termId && { termId }) } },
+    );
+    return res.data;
+  },
+ 
 };
 
 export const parentService = {

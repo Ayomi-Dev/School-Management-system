@@ -22,7 +22,6 @@ export const GET = async(req: NextRequest, context: ParamsContext ) => {
     // ── Pull academicYearId from the query string ───────────────────────────
     const { searchParams } = new URL(req.url);
     const academicYearId = searchParams.get("academicYearId")?.trim();
-    console.log("raw academicYearId:", JSON.stringify(academicYearId));
 
 
     if (!academicYearId) {
@@ -32,10 +31,7 @@ export const GET = async(req: NextRequest, context: ParamsContext ) => {
       );
     }
 
-    const { schoolId } = auth
     const { id } = await context.params
-    
-    console.log("school id:", schoolId, "studentid:", id)
     const result = await enrollmentService.extractFromEnrollment(id, academicYearId )
     return result;
 }

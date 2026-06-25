@@ -323,16 +323,85 @@ export interface ReportCardDetail {
     createdAt: string;
     updatedAt: string;
   };
-  student: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    studentNumber: string;
-    gender: string;
-  };
+  student: StudentInfo
   scores: ScoreEntry[];
   attendanceSummary: AttendanceSummary;
 }
+
+export interface StudentInfo {
+  id:            string;
+  firstName:     string;
+  lastName:      string;
+  studentNumber: string;
+  gender: string
+}
+ 
+export interface ScoreRecord {
+  id:          string;
+  subjectId:   string;
+  subject:     { name: string; code: string };
+  termId:      string;
+  term: {
+    id:           string;
+    period:       string;
+    academicYear: { label: string };
+  };
+  caScore:      number | null;
+  examScore:    number | null;
+  totalScore:   number | null;
+  grade:        string | null;
+  gradeRemark:  string | null;
+  isPublished:  boolean;
+}
+ 
+export interface AttendanceSummary {
+  total:    number;
+  present:  number;
+  late:     number;
+  absent:   number;
+  unmarked: number;
+  rate:     number; // always a number, 0 when no sessions
+}
+ 
+export interface ReportCard {
+  id:              string;
+  termId:          string;
+  academicYearId:  string;
+  term:            { id: string; period: string };
+  academicYear:    { id: string; label: string };
+  status:          'DRAFT' | 'PUBLISHED';
+  totalScore:      number | null;
+  average:         number | null;
+  position:        number | null;
+  teacherRemark:   string | null;
+  principalRemark: string | null;
+  classSnapshot:   string | null;
+  publishedAt:     string | null;
+}
+ 
+export interface EnrollmentRecord {
+  id:          string;
+  enrolledAt:  string;
+  class:       { level: string };
+  academicYear: { label: string };
+}
+ 
+export interface StudentAcademicSummaryResponse {
+  data: {
+    student:     StudentInfo;
+    enrollments: EnrollmentRecord[];
+    scores:      ScoreRecord[];
+    attendance:  AttendanceSummary;
+    reportCards: ReportCard[];
+  };
+}
+  
+export interface UseStudentAcademicSummaryParams {
+  studentId: string;
+  schoolId:  string;
+  termId?:   string;
+}
+ 
 
 export type UserProfile = StudentProfile | TeacherProfile | ParentProfile | BursarProfile | AdminProfile | null
 

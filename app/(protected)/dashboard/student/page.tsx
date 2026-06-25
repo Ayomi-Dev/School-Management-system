@@ -10,10 +10,10 @@ import {
 } from '@/src/components/dashboards/student/components';
 import { Class, StudentProfile, Subject } from '@/src/types';
 import { useProfileStore } from '@/src/stores/profileStore';
-import { Loader } from '@/src/components/ui/Loader';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useEffect, useState } from 'react';
 import { useAcademicYearsList, useExtractEnrollment } from '@/src/hooks/queries/useAcademic';
+import { useStudentAcademicSummary } from '@/src/hooks/queries/useAcademic';
 
 
 const StudentDashboardPage = ( ) => {
@@ -25,6 +25,8 @@ const StudentDashboardPage = ( ) => {
       const { data: yearsData, isLoading: isYearsLoading } =
         useAcademicYearsList(schoolId);
       const years = yearsData?.data ?? [];
+
+    
     
       // Auto-selects the current academic year once years load
       useEffect(() => {
@@ -39,6 +41,16 @@ const StudentDashboardPage = ( ) => {
       // Flatten defensively in case the API ever returns nested arrays
       const subjects = (enrollmentData?.data?.class.subjects ?? []) as Subject[];
       const selectedClass =( enrollmentData?.data.class) as Class
+      const termId = (enrollmentData?.data?.termId as string) ?? '';
+      const { data: summaryData, isLoading: isSummaryLoading, isError: isSummaryError } =
+        useStudentAcademicSummary({
+          studentId: profile?.id as string,
+          schoolId,
+          termId
+      });
+
+      const attendance = summaryData?.data.attendance;
+
 
 
   return (
@@ -58,7 +70,10 @@ const StudentDashboardPage = ( ) => {
       <TimetableCard />
       {/* Attendance and Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AttendanceCard />
+        <AttendanceCard attendance={attendance}
+          isLoading={isSummaryLoading}
+          isError={isSummaryError}
+        />
         <RecentActivitiesCard />
       </div>
 

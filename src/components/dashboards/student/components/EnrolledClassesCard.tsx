@@ -9,7 +9,6 @@ interface EnrolledClassesCardProps {
 }
 
 export function EnrolledClassesCard({subjects, enrolledClass}: EnrolledClassesCardProps) {
-  console.log(enrolledClass)
   
   return (
     <Card className="p-6">

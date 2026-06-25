@@ -280,80 +280,139 @@ export const studentService = {
   // GET STUDENT ACADEMIC SUMMARY
   // Returns enrollments, scores, attendance rate, report cards
   // ----------------------------------------------------------------
-  async getStudentAcademicSummary(studentProfileId: string, schoolId: string, termId?: string) {
-    try {
-        const student = await prisma.studentProfile.findFirst({
-          where: { id: studentProfileId, schoolId },
-          select: { id: true, firstName: true, lastName: true, studentNumber: true },
-        });
-        if (!student) {
-          return NextResponse.json({ error: "Student not found." }, { status: 404 });
-        }
-
-        const scoreWhere: any = { studentId: studentProfileId };
-        if (termId) scoreWhere.termId = termId;
-
-        const attendanceWhere: any = { studentId: studentProfileId };
-
-        const [scores, attendances, reportCards, enrollments] = await Promise.all([
-            prisma.score.findMany({
-                where: scoreWhere,
-                include: {
-                  subject: { select: { name: true, code: true } },
-                  term: { select: { period: true, academicYear: { select: { label: true } } } },
-                },
-                orderBy: { createdAt: "desc" },
-            }),
-            prisma.attendance.findMany({
-                where: attendanceWhere,
-                select: { status: true },
-            }),
-            prisma.reportCard.findMany({
-                where: { studentId: studentProfileId },
-                orderBy: { createdAt: "desc" },
-                include: {
-                  term: { select: { period: true } },
-                  academicYear: { select: { label: true } },
-                },
-            }),
-            prisma.enrollment.findMany({
-                where: { studentId: studentProfileId },
-                include: {
-                  class: { select: { name: true, level: true } },
-                  academicYear: { select: { label: true } },
-                },
-                orderBy: { enrolledAt: "desc" },
-            }),
-        ]);
-
-        const totalSessions = attendances.length;
-        const presentCount = attendances.filter((a) => a.status === "PRESENT").length;
-        const lateCount = attendances.filter((a) => a.status === "LATE").length;
-        const attendanceRate =
-          totalSessions > 0
-            ? (((presentCount + lateCount) / totalSessions) * 100).toFixed(1)
-            : "N/A";
-
-        return NextResponse.json({
-            data: {
-                student,
-                enrollments,
-                scores,
-                attendance: {
-                  total: totalSessions,
-                  present: presentCount,
-                  late: lateCount,
-                  absent: attendances.filter((a) => a.status === "ABSENT").length,
-                  rate: attendanceRate,
-                },
-                reportCards,
-            },
-        });
-    }   
-    catch (error) {
-      console.error("[studentService.getSummary]", error);
-      return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
+  async getStudentAcademicSummary(
+    studentProfileId: string,
+    schoolId: string,
+    termId?: string,
+) {
+  try {
+    // ── 1. Verify student belongs to this school ──────────────────────────
+    const student = await prisma.studentProfile.findFirst({
+      where: { userId: studentProfileId, schoolId },
+      select: { id: true, firstName: true, lastName: true, studentNumber: true },
+    });
+    if (!student) {
+      return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
     }
-  },
+
+    // ── 2. Shared term scope ──────────────────────────────────────────────
+    // All four queries now apply the same termId filter so the summary is
+    // always scoped consistently — either to a specific term or all-time.
+    const termFilter = termId ? { termId } : {};
+
+    // ── 3. Parallel queries ───────────────────────────────────────────────
+    const [scores, attendanceCounts, reportCards, enrollments] =
+      await Promise.all([
+        // Scores — scoped to term when provided
+        prisma.score.findMany({
+          where: { studentId: student.id, ...termFilter },
+          select: {
+            id:          true,
+            subjectId:   true,
+            termId:      true,
+            caScore:     true,
+            examScore:   true,
+            totalScore:  true,
+            grade:       true,
+            gradeRemark: true,
+            isPublished: true,
+            subject: { select: { name: true, code: true } },
+            term: {
+              select: {
+                id:     true,
+                period: true,
+                academicYear: { select: { id: true, label: true } },
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+
+        // Attendance — use groupBy instead of fetching every row.
+        // Only counts matter here; no need to hydrate full records.
+        // termId is applied via the session relation when provided.
+        prisma.attendance.groupBy({
+          by: ['status'],
+          where: {
+            studentId: student.id,
+            ...(termId
+              ? { session: { termId } } // scope to term via ClassSession
+              : {}),
+          },
+          _count: { status: true },
+        }),
+
+        // Report cards — scoped to term when provided
+        prisma.reportCard.findMany({
+          where: { studentId: student.id, ...termFilter },
+          select: {
+            id:              true,
+            termId:          true,
+            academicYearId:  true,
+            status:          true,
+            totalScore:      true,
+            average:         true,
+            position:        true,
+            teacherRemark:   true,
+            principalRemark: true,
+            classSnapshot:   true,
+            publishedAt:     true,
+            createdAt:       true,
+            term:         { select: { id: true, period: true } },
+            academicYear: { select: { id: true, label: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+        
+        // Enrollments — not term-scoped (shows full academic history)
+        prisma.enrollment.findMany({
+          where: { studentId: student.id },
+          include: {
+            class: { select: { level: true } },
+            academicYear: { select: { label: true } },
+          },
+          orderBy: { enrolledAt: 'desc' },
+        }),
+      ]);
+    // ── 4. Derive attendance summary from groupBy result ─────────────────
+    // groupBy returns one row per distinct status value — pull counts safely
+    const countFor = (status: string): number =>
+      attendanceCounts.find((r) => r.status === status)?._count.status ?? 0;
+
+    const presentCount  = countFor('PRESENT');
+    const lateCount     = countFor('LATE');
+    const absentCount   = countFor('ABSENT');
+    const unmarkedCount = countFor('UNMARKED');
+    const totalSessions = presentCount + lateCount + absentCount + unmarkedCount;
+
+    // attendanceRate is always a number (0 when no sessions) — never a string
+    const attendanceRate =
+      totalSessions > 0
+        ? parseFloat((((presentCount + lateCount) / totalSessions) * 100).toFixed(1))
+        : 0;
+
+    return NextResponse.json({
+      data: {
+        student,
+        enrollments,
+        scores,
+        attendance: {
+          total:    totalSessions,
+          present:  presentCount,
+          late:     lateCount,
+          absent:   absentCount,
+          unmarked: unmarkedCount,
+          rate:     attendanceRate, // number, e.g. 87.5 — not a string
+        },
+        reportCards,
+      },
+    });
+  } catch (error) {
+    console.error('[studentService.getStudentAcademicSummary]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+  }
+},
+
+
 };
 

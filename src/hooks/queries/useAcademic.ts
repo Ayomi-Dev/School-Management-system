@@ -12,9 +12,12 @@ import {
   CreateClassRequest,
   CreateAcademicYearRequest,
   CreateTermRequest,
+  UseStudentAcademicSummaryParams,
+  StudentAcademicSummaryResponse,
 } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
+import { studentService } from '@/src/services/client/student';
 
 // Classes
 export const useClassesList = (schoolId: string, page = 1, limit = 20) => {
@@ -110,4 +113,18 @@ export const useExtractEnrollment = (studentId: string, academicYearId: string) 
     queryFn: () => enrollmentService.extract(studentId, academicYearId),
     enabled: !!studentId && !!academicYearId,
   })
+}
+
+
+export function useStudentAcademicSummary({
+  studentId,
+  schoolId,
+  termId,
+}: UseStudentAcademicSummaryParams) {
+  return useQuery<StudentAcademicSummaryResponse>({
+    queryKey: ['student-academic-summary', studentId, schoolId, termId],
+    queryFn:  () => studentService.getAcademicSummary(studentId, schoolId, termId),
+    enabled:  Boolean(studentId && schoolId),
+    staleTime: 1000 * 60 * 5,
+  });
 }

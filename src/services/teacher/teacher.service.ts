@@ -566,7 +566,6 @@ export const teacherServices = {
     
   },
   async attendanceHistory(req: NextRequest, teacherId: string, classId: string) {
-    console.log("teacher id", teacherId)
     try{
       const teacher = await prisma.teacherProfile.findUnique({
         where: { userId: teacherId },
@@ -587,7 +586,6 @@ export const teacherServices = {
           { status: 403 },
         );
       }
-      console.log("forbiddden error in attendance history")
     
       const { searchParams } = new URL(req.url);
       const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));

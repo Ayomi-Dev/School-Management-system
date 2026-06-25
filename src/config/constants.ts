@@ -54,6 +54,7 @@ export const API_ENDPOINTS = {
   STUDENTS_GET: (id: string) => `/api/students/${id}/profile`,
   STUDENTS_LINK_PARENT: (id: string) => `/api/admin/students/${id}/link`,
   EXTRACT_ENROLLMENT: (id: string, academicYearId: string ) => `/api/students/${id}/enrollment?academicYearId=${academicYearId} `,
+  GET_ACADEMIC_SUMMARY: (id: string) => `/api/students/${id}/attendance`,
 
   // Teachers
   TEACHERS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/teachers`,
