@@ -1,11 +1,11 @@
-import { adminCreateUserSchema, adminUpdateSchema } from "@/src/validators/adminSchema";
+import { adminCreateUserSchema, adminUpdateUserSchema } from "@/src/validators/adminSchema";
 import { prisma } from "@/src/lib/prisma/client";
 import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
 import { currentSession, generateUserCode } from "../../utils/userCode";
 import { generalTempPassword, generateSetUpToken } from "../notification/services";
 import { passwordServices } from "../passwords/password.service";
-import { resolveAcademicYear, resolveClass } from "@/src/utils/resolvers";
+import { resolveAcademicYear } from "@/src/utils/resolvers";
 import { classService } from "../class/class.service";
 import { _levelOrder } from "@/src/utils/levelOrder";
 import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
@@ -241,7 +241,7 @@ export const adminServices = {
 
    async updateUser(req: NextRequest, id: string){
         const body = await req.json()
-        const parsedBody = adminUpdateSchema.safeParse(body)
+        const parsedBody = adminUpdateUserSchema.safeParse(body)
         if(!parsedBody.success){
             return NextResponse.json(
                 {
@@ -265,8 +265,16 @@ export const adminServices = {
                 { status: 404 }
             )
         }
-
-
+        const updatedUser = await prisma.user.update(
+            {
+                where: { id: user.id},
+                data: parsedBody.data
+            }
+        )
+        return NextResponse.json(
+            { message: "User details updated successfully", updatedUser},
+            { status: 200 }
+        )
    },
    async getUserById(id: string)  {
         const user = await prisma.user.findUnique(

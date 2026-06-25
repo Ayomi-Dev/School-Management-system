@@ -40,11 +40,11 @@ const studentNavItems: NavItem[] = [
     href: '/dashboard/student/assignments',
     icon: '📝',
   },
-  {
-    label: 'Attendance',
-    href: '/dashboard/student/attendance',
-    icon: '✓',
-  },
+  // {
+  //   label: 'Attendance',
+  //   href: '/dashboard/student/attendance',
+  //   icon: '✓',
+  // },
   {
     label: 'Fees',
     href: '/dashboard/student/fees',

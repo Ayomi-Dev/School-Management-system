@@ -28,10 +28,14 @@ export const provisionAdminSchema = z.object({
   phone: z.string().max(20).optional()
 });
 
-export const adminUpdateSchema = z.object({
+export const adminUpdateUserSchema = z.object({
   phone: z.string().max(20).optional(),
-  
+  firstName: z.string().min(1).max(50).optional(),
+  lastName:  z.string().min(1).max(50).optional(),
+  photoUrl: z.string().optional(),
+
 })
+export type EditUserFormData = z.infer<typeof adminUpdateUserSchema>
 
 
 
