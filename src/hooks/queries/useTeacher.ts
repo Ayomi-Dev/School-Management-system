@@ -27,4 +27,14 @@ export const useMySubjectsForClass = (classId: string) => {
     staleTime: 2 * 60 * 1000,
   });
 };
+
+ 
+export const useMySubjectAssignments = () => {
+  return useQuery({
+    queryKey: ['teacher', 'mySubjectAssignments'],
+    queryFn:  () => teacherService.getMySubjectAssignments(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+ 
  

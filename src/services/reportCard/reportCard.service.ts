@@ -515,20 +515,6 @@ export const reportCardServices = {
       // ============================================================
       // PUBLISH REPORT CARD
       // ============================================================
-
-      async publishReportCard(reportCardId: string) {
-      const rc = await prisma.reportCard.findUniqueOrThrow({
-        where: { id: reportCardId },
-      });
-      if (rc.status === ReportCardStatus.PUBLISHED) {
-        throw new Error("Report card is already published.");
-      }
-      return prisma.reportCard.update({
-        where: { id: reportCardId },
-        data: { status: ReportCardStatus.PUBLISHED, publishedAt: new Date() },
-      });
-      },
-
       async bulkPublishReportCards(classId: string, termId: string, academicYearId: string) {
       const enrollments = await prisma.enrollment.findMany({
         where: { classId, academicYearId },
@@ -560,7 +546,7 @@ export const reportCardServices = {
       // UPDATE REPORT CARD
       // ============================================================
 
-    async updateReportCard(
+    async publishReportCard(
       req: NextRequest,
       teacherId: string,
       classId: string,

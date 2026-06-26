@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import {
   useSubjectsList,
-  useCreateSubjectMutation,
   useClassesList,
 } from '@/src/hooks/queries/useAdmin';
 import { Card } from '@/src/components/ui/Card';

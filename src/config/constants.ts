@@ -70,13 +70,14 @@ export const API_ENDPOINTS = {
   ASSIGN_TEACHER_TO_CLASS: `/api/teachers/assign-class`,
   GET_MY_STUDENTS: (classId: string) => `/api/teachers/class/${classId}/students`,
   GET_SCORE_SHEET: (classId: string) => `/api/teachers/class/${classId}/scores/sheet`,
+  GET_SUBJECT_ASSIGNMENTS: `/api/teachers/me/subject-assignments`,
 
   //Report cards
   COMPILE_REPORT_CARDS: (classId: string) => `/api/teachers/class/${classId}/report-cards/compile`,
   GET_REPORT_CARDS: (classId: string) => `/api/teachers/class/${classId}/report-cards`,
   GET_SINGLE_REPORT_CARD: (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
   UPDATE_REPORT_CARD : (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
-
+  PUBLISH_REPORT_CARD: ( classId: string, reportCardId: string) => `api/teachers/class/${classId}/report-cards/${reportCardId}`,
 
 
   // Parents

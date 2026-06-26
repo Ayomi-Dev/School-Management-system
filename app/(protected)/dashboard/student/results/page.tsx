@@ -161,6 +161,7 @@ export default function ResultsPage() {
     ? Math.round(scoredSubjects.reduce((acc, s) => acc + (s.totalScore ?? 0), 0) / scoredSubjects.length)
     : null;
 
+    console.log(reportCards)
   // ── Loading / error states ─────────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -274,7 +275,7 @@ export default function ResultsPage() {
           <Card className="overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-800">
-                Score Sheet — {activeCard.term.period}, {activeCard.academicYear.label}
+                Report Sheet — <span className='text-blue-300'>{activeCard.term.period}</span> Term, {activeCard.academicYear.label}
               </h2>
               <p className="text-sm text-gray-500 mt-0.5">
                 {scoredSubjects.length} subject{scoredSubjects.length !== 1 ? 's' : ''} recorded

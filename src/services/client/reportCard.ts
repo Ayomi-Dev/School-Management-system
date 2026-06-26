@@ -43,7 +43,7 @@ export const reportCardService = {
     reportCardId: string,
   ): Promise<{ message: string; data: any }> =>
     client
-      .patch(`/teacher/classes/${classId}/report-cards/${reportCardId}`, {
+      .patch(API_ENDPOINTS.PUBLISH_REPORT_CARD(classId, reportCardId), {
         action: 'publish',
       })
       .then((r) => r.data),

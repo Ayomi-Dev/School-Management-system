@@ -5,21 +5,44 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useState } from 'react';
 import { ChevronDown, Menu, X } from 'lucide-react';
-import { buildClassNavSections, NavItem, NavSection, personalNavSection } from '@/src/utils/teacher';
-import { useMyClass } from '@/src/hooks/queries/useUsers';
+import {
+  buildClassNavSections,
+  buildSubjectTeacherNavSections,
+  NavItem,
+  NavSection,
+  personalNavSection,
+} from '@/src/utils/teacher';
+import { useMyClass } from '@/src/hooks/queries/useTeacher';
+import { useMySubjectAssignments } from '@/src/hooks/queries/useTeacher';
+
+// ─── teacher type detection ───────────────────────────────────────────────────
+//
+// Three possible states after both queries resolve:
+//
+//   CLASS TEACHER    — assignedClass is non-null.
+//                      Renders the full class management nav.
+//
+//   SUBJECT TEACHER  — assignedClass is null but subjectAssignments has
+//                      at least one class. Renders one section per class
+//                      with their subjects + score/assignment links.
+//
+//   UNASSIGNED       — assignedClass is null AND no subject assignments.
+//                      Renders only the personal section with a clear
+//                      "no assignments yet" message. No nav items that
+//                      depend on a classId are shown — prevents undefined
+//                      classId from reaching any page.
 
 export function TeacherSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  // A teacher has exactly one class assignment (TeacherClassAssignment
-  // is 1:1), so we fetch it directly on mount instead of receiving it as a
-  // prop. No class switcher needed — there's nothing to switch between.
-  const { data: assignedClass, isLoading } = useMyClass();
-  const classAssignedToTeacher = assignedClass?.data
+  const { data: assignedClass,       isLoading: loadingClass   } = useMyClass();
+  const { data: subjectAssignments,  isLoading: loadingSubjects } = useMySubjectAssignments();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen,   setIsOpen]   = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const isLoading = loadingClass || loadingSubjects;
 
   const toggleExpanded = (label: string) => {
     setExpanded((prev) => {
@@ -32,22 +55,44 @@ export function TeacherSidebar() {
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + '/');
 
-  const sections: NavSection[] = assignedClass
-    ? [...buildClassNavSections(classAssignedToTeacher?.classAssignment.classId as string), personalNavSection]
-    : [personalNavSection];
+  // Determine teacher type and build nav sections accordingly.
+  const subjectClasses = subjectAssignments?.data.classes ?? [];
 
-  // ─── NAV LINKS ──────────────────────────────────────────────────────────────
+  let teacherType: 'class' | 'subject' | 'unassigned' = 'unassigned';
+  if (assignedClass?.data?.classAssignment?.isClassTeacher) {
+    teacherType = 'class';
+  } else if (subjectClasses.length > 0) {
+    teacherType = 'subject';
+  }
+
+  const sections: NavSection[] = (() => {
+    switch (teacherType) {
+      case 'class':
+        return [
+          ...buildClassNavSections(assignedClass!?.data?.classAssignment?.classId),
+          personalNavSection,
+        ];
+      case 'subject':
+        return [
+          ...buildSubjectTeacherNavSections(subjectClasses),
+          personalNavSection,
+        ];
+      case 'unassigned':
+        return [personalNavSection];
+    }
+  })();
+
+  // ── nav links ─────────────────────────────────────────────────────────────
 
   const NavLinks = ({ items }: { items: NavItem[] }) => (
     <nav className="space-y-0.5 px-2">
       {items.map((item) => {
-        const active = isActive(item.href);
+        const active     = isActive(item.href);
         const hasChildren = !!item.children?.length;
-        const isExpanded = expanded.has(item.label);
+        const isExpanded  = expanded.has(item.label);
 
         return (
           <div key={item.label}>
-            {/* Parent row */}
             <div
               className={`flex items-center rounded-lg transition-colors ${
                 active
@@ -55,7 +100,6 @@ export function TeacherSidebar() {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              {/* Link — separate from the chevron so both are individually clickable */}
               <Link
                 href={item.href}
                 className="flex items-center gap-3 flex-1 px-4 py-2.5"
@@ -70,8 +114,6 @@ export function TeacherSidebar() {
                   </span>
                 )}
               </Link>
-
-              {/* Chevron — only toggles expand, does not navigate */}
               {hasChildren && (
                 <button
                   onClick={() => toggleExpanded(item.label)}
@@ -85,8 +127,6 @@ export function TeacherSidebar() {
                 </button>
               )}
             </div>
-
-            {/* Children */}
             {hasChildren && isExpanded && (
               <div className="pl-4 mt-0.5 mb-1 space-y-0.5 border-l-2 border-gray-200 ml-6">
                 {item.children!.map((child) => (
@@ -111,11 +151,10 @@ export function TeacherSidebar() {
     </nav>
   );
 
-  // ─── RENDER ─────────────────────────────────────────────────────────────────
+  // ── render ────────────────────────────────────────────────────────────────
 
   return (
     <>
-      {/* Mobile toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 md:hidden p-2 hover:bg-gray-100 rounded-lg"
@@ -124,7 +163,6 @@ export function TeacherSidebar() {
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Mobile backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40 md:hidden"
@@ -132,16 +170,17 @@ export function TeacherSidebar() {
         />
       )}
 
-      {/* Sidebar shell */}
       <aside
-        className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col overflow-hidden z-40 transition-transform ${
-          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-white border-r
+                    border-gray-200 flex flex-col overflow-hidden z-40 transition-transform ${
+                      isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+                    }`}
       >
-        {/* Logo + active class */}
+        {/* Logo + identity header */}
         <div className="shrink-0 p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-emerald-700
+                            rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">T</span>
             </div>
             <div>
@@ -152,45 +191,69 @@ export function TeacherSidebar() {
             </div>
           </div>
 
-          {/* Assigned class indicator — replaces the old multi-class switcher
-              since a teacher now has exactly one class. */}
+          {/* Context indicator — what this teacher is assigned to */}
           {isLoading ? (
             <div className="mt-3 h-8 bg-gray-100 rounded-lg animate-pulse" />
-          ) : assignedClass ? (
+          ) : teacherType === 'class' && assignedClass ? (
+            // Class teacher — show their assigned class
             <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
               <p className="text-[10px] uppercase tracking-widest text-emerald-600 font-semibold">
-                {classAssignedToTeacher?.classAssignment.isClassTeacher ? 'Class Teacher' : 'Assigned Class'}
+                {assignedClass?.data?.classAssignment?.isClassTeacher ? 'Class Teacher' : 'Assigned Class'}
               </p>
               <p className="text-sm font-medium text-gray-900 truncate">
-                {classAssignedToTeacher?.classAssignment.class.level}
+                {assignedClass?.data?.classAssignment?.class.level} 
               </p>
             </div>
-          ) : null}
+          ) : teacherType === 'subject' ? (
+            // Subject teacher — show how many classes they teach across
+            <div className="mt-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-[10px] uppercase tracking-widest text-blue-600 font-semibold">
+                Subject Teacher
+              </p>
+              <p className="text-sm font-medium text-gray-900">
+                {subjectClasses?.length} class{subjectClasses?.length !== 1 ? 'es' : ''}
+                {' · '}
+                {subjectClasses.reduce((n, c) => n + c.subjects.length, 0)} subject
+                {subjectClasses.reduce((n, c) => n + c.subjects.length, 0) !== 1 ? 's' : ''}
+              </p>
+            </div>
+          ) : null /* unassigned — no indicator shown, empty state in nav covers it */}
         </div>
 
         {/* Scrollable nav */}
         <div className="flex-1 overflow-y-auto py-4 space-y-5 pb-36">
           {isLoading ? (
+            // Skeleton — avoids layout shift while both queries resolve
             <div className="px-6 py-4 space-y-3">
-              <div className="h-4 bg-gray-100 rounded animate-pulse" />
-              <div className="h-4 bg-gray-100 rounded animate-pulse w-5/6" />
-              <div className="h-4 bg-gray-100 rounded animate-pulse w-4/6" />
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-4 bg-gray-100 rounded animate-pulse"
+                  style={{ width: `${60 + i * 8}%` }}
+                />
+              ))}
             </div>
           ) : (
             <>
               {sections.map((section) => (
                 <div key={section.title}>
-                  <p className="px-6 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                  <p className="px-6 mb-1 text-[10px] font-semibold uppercase
+                                tracking-widest text-gray-400">
                     {section.title}
                   </p>
                   <NavLinks items={section.items} />
                 </div>
               ))}
 
-              {!assignedClass && (
-                <div className="px-6 py-4 text-center">
-                  <p className="text-sm text-gray-400">
-                    No class assigned yet. Contact your admin.
+              {/* Unassigned empty state */}
+              {teacherType === 'unassigned' && (
+                <div className="mx-4 px-4 py-5 bg-amber-50 border border-amber-200
+                                rounded-xl text-center">
+                  <p className="text-sm font-medium text-amber-800 mb-1">
+                    No classes assigned yet
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    Contact your admin to be assigned to a class or subject.
                   </p>
                 </div>
               )}
@@ -205,7 +268,8 @@ export function TeacherSidebar() {
             <p className="text-xs text-gray-600 mb-3">
               Reach out to admin for support
             </p>
-            <button className="w-full px-3 py-2 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 transition-colors">
+            <button className="w-full px-3 py-2 bg-emerald-600 text-white text-xs
+                               font-medium rounded hover:bg-emerald-700 transition-colors">
               Get Support
             </button>
           </div>

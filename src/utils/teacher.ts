@@ -59,172 +59,6 @@ export interface AssignClassTeacherPayload {
   level: string;
 }
 
-// ─── NAV FACTORY ──────────────────────────────────────────────────────────────
-// Nav items are functions of classId so hrefs stay correct when the teacher
-// switches context. All class-scoped routes include the classId as a path
-// segment so pages can read it via params without needing global state.
-
-export function buildClassNavSections(classId: string): NavSection[] {
-  const base = `/dashboard/teacher/classes/${classId}`;
-
-  return [
-    {
-      title: 'Class Management',
-      items: [
-        {
-          label: 'Overview',
-          href: base,
-          icon: '🏫',
-        },
-        {
-          label: 'Students',
-          href: `${base}/students/list`,
-          icon: '👥',
-          children: [
-            {
-              label: 'Student List',
-              href: `${base}/students/list`,
-              icon: '📋',
-            },
-            {
-              label: 'Student Profiles',
-              href: `${base}/students/profiles`,
-              icon: '👤',
-            },
-          ],
-        },
-        {
-          label: 'Attendance',
-          href: `${base}/attendance/mark`,
-          icon: '✅',
-          children: [
-            {
-              label: 'Mark Attendance',
-              href: `${base}/attendance/mark`,
-              icon: '📝',
-            },
-            {
-              label: 'Attendance History',
-              href: `${base}/attendance/history`,
-              icon: '📅',
-            },
-            {
-              label: 'Attendance Report',
-              href: `${base}/attendance/report`,
-              icon: '📊',
-            },
-          ],
-        },
-        {
-          label: 'Report Cards',
-          href: `${base}/report-cards/compile`,
-          icon: '🗂️',
-          children: [
-            {
-              label: 'Compile Cards',
-              href: `${base}/report-cards/compile`,
-              icon: '🔧',
-            },
-            {
-              label: 'Edit / Review',
-              href: `${base}/report-cards/edit`,
-              icon: '✏️',
-            },
-            {
-              label: 'Publish',
-              href: `${base}/report-cards/publish`,
-              icon: '📤',
-            },
-          ],
-        },
-        {
-          label: 'Timetable',
-          href: `${base}/timetable`,
-          icon: '🗓️',
-        },
-        {
-          label: 'Announcements',
-          href: `${base}/announcements`,
-          icon: '📢',
-        },
-      ],
-    },
-    {
-      title: 'Subject Teaching',
-      // Each subject this teacher teaches in this class — rendered as children.
-      // The parent item is a gateway; subjects are fetched from SubjectTeacher
-      // where classId = selected classId and teacherId = current teacher.
-      items: [
-        {
-          label: 'My Subjects',
-          href: `${base}/subjects`,
-          icon: '📚',
-        },
-        {
-          label: 'Scores',
-          href: `${base}/scores/sheet`,
-          icon: '🕓',
-        },
-        {
-          label: 'Assignments',
-          href: `${base}/assignments`,
-          icon: '📋',
-          children: [
-            {
-              label: 'Create Assignment',
-              href: `${base}/assignments/create`,
-              icon: '➕',
-            },
-            {
-              label: 'Submissions',
-              href: `${base}/assignments/submissions`,
-              icon: '📥',
-            },
-            {
-              label: 'Grade Assignments',
-              href: `${base}/assignments/grade`,
-              icon: '🏷️',
-            },
-          ],
-        },
-        {
-          label: 'Lesson Plans',
-          href: `${base}/lesson-plans`,
-          icon: '🗒️',
-        },
-        {
-          label: 'Resources',
-          href: `${base}/resources`,
-          icon: '📁',
-        },
-      ],
-    },
-  ];
-}
-
-// These are not class-scoped — they belong to the teacher regardless of which
-// class is currently selected.
-export const personalNavSection: NavSection = {
-  title: 'Personal',
-  items: [
-    {
-      label: 'My Profile',
-      href: '/dashboard/teacher/profile',
-      icon: '👤',
-    },
-    {
-      label: 'My Schedule',
-      href: '/dashboard/teacher/schedule',
-      icon: '📆',
-    },
-    {
-      label: 'Leave Requests',
-      href: '/dashboard/teacher/leave',
-      icon: '🏖️',
-    },
-  ],
-};
-
 // ─── CLASS SWITCHER ───────────────────────────────────────────────────────────
 // Renders a dropdown of all classes the teacher is assigned to.
 // On selection, call onSelect(classId) to update the Zustand context slice
@@ -238,7 +72,6 @@ export interface ClassSwitcherProps {
 
 
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 export interface TeacherSidebarProps {
   /**
@@ -360,8 +193,25 @@ export  interface MyStudentsResponse {
     }
   }
 }
-
  
+export interface SubjectAssignment {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string | null;
+}
+ 
+export interface ClassWithSubjects {
+  classId: string;
+  className: string;
+  subjects: SubjectAssignment[];
+}
+ 
+export interface MySubjectAssignmentsResponse {
+  data: { classes: ClassWithSubjects[] };
+}
+ 
+
+ //scores
 export interface ScoreSheetSubject {
   id: string;
   name: string;
@@ -392,3 +242,236 @@ export interface ScoreSheetResponse {
   };
 }
  
+
+// ─── NAV FACTORY ──────────────────────────────────────────────────────────────
+// Nav items are functions of classId so hrefs stay correct when the teacher
+// switches context. All class-scoped routes include the classId as a path
+// segment so pages can read it via params without needing global state.
+
+export function buildClassNavSections(classId: string): NavSection[] {
+  const base = `/dashboard/teacher/classes/${classId}`;
+
+  return [
+    {
+      title: 'Class Management',
+      items: [
+        {
+          label: 'Overview',
+          href: base,
+          icon: '🏫',
+        },
+        {
+          label: 'Students',
+          href: `${base}/students/list`,
+          icon: '👥',
+          children: [
+            {
+              label: 'Student List',
+              href: `${base}/students/list`,
+              icon: '📋',
+            },
+            {
+              label: 'Student Profiles',
+              href: `${base}/students/profiles`,
+              icon: '👤',
+            },
+          ],
+        },
+        {
+          label: 'Attendance',
+          href: `${base}/attendance/mark`,
+          icon: '✅',
+          children: [
+            {
+              label: 'Mark Attendance',
+              href: `${base}/attendance/mark`,
+              icon: '📝',
+            },
+            {
+              label: 'Attendance History',
+              href: `${base}/attendance/history`,
+              icon: '📅',
+            },
+            {
+              label: 'Attendance Report',
+              href: `${base}/attendance/report`,
+              icon: '📊',
+            },
+          ],
+        },
+        {
+          label: 'Report Cards',
+          href: `#`,
+          icon: '🗂️',
+          children: [
+            {
+              label: 'Compile Cards',
+              href: `${base}/report-cards/compile`,
+              icon: '🔧',
+            },
+            {
+              label: 'Publish',
+              href: `${base}/report-cards/publish`,
+              icon: '📤',
+            },
+          ],
+        },
+        {
+          label: 'Timetable',
+          href: `${base}/timetable`,
+          icon: '🗓️',
+        },
+        {
+          label: 'Announcements',
+          href: `${base}/announcements`,
+          icon: '📢',
+        },
+      ],
+    },
+    {
+      title: 'Subject Teaching',
+      // Each subject this teacher teaches in this class — rendered as children.
+      // The parent item is a gateway; subjects are fetched from SubjectTeacher
+      // where classId = selected classId and teacherId = current teacher.
+      items: [
+        {
+          label: 'My Subjects',
+          href: `${base}/subjects`,
+          icon: '📚',
+        },
+        {
+          label: 'Scores',
+          href: `${base}/scores/sheet`,
+          icon: '🕓',
+        },
+        {
+          label: 'Assignments',
+          href: `${base}/assignments`,
+          icon: '📋',
+          children: [
+            {
+              label: 'Create Assignment',
+              href: `${base}/assignments/create`,
+              icon: '➕',
+            },
+            {
+              label: 'Submissions',
+              href: `${base}/assignments/submissions`,
+              icon: '📥',
+            },
+            {
+              label: 'Grade Assignments',
+              href: `${base}/assignments/grade`,
+              icon: '🏷️',
+            },
+          ],
+        },
+        {
+          label: 'Lesson Plans',
+          href: `${base}/lesson-plans`,
+          icon: '🗒️',
+        },
+        {
+          label: 'Resources',
+          href: `${base}/resources`,
+          icon: '📁',
+        },
+      ],
+    },
+  ];
+}
+
+// These are not class-scoped — they belong to the teacher regardless of which
+// class is currently selected.
+export const personalNavSection: NavSection = {
+  title: 'Personal',
+  items: [
+    {
+      label: 'My Profile',
+      href: '/dashboard/teacher/profile',
+      icon: '👤',
+    },
+    {
+      label: 'My Schedule',
+      href: '/dashboard/teacher/schedule',
+      icon: '📆',
+    },
+    {
+      label: 'Leave Requests',
+      href: '/dashboard/teacher/leave',
+      icon: '🏖️',
+    },
+  ],
+};
+
+
+// ─── src/utils/teacher.ts addition ───────────────────────────────────────────
+//
+// Builds sidebar nav sections for a subject-only teacher (no class
+// assignment). One NavSection per class they teach in; subjects nested as
+// children with direct links to score entry and assignments for that
+// specific subject.
+//
+// A subject teacher can:
+//   - View the subjects they teach per class
+//   - Enter CA / Exam scores for each subject
+//   - Manage assignments for each subject
+//
+// They CANNOT access:
+//   - Attendance marking (class teacher only)
+//   - Report cards (class teacher only)
+//   - Class overview / timetable / announcements (class-scoped, irrelevant)
+
+export function buildSubjectTeacherNavSections(
+  classes: {
+    classId: string;
+    className: string;
+    subjects: { subjectId: string; subjectName: string; subjectCode: string | null }[];
+  }[],
+): NavSection[] {
+  if (classes.length === 0) return [];
+
+  return classes.map((cls) => ({
+    title: cls.className,
+    items: [
+      // Gateway: subject picker for this class (same MySubjectsPage used by
+      // class teachers, but filtered to this teacher's own subjects only).
+      {
+        label: 'My Subjects',
+        href:  `/dashboard/teacher/classes/${cls.classId}/subjects`,
+        icon:  '📚',
+        // Each subject is a child link — direct entry into score landing page.
+        children: cls.subjects.map((subject) => ({
+          label: subject.subjectName,
+          href:  `/dashboard/teacher/classes/${cls.classId}/subjects/${subject.subjectId}/scores`,
+          icon:  subject.subjectCode ? `${subject.subjectCode}` : '·',
+        })),
+      },
+      // Assignments scoped to this class — teacher manages work for their
+      // own subjects here. Pages filter by teacherId server-side so they
+      // only see assignments they created.
+      {
+        label: 'Assignments',
+        href:  `/dashboard/teacher/classes/${cls.classId}/assignments`,
+        icon:  '📋',
+        children: [
+          {
+            label: 'Create Assignment',
+            href:  `/dashboard/teacher/classes/${cls.classId}/assignments/create`,
+            icon:  '➕',
+          },
+          {
+            label: 'Submissions',
+            href:  `/dashboard/teacher/classes/${cls.classId}/assignments/submissions`,
+            icon:  '📥',
+          },
+          {
+            label: 'Grade Assignments',
+            href:  `/dashboard/teacher/classes/${cls.classId}/assignments/grade`,
+            icon:  '🏷️',
+          },
+        ],
+      },
+    ] satisfies NavItem[],
+  }));
+}

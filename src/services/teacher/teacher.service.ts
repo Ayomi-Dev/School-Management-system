@@ -253,13 +253,12 @@ export const teacherServices = {
   // GET TEACHER ASSIGNMENTS (timetable view)
   // GET /schools/:schoolId/teachers/:employeeNumber/assignments?termPeriod=FIRST
   // ----------------------------------------------------------------
-  async getAssignments(schoolId: string, employeeNumber: string, termPeriod?: TermPeriod) {
-    console.log("teacher number",employeeNumber)
+  async getAssignments(schoolId: string, userId: string, termPeriod?: TermPeriod) {
     try {
       let teacher: { id: string; firstName: string; lastName: string; employeeNumber: string };
       try {
-        teacher = await resolveTeacher(schoolId, employeeNumber);
-      } catch (err) {
+        teacher = await resolveTeacher(userId, schoolId);
+      } catch (err) { 
         if (err instanceof ResolverError) {
           return NextResponse.json({ error: err.message }, { status: err.statusCode });
         }
@@ -1191,4 +1190,58 @@ export const teacherServices = {
   }
     
   },
+
+  async getSubjectAssignments(teacherId: string) {
+    try{
+      const teacher = await prisma.teacherProfile.findUnique({
+        where: { userId: teacherId },
+        select: { id: true },
+      });
+      if (!teacher) {
+        return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+      }
+    
+      const assignments = await prisma.subjectTeacher.findMany({
+        where: { teacherId: teacher.id },
+        select: {
+          subject: { select: { id: true, name: true, code: true } },
+          class:   { select: { id: true, level: true } },
+        },
+        orderBy: [
+          { class:   { level: 'asc' } },
+          { subject: { name:  'asc' } },
+        ],
+      });
+    
+      // Group by classId — Map preserves insertion order (already sorted above)
+      const classMap = new Map<
+        string,
+        { classId: string; className: string; subjects: { subjectId: string; subjectName: string; subjectCode: string | null }[] }
+      >();
+    
+      for (const a of assignments) {
+        const key = a.class.id;
+        if (!classMap.has(key)) {
+          classMap.set(key, {
+            classId:   a.class.id,
+            className: a.class.level,
+            subjects:  [],
+          });
+        }
+        classMap.get(key)!.subjects.push({
+          subjectId:   a.subject.id,
+          subjectName: a.subject.name,
+          subjectCode: a.subject.code ?? null,
+        });
+      }
+    
+      return NextResponse.json({
+        data: { classes: Array.from(classMap.values()) },
+      });
+    } 
+    catch (error) {
+      console.error('[teacherService.getMySubjectAssignments]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  }
 }

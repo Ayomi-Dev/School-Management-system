@@ -30,6 +30,6 @@ export const PATCH = async(req: NextRequest, context: ClassParamsContext)  => {
     }
     const { classId, reportCardId } = await context.params
     const { userId } = auth;
-    const result = await reportCardServices.updateReportCard(req, userId, classId, reportCardId);
+    const result = await reportCardServices.publishReportCard(req, userId, classId, reportCardId);
     return result;
 }

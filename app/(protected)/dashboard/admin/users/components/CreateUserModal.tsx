@@ -5,9 +5,7 @@ import { useForm, Controller, useController } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Select from '@radix-ui/react-select';
-import * as Popover from '@radix-ui/react-popover';
 import { useCreateUserMutation } from '@/src/hooks/queries/useAdmin';
-import { useSubjectsList } from '@/src/hooks/queries/useAdmin';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { X, ChevronDown, ChevronLeft, Check } from 'lucide-react';
@@ -152,7 +150,7 @@ function RadixSelect({
                   className="
                     flex items-center px-3 py-2 text-sm rounded-md cursor-pointer
                     text-gray-800 select-none
-                    data-[highlighted]:bg-blue-50 data-[highlighted]:text-blue-700
+                    data-highlighted:bg-blue-50 data-highlighted:text-blue-700
                     data-[state=checked]:font-medium
                     focus:outline-none
                   "

@@ -140,15 +140,14 @@ export async function resolveSubject(schoolId: string, subjectName: string) {
 // TEACHER (by employee number)
 // ─────────────────────────────────────────────────────────────
 
-export async function resolveTeacher(schoolId: string, employeeNumber: string) {
+export async function resolveTeacher(teacherId: string, schoolId: string, ) {
   const teacher = await prisma.teacherProfile.findFirst({
-    where: { schoolId, employeeNumber },
+    where: { userId: teacherId, schoolId, },
     select: { id: true, firstName: true, lastName: true, employeeNumber: true, classAssignment: true },
   });
-
   if (!teacher) {
     throw new ResolverError(
-      `Teacher with employee number "${employeeNumber}" not found.`
+      `Teacher with  not found.`
     );
   }
 

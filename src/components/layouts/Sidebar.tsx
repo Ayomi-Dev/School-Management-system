@@ -22,7 +22,7 @@ const adminNavItems: NavItem[] = [
   },
   {
     label: 'Users',
-    href: '/dashboard/admin/users',
+    href: '#',
     icon: '👥',
     children: [
       { label: 'All Users', href: '/dashboard/admin/users', icon: '👤' },
@@ -34,7 +34,7 @@ const adminNavItems: NavItem[] = [
   },
   {
     label: 'Academics',
-    href: '/dashboard/admin/academics',
+    href: '#',
     icon: '📚',
     children: [
       { label: 'Classes', href: '/dashboard/admin/classes', icon: '🏫' },
@@ -49,7 +49,7 @@ const adminNavItems: NavItem[] = [
   },
   {
     label: 'Reports',
-    href: '/dashboard/admin/reports',
+    href: '#',
     icon: '📈',
     children: [
       { label: 'Academic Reports', href: '/dashboard/admin/reports/academic', icon: '📋' },
@@ -123,7 +123,7 @@ const isActive = (href: string) => {
                 {item.badge && (
                   <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                     {item.badge}
-                  </span>
+                  </span> 
                 )}
               </Link>
               {hasChildren && (

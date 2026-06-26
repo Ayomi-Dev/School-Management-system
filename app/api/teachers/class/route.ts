@@ -14,15 +14,6 @@ export const GET = async(req: NextRequest ) => {
         )
     }
     const { userId, schoolId } = auth
-    const teacher = await prisma.teacherProfile.findUnique(
-        {
-            where: { userId },
-            select: { id: true, employeeNumber: true}
-        }
-    )
-    if (!teacher) {
-      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
-    }
-    const result = await teacherServices.getAssignments(schoolId, teacher.employeeNumber, getCurrentTerm())
+    const result = await teacherServices.getAssignments(schoolId, userId, getCurrentTerm())
     return result;
 }

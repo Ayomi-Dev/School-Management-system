@@ -237,9 +237,9 @@ export const adminServices = {
                 { status: 500 }
             )
         }
-   },
+    },
 
-   async updateUser(req: NextRequest, id: string){
+    async updateUser(req: NextRequest, id: string){
         const body = await req.json()
         const parsedBody = adminUpdateUserSchema.safeParse(body)
         if(!parsedBody.success){
@@ -275,7 +275,7 @@ export const adminServices = {
             { message: "User details updated successfully", updatedUser},
             { status: 200 }
         )
-   },
+    },
    async getUserById(id: string)  {
         const user = await prisma.user.findUnique(
             {
@@ -292,7 +292,7 @@ export const adminServices = {
         return NextResponse.json({ user})
    },
 
-   async getAllUsers(schoolId: string, params: PaginationMeta) {
+    async getAllUsers(schoolId: string, params: PaginationMeta) {
         try{
         const { role, search, page = 1, limit = 10 } = params;
         const whereClause: any = { schoolId };
