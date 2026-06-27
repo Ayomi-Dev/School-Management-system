@@ -8,7 +8,7 @@ import { useAssignClassTeacherMutation } from '@/src/hooks/queries/useAdmin';
 import { useActiveAcademicYear } from '@/src/hooks/queries/useAcademic';
 import { useAuthStore } from '@/src/stores/authStore';
 import { TeacherCombobox } from '../../subjects/components/ComboBox';
-import { SelectedTeacher } from '@/src/utils/teacher';
+import { SelectedTeacher } from '@/app/(protected)/dashboard/teacher/components/teacher';
 
 interface AssignClassTeacherModalProps {
   classLevel: string;

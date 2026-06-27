@@ -11,7 +11,7 @@ import {
   useMarkAttendance,
 } from '@/src/hooks/queries/useAttendance';
 import { AttendanceStatus } from '@/src/types';
-import { RosterEntry } from '@/src/utils/teacher';
+import { RosterEntry } from '@/app/(protected)/dashboard/teacher/components/teacher';
 
 const STATUS_OPTIONS: { value: Exclude<AttendanceStatus, 'UNMARKED'>; label: string; icon: React.ReactNode; activeClass: string }[] = [
   { value: 'PRESENT', label: 'Present', icon: <Check size={15} />, activeClass: 'bg-emerald-100 text-emerald-700 border-emerald-300' },

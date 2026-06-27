@@ -884,7 +884,7 @@ export const teacherServices = {
             const updated = await tx.score.update({
               where: { id: existing.id },
               data: { totalScore, grade, gradeRemark },
-              select: { id: true, studentId: true, totalScore: true, grade: true },
+              select: { id: true, studentId: true, totalScore: true, grade: true, isPublished: true },
             });
           
             written.push(updated);
@@ -1114,7 +1114,7 @@ export const teacherServices = {
         where: { classId },
         select: { id: true, name: true, code: true },
         orderBy: { name: 'asc' },
-      }),
+      }), 
       prisma.enrollment.findMany({
         where: { classId, academicYearId: term.academicYearId },
         select: {

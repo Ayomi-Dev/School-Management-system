@@ -1,4 +1,4 @@
-import { ClassLevel, StudentProfile, TeacherProfile, TermPeriod } from "../types";
+import { ClassLevel, StudentProfile, TeacherProfile, TermPeriod } from "../../../../../src/types";
 
 
 export interface NavItem {

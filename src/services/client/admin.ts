@@ -1,14 +1,16 @@
 import { createApiClient } from '@/src/config/api';
 import { API_ENDPOINTS } from '@/src/config/constants';
-import { TeachersListParams, TeachersListResponse } from '@/src/types';
+import { TeachersListParams, TeachersListResponse, UserStatus } from '@/src/types';
 import {
   CreateClassRequest,
   CreateSubjectRequest,
   CreateAcademicYearRequest,
   CreateTermRequest,
+  StudentAcademicSummaryResponse,
 } from '@/src/types/api';
-import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/src/utils/teacher';
+import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
+import { ClassDetail, PublishReportCardResponse, ScoreSheet, UpdateUserStatusResponse, UserProfile } from '@/src/types/admin';
 
 const API_BASE = '/api/admin';
 
@@ -20,13 +22,24 @@ export const adminService = {
   getUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) =>
     createApiClient().get(API_ENDPOINTS.USERS_LIST, { params }),
 
-  getUserById: (id: string) => createApiClient().get(API_ENDPOINTS.USERS_GET(id)),
+  getUserProfile: (id: string): Promise<UserProfile> => createApiClient().get(API_ENDPOINTS.USERS_GET(id)),
   getAdmin: (id: string) => createApiClient().get(API_ENDPOINTS.GET_ADMIN_PROFILE(id)),
 
   createUser: (data: CreateUserFormData) => createApiClient().post(API_ENDPOINTS.USERS_CREATE, data),
 
   updateUser: (id: string, data: Partial<CreateUserFormData>) =>
     createApiClient().put(API_ENDPOINTS.USERS_UPDATE(id), data),
+
+  updateUserStatus: async (
+    userId: string,
+    status: UserStatus,
+  ): Promise<UpdateUserStatusResponse> => {
+    const res = await createApiClient().patch(
+      API_ENDPOINTS.UPDATE_USER_STATUS(userId),
+      { status },
+    );
+    return res.data;
+  },
 
   deleteUser: (id: string) => createApiClient().delete(API_ENDPOINTS.USERS_DELETE(id)),
 
@@ -38,14 +51,30 @@ export const adminService = {
   getClasses: ( params?: { academicYearId?: string; page?: number; limit?: number }) =>
     createApiClient().get(API_ENDPOINTS.CLASSES_LIST, { params }),
 
-  getClassById: (id: string) => createApiClient().get(API_ENDPOINTS.CLASSES_GET(id)),
+  getClassDetail: async (classId: string): Promise<ClassDetail> => {
+    const res = await createApiClient().get(API_ENDPOINTS.CLASSES_GET(classId));
+    return res.data.data;
+  },
+   getClassScoreSheet: async (classId: string): Promise<ScoreSheet> => {
+    const res = await createApiClient().get(
+      API_ENDPOINTS.CLASS_SCORESHEET(classId),
+    );
+    return res.data.data;
+  },
+   publishClassReportCards: async (classId: string): Promise<{ message: string }> => {
+    const res = await createApiClient().post(
+      API_ENDPOINTS.PUBLISH_CLASS_REPORT_CARDS(classId),
+    );
+    return res.data.data;
+  },
+
 
   createClass: (data: CreateClassRequest) => createApiClient().post(API_ENDPOINTS.CLASSES_CREATE, data),
 
-  updateClass: (id: string, data: Partial<CreateClassRequest>) =>
-    createApiClient().put(`${API_BASE}/classes/${id}`, data),
+  updateClass: (classId: string, data: Partial<CreateClassRequest>) =>
+    createApiClient().put(`${API_BASE}/classes/${classId}`, data),
 
-  deleteClass: (id: string) => createApiClient().delete(API_ENDPOINTS.CLASSES_DELETE(id)),
+  deleteClass: (classId: string) => createApiClient().delete(API_ENDPOINTS.CLASSES_DELETE(classId)),
   getClassStudents: (classId: string) => createApiClient().get(`${API_BASE}/classes/${classId}/students`),
   assignTeacherToCLass: (payload: AssignClassTeacherPayload) => createApiClient().post(API_ENDPOINTS.ASSIGN_TEACHER_TO_CLASS, payload),
 
@@ -116,6 +145,27 @@ export const adminService = {
   deleteTimetableSlot: (id: string) => createApiClient().delete(`${API_BASE}/timetable/${id}`),
 
   // Reports
+  publishReportCard: async (
+    reportCardId: string,
+  ): Promise<PublishReportCardResponse> => {
+    const res = await createApiClient().post(
+      API_ENDPOINTS.PUBLISH_REPORT_CARD(reportCardId),
+    );
+    return res.data;
+  },
+  getStudentAcademicSummary: async (
+    userId: string,
+    termId?: string,
+  ): Promise<StudentAcademicSummaryResponse> => {
+    const res = await createApiClient().get(
+      API_ENDPOINTS.GET_STUDENT_ACADEMIC_SUMMARY(userId),
+      { params: termId ? { termId } : undefined },
+    );
+    return res.data.data;
+  },
+ 
+  
+ 
   getAcademicReport: (params?: { classId?: string; academicYearId?: string }) =>
     createApiClient().get(`${API_BASE}/reports/academic`, { params }),
 
@@ -136,5 +186,8 @@ export const adminService = {
   getPermissions: () => createApiClient().get(`${API_BASE}/permissions`),
 
   //teachers
-  getTeachers: (params?: TeachersListParams ): Promise<TeachersListResponse> => createApiClient().get(`${API_BASE}/teachers`, { params })
+  getTeachers: (params?: TeachersListParams ): Promise<TeachersListResponse> => createApiClient().get(`${API_BASE}/teachers`, { params }),
+
+ 
 };
+

@@ -1,4 +1,4 @@
-import { adminCreateUserSchema, adminUpdateUserSchema } from "@/src/validators/adminSchema";
+import { adminCreateUserSchema, adminUpdateUserSchema, updateStatusSchema } from "@/src/validators/adminSchema";
 import { prisma } from "@/src/lib/prisma/client";
 import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
@@ -276,7 +276,145 @@ export const adminServices = {
             { status: 200 }
         )
     },
-   async getUserById(id: string)  {
+    async getUserById(schoolId: string, userId: string) {
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          id: userId,
+          OR: [
+            { studentProfile: { schoolId } },
+            { teacherProfile: { schoolId } },
+            { bursarProfile:  { schoolId } },
+          ],
+        },
+        select: {
+          id:        true,
+          firstName: true,
+          lastName:  true,
+          email:     true,
+          phone:     true,
+          role:      true,
+          status:    true,
+          createdAt: true,
+          studentProfile: {
+            select: {
+              id:              true,
+              studentNumber:   true,
+              dateOfBirth:     true,
+              enrollments: {
+                orderBy:  { enrolledAt: 'desc' },
+                take:     1,
+                select: {
+                  class: { select: { id: true, level: true } },
+                },
+              },
+            },
+          },
+          teacherProfile: {
+            select: {
+              id:            true,
+              staffId:       true,
+              qualification: true,
+              classAssignment: {
+                take:   1,
+                select: { class: { select: { id: true, level: true } } },
+              },
+            },
+          },
+        },
+      });
+ 
+      if (!user) {
+        return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+      }
+ 
+      // Flatten the nested class/enrollment so the frontend gets a clean shape
+      const { studentProfile, teacherProfile, ...rest } = user;
+ 
+      return NextResponse.json({
+        data: {
+          ...rest,
+          studentProfile: studentProfile
+            ? {
+                id:              studentProfile.id,
+                admissionNumber: studentProfile.studentNumber,
+                dateOfBirth:     studentProfile.dateOfBirth,
+                currentClass:    studentProfile.enrollments[0]?.class ?? null,
+              }
+            : undefined,
+          teacherProfile: teacherProfile
+            ? {
+                id:             teacherProfile.id,
+                staffId:        teacherProfile.staffId,
+                qualification:  teacherProfile.qualification,
+                classAssignment: teacherProfile.classAssignment?.class ?? null,
+              }
+            : undefined,
+        },
+      });
+    } catch (error) {
+      console.error('[adminService.getUserProfile]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+  async updateUserStatus(req: NextRequest, adminId: string, userId: string, schoolId: string) {
+    try {
+        const body   = await req.json();
+      const parsed = updateStatusSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+          { status: 400 },
+        );
+      }
+      const { status } = parsed.data;
+
+ 
+      const targetUser = await prisma.user.findFirst({
+        where: {
+          id: userId,
+          OR: [
+            { studentProfile: { schoolId } },
+            { teacherProfile: { schoolId } },
+            { adminProfile:   { schoolId } },
+            { bursarProfile:  { schoolId } },
+          ],
+        },
+        select: { id: true, status: true },
+      });
+      if (!targetUser) {
+        return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+      }
+      if (targetUser.id === adminId) {
+        return NextResponse.json(
+          { error: 'You cannot change your own status.' },
+          { status: 403 },
+        );
+      }
+      if (targetUser.status === status) {
+        return NextResponse.json(
+          { error: `User is already ${status}.` },
+          { status: 409 },
+        );
+      }
+ 
+    const updated = await prisma.user.update({
+        where:  { id: userId },
+        data:   { status },
+        select: { id: true, status: true },
+    });
+ 
+      return NextResponse.json({
+        message: `User status updated to ${status}.`,
+        data: updated,
+      });
+    } catch (error) {
+      console.error('[adminService.updateUserStatus]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+ 
+   async getAdminById(id: string)  {
         const user = await prisma.user.findUnique(
             {
                 where: { id },
@@ -420,4 +558,281 @@ export const adminServices = {
         )
     },
 
-}
+   async adminPublishReportCard( schoolId: string, reportCardId: string) {
+    try {
+      const reportCard = await prisma.reportCard.findUnique({
+        where:  { id: reportCardId },
+        select: {
+          id:            true,
+          status:        true,
+          teacherRemark: true,
+          student: { select: { schoolId: true } },
+        },
+      });
+ 
+      if (!reportCard || reportCard.student.schoolId !== schoolId) {
+        return NextResponse.json({ error: 'Report card not found.' }, { status: 404 });
+      }
+      if (reportCard.status === 'PUBLISHED') {
+        return NextResponse.json(
+          { error: 'This report card is already published.' },
+          { status: 409 },
+        );
+      }
+      if (!reportCard.teacherRemark?.trim()) {
+        return NextResponse.json(
+          { error: 'A teacher remark must be added before publishing.' },
+          { status: 400 },
+        );
+      }
+ 
+      const published = await prisma.reportCard.update({
+        where:  { id: reportCardId },
+        data:   { status: 'PUBLISHED', publishedAt: new Date() },
+        select: { id: true, status: true, publishedAt: true },
+      });
+ 
+      return NextResponse.json({
+        message: 'Report card published successfully.',
+        data: published,
+      });
+    } catch (error) {
+      console.error('[adminService.adminPublishReportCard]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+   async getClassDetail(schoolId: string, classId: string) {
+    try {
+      const classRecord = await prisma.class.findFirst({
+        where: { id: classId, schoolId },
+        select: {
+          id:         true,
+          level:      true,
+          order:      true,
+          department: true,
+          // Current class teacher (latest assignment)
+          teacherAssignments: {
+            take:    1,
+            orderBy: { assignedAt: 'desc' },
+            select: {
+              teacher: {
+                select: {
+                  id:   true,
+                  user: { select: { id: true, firstName: true, lastName: true, email: true } },
+                },
+              },
+            },
+          },
+          subjects: {
+            select: { id: true, name: true, code: true },
+            orderBy: { name: 'asc' },
+          },
+          enrollments: {
+            select: {
+              id: true,
+              student: {
+                select: {
+                  id:            true,
+                  studentNumber: true,
+                  user: {
+                    select: { id: true, firstName: true, lastName: true, email: true, status: true },
+                  },
+                },
+              },
+            },
+            orderBy: { enrolledAt: 'asc' },
+          },
+          _count: {
+            select: { enrollments: true, subjects: true },
+          },
+        },
+      });
+ 
+      if (!classRecord) {
+        return NextResponse.json({ error: 'Class not found.' }, { status: 404 });
+      }
+ 
+      // Flatten teacherAssignments array → single teacherAssignment object
+      const { teacherAssignments, enrollments, ...rest } = classRecord;
+ 
+      return NextResponse.json({
+        data: {
+          ...rest,
+          teacherAssignment: teacherAssignments[0] ?? null,
+          enrollments: enrollments.map((e) => ({
+            id: e.id,
+            student: {
+              id:              e.student.id,
+              admissionNumber: e.student.studentNumber,
+              user:            e.student.user,
+            },
+          })),
+        },
+      });
+    } catch (error) {
+      console.error('[adminService.getClassDetail]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+
+   async getClassScoreSheet(schoolId: string, classId: string) {
+    try {
+      // Verify the class belongs to this school
+      const classRecord = await prisma.class.findFirst({
+        where:  { id: classId, schoolId },
+        select: { id: true },
+      });
+      if (!classRecord) {
+        return NextResponse.json({ error: 'Class not found.' }, { status: 404 });
+      }
+ 
+      // Pull all scores for all students currently enrolled in this class,
+      // including the most-recent term info so we can label the sheet.
+      const scores = await prisma.score.findMany({
+        where: {
+          student: {
+            enrollments: { some: { classId } },
+          },
+        },
+        select: {
+          totalScore: true,
+          caScore:    true,
+          examScore:  true,
+          grade:      true,
+          subject:    { select: { name: true } },
+          term: {
+            select: {
+              id:           true,
+              period:       true,
+              academicYear: { select: { label: true } },
+            },
+          },
+          student: {
+            select: {
+              id:            true,
+              studentNumber: true,
+              user:          { select: { firstName: true, lastName: true } },
+            },
+          },
+        },
+        orderBy: [
+          { term: { academicYear: { startDate: 'desc' } } },
+          { student: { user: { firstName: 'asc' } } },
+        ],
+      });
+ 
+      if (scores.length === 0) {
+        return NextResponse.json({
+          data: { term: '', year: '', subjects: [], rows: [] },
+        });
+      }
+ 
+      // Use the term from the first score (most recent, given the orderBy)
+      const latestTerm = scores[0].term;
+ 
+      // Filter to that term only (scores are mixed-term if the student has history)
+      const termScores = scores.filter((s) => s.term.id === latestTerm.id);
+ 
+      // Collect the unique subject names in alphabetical order
+      const subjectSet = new Set(termScores.map((s) => s.subject.name));
+      const subjects   = Array.from(subjectSet).sort();
+ 
+      // Build one row per student
+      const studentMap = new Map<
+        string,
+        {
+          studentId:       string;
+          studentName:     string;
+          admissionNumber: string | null;
+          scores:          Record<string, { ca: number | null; exam: number | null; total: number | null; grade: string | null }>;
+        }
+      >();
+ 
+      for (const s of termScores) {
+        const key  = s.student.id;
+        const name = `${s.student.user.firstName} ${s.student.user.lastName}`;
+ 
+        if (!studentMap.has(key)) {
+          studentMap.set(key, {
+            studentId:       key,
+            studentName:     name,
+            admissionNumber: s.student.studentNumber,
+            scores:          {},
+          });
+        }
+        studentMap.get(key)!.scores[s.subject.name] = {
+          ca:    s.caScore,
+          exam:  s.examScore,
+          total: s.totalScore,
+          grade: s.grade,
+        };
+      }
+ 
+      return NextResponse.json({
+        data: {
+          term:     latestTerm.period,
+          year:     latestTerm.academicYear.label,
+          subjects,
+          rows:     Array.from(studentMap.values()),
+        },
+      });
+    } catch (error) {
+      console.error('[adminService.getClassScoreSheet]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+
+  async publishClassReportCards(schoolId: string, classId: string) {
+    try {
+      const classRecord = await prisma.class.findFirst({
+        where:  { id: classId, schoolId },
+        select: { id: true },
+      });
+      if (!classRecord) {
+        return NextResponse.json({ error: 'Class not found.' }, { status: 404 });
+      }
+ 
+      // Find all DRAFT cards for students enrolled in this class
+      const draftCards = await prisma.reportCard.findMany({
+        where: {
+          status:  'DRAFT',
+          student: {
+            enrollments: { some: { classId } },
+          },
+        },
+        select: {
+          id:            true,
+          teacherRemark: true,
+        },
+      });
+ 
+      if (draftCards.length === 0) {
+        return NextResponse.json({
+          message: 'No draft report cards to publish.',
+          data: { published: 0, skipped: 0 },
+        });
+      }
+ 
+      // Split: cards with a remark are publishable; those without are skipped
+      const publishable = draftCards.filter((rc) => rc.teacherRemark?.trim());
+      const skipped     = draftCards.length - publishable.length;
+ 
+      if (publishable.length > 0) {
+        await prisma.reportCard.updateMany({
+          where: { id: { in: publishable.map((rc) => rc.id) } },
+          data:  { status: 'PUBLISHED', publishedAt: new Date() },
+        });
+      }
+ 
+      return NextResponse.json({
+        message: `${publishable.length} report card(s) published.${skipped > 0 ? ` ${skipped} skipped (no teacher remark).` : ''}`,
+        data: { published: publishable.length, skipped },
+      });
+    } catch (error) {
+      console.error('[adminService.publishClassReportCards]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+};
+
+

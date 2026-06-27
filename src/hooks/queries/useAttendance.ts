@@ -1,7 +1,7 @@
 import { studentService } from "@/src/services/client/student";
 import { teacherService } from "@/src/services/client/teacher";
 import { StudentAcademicSummaryResponse, UseStudentAcademicSummaryParams } from "@/src/types/api";
-import { AttendanceHistoryParams, MarkAttendancePayload } from "@/src/utils/teacher";
+import { AttendanceHistoryParams, MarkAttendancePayload } from "@/app/(protected)/dashboard/teacher/components/teacher";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const attendanceKeys = {

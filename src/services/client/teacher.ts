@@ -1,7 +1,7 @@
 import { getApiClient } from "@/src/config/api";
 import { API_ENDPOINTS } from "@/src/config/constants";
 import { PaginatedResponse, SaveScoresPayload, ScoreHistoryEntry, ScoreHistoryParams, ScoreRosterResponse, StudentProfile, TeacherProfile } from "@/src/types";
-import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudentsResponse, MySubjectAssignmentsResponse, MySubjectsResponse, ScoreSheetResponse } from "@/src/utils/teacher";
+import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudentsResponse, MySubjectAssignmentsResponse, MySubjectsResponse, ScoreSheetResponse } from "@/app/(protected)/dashboard/teacher/components/teacher";
 
 
 

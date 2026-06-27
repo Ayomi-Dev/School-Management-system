@@ -24,7 +24,7 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
     }
     const { schoolId } = auth
     const { id } = await context.params
-    const result = adminServices.getUserById(id)
+    const result = adminServices.getAdminById(id)
     return result
 }
 

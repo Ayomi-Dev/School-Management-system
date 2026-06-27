@@ -160,7 +160,6 @@ export function ScoreEntryGrid({ classId, subjectId, field, label }: ScoreEntryG
               <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
                 <th className="px-5 py-3 font-semibold">Student</th>
                 <th className="px-5 py-3 font-semibold w-32">{label} (/{maxScore})</th>
-                <th className="px-5 py-3 font-semibold w-24">Total</th>
                 <th className="px-5 py-3 font-semibold w-20">Grade</th>
                 <th className="px-5 py-3 font-semibold w-28">Status</th>
               </tr>
@@ -189,9 +188,6 @@ export function ScoreEntryGrid({ classId, subjectId, field, label }: ScoreEntryG
                           : 'border-gray-300'
                       }`}
                     />
-                  </td>
-                  <td className="px-5 py-3 text-gray-700">
-                    {entry.totalScore != null ? entry.totalScore : '—'}
                   </td>
                   <td className="px-5 py-3">
                     {entry.grade ? (

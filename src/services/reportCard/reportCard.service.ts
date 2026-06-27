@@ -33,7 +33,7 @@ export interface UpdateReportCardInput {
 
 export const reportCardServices = {
 
-    async compileReportCards(req: NextRequest, teacherId: string, classId: string) {
+  async compileReportCards(req: NextRequest, teacherId: string, classId: string) {
       try{
         const teacher = await prisma.teacherProfile.findUnique({
           where: { userId: teacherId },
@@ -709,17 +709,27 @@ export const reportCardServices = {
     
     async listReportCardsByClass(
       classId: string,
-      termId: string,
-      academicYearId: string
     ) {
+      const term = await prisma.term.findFirst(
+        {
+          where: { isCurrent: true },
+          select: { academicYearId: true, id: true, period: true }
+        }
+      )
+      if(!term){
+        return NextResponse.json(
+          { error: "No active term found"},
+          { status: 400 }
+        )
+      }
       const enrollments = await prisma.enrollment.findMany({
-        where: { classId, academicYearId },
+        where: { classId, academicYearId: term?.academicYearId },
         select: { studentId: true },
       });
       const studentIds = enrollments.map((e) => e.studentId);
-    
-      return prisma.reportCard.findMany({
-        where: { studentId: { in: studentIds }, termId },
+     
+      const reportCards =  prisma.reportCard.findMany({
+        where: { studentId: { in: studentIds }, termId: term?.id },
         include: {
           student: {
             select: { firstName: true, lastName: true, studentNumber: true, gender: true },
@@ -727,6 +737,10 @@ export const reportCardServices = {
         },
         orderBy: { position: "asc" },
       });
+      
+      return NextResponse.json(
+        { data: reportCards }
+      )
     },
     
     async getStudentAllReportCards(studentId: string) {

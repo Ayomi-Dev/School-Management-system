@@ -11,7 +11,7 @@ import {
   NavItem,
   NavSection,
   personalNavSection,
-} from '@/src/utils/teacher';
+} from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { useMyClass } from '@/src/hooks/queries/useTeacher';
 import { useMySubjectAssignments } from '@/src/hooks/queries/useTeacher';
 

@@ -3,12 +3,15 @@ import { studentSchema } from "./studentSchema";
 import { teacherSchema } from "./teacherSchema";
 import { parentSchema } from "./parentSchema";
 import { bursarSchema } from "./bursarSchema";
+import { UserStatus } from "@/app/generated/prisma/enums";
 
 
 // ── Discriminated union — the single export used by the route ──────────────────
 // Zod picks the correct sub-schema based on the `role` field value.
 // Validation errors are role-specific — e.g. "Grade level is required" only
 // appears when role === "STUDENT", not for teachers or parents.
+
+const Status = z.enum(UserStatus)
 export const adminCreateUserSchema = z.discriminatedUnion("role", [
   studentSchema,
   teacherSchema,
@@ -35,6 +38,9 @@ export const adminUpdateUserSchema = z.object({
   photoUrl: z.string().optional(),
 
 })
+export const updateStatusSchema = z.object({
+  status: Status,
+});
 export type EditUserFormData = z.infer<typeof adminUpdateUserSchema>
 
 

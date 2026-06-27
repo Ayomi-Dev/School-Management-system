@@ -7,8 +7,9 @@ import {
   CreateAcademicYearRequest,
 } from '@/src/types/api';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
-import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/src/utils/teacher';
-import { TeachersListParams } from '@/src/types';
+import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
+import { TeachersListParams, UserStatus } from '@/src/types';
+import { queryClient } from '@/src/lib/queryClient';
 
 const queryKeys = {
   admin: ['admin'],
@@ -16,7 +17,7 @@ const queryKeys = {
   users: () => [...queryKeys.admin, 'users'],
   userById: (id: string) => [...queryKeys.admin, 'users', id],
   classes: () => [...queryKeys.admin, 'classes'],
-  classById: (id: string) => [...queryKeys.admin, 'classes', id],
+  classDetail: (classId: string) => [...queryKeys.admin, 'classes', classId],
   subjects: () => [...queryKeys.admin, 'subjects'],
   subjectById: (id: string) => [...queryKeys.admin, 'subjects', id],
   academicYears: () => [...queryKeys.admin, 'academicYears'],
@@ -25,7 +26,9 @@ const queryKeys = {
   timetable: (classId?: string) => [...queryKeys.admin, 'timetable', classId],
   reports: () => [...queryKeys.admin, 'reports'],
   settings: () => [...queryKeys.admin, 'settings'],
-  teachers: () => [...queryKeys.admin, 'subjects']
+  teachers: () => [...queryKeys.admin, 'subjects'],
+  academicSummary: (userId: string, termId?: string) => ['admin-academic-summary', userId, termId ?? 'all'] as const,
+  classScoreSheet: (classId: string) => ['admin-class-scoresheet', classId] as const,
 };
 
 // Stats Queries
@@ -49,7 +52,7 @@ export const useUsersList = (params?: { role?: string; search?: string; page?: n
 export const useUserById = (id: string) => {
   return useQuery({
     queryKey: queryKeys.userById(id),
-    queryFn: () => adminService.getUserById(id),
+    queryFn: () => adminService.getUserProfile(id),
     enabled: !!id,
   });
 };
@@ -96,6 +99,22 @@ export const useUpdateUserMutation = () => {
   });
 };
 
+export const useUpdateUserStatusMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (newStatus: UserStatus) =>
+      adminService.updateUserStatus(userId, newStatus),
+    onSuccess: (_, newStatus) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userById(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.users() });
+      success(`User status updated to ${newStatus}`);
+    },
+    onError: () => error('Failed to update user status'),
+  });
+};
+ 
 export const useDeleteUserMutation = () => {
   const queryClient = useQueryClient();
   const { success, error: showError } = useToast();
@@ -147,6 +166,36 @@ export const useAssignClassTeacherMutation = () => {
     }
   })
 }
+
+export const useClassDetail = (classId: string) =>
+  useQuery({
+    queryKey: queryKeys.classDetail(classId),
+    queryFn:  () => adminService.getClassDetail(classId),
+    enabled:  !!classId,
+  });
+ 
+// ─── Class: score sheet ────────────────────────────────────────────────────────
+export const useClassScoreSheet = (classId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: queryKeys.classScoreSheet(classId),
+    queryFn:  () => adminService.getClassScoreSheet(classId),
+    enabled:  enabled && !!classId,
+  });
+ 
+// ───publish all report cards ──────────────────────────────────────────
+export const usePublishClassReportCardsMutation = (classId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: () => adminService.publishClassReportCards(classId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.classDetail(classId) });
+      success('All report cards published');
+    },
+    onError: () => error('Failed to publish report cards'),
+  });
+};
 
 export const useTeachersList = (params?: TeachersListParams) => {
   return useQuery({
@@ -274,3 +323,35 @@ export const useUpdateSettingsMutation = () => {
     },
   });
 };
+
+export const useAdminPublishReportCardMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (reportCardId: string) =>
+      adminService.publishReportCard(reportCardId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+      success('Report card published successfully');
+    },
+    onError: () => error('Failed to publish report card'),
+  });
+};
+
+
+//students
+export const useStudentAcademicSummary = (
+  userId: string,
+  enabled: boolean,
+  termId?: string,
+) =>
+  useQuery({
+    queryKey: queryKeys.academicSummary(userId, termId),
+    queryFn:  () => adminService.getStudentAcademicSummary(userId, termId),
+    enabled:  enabled && !!userId,
+  });
+ 
+ 
+
+

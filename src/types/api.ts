@@ -2,17 +2,6 @@
 import { z } from 'zod';
 import { ClassLevel, Gender, Role, TermPeriod, UserStatus } from './types';
 
-// Pagination
-// export interface PaginatedResponse<T> {
-//   data: T[];
-//   pagination: {
-//     page: number;
-//     limit: number;
-//     total: number;
-//     pages: number;
-//   };
-// }
-
 export interface ApiError {
   error: string;
   details?: Record<string, string[]>;

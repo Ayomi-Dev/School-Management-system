@@ -160,8 +160,8 @@ export default function ResultsPage() {
   const termAverage      = scoredSubjects.length > 0
     ? Math.round(scoredSubjects.reduce((acc, s) => acc + (s.totalScore ?? 0), 0) / scoredSubjects.length)
     : null;
-
-    console.log(reportCards)
+  const tscore = allScores.reduce((acc, s) => acc + (s.totalScore ?? 0), 0)
+    console.log(activeCard, selectedCardId, selectedYearId)
   // ── Loading / error states ─────────────────────────────────────────────────
   if (isLoading) {
     return (

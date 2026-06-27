@@ -26,13 +26,18 @@ export const API_ENDPOINTS = {
   USERS_UPDATE: (id: string) => `api/admin/users/${id}`,
   USERS_DELETE: (id: string) => `api/admin/users/${id}`,
   GET_ADMIN_PROFILE: (id: string) => `api/admin/${id}/profile`,
+  UPDATE_USER_STATUS: (userId: string) => `/api/admin/users/${userId}/status`,
+  GET_STUDENT_ACADEMIC_SUMMARY: (id: string) => `/admin/students/${id}/academic-summary`,
+
 
   // Admin - Classes
   CLASSES_CREATE: '/api/admin/classes/create',
   CLASSES_LIST:  `/api/admin/classes`,
-  CLASSES_GET: (id: string) => `/api/admin/classes/${id}`,
-  CLASSES_UPDATE: (id: string) => `/api/admin/classes/${id}`,
-  CLASSES_DELETE: (id: string) => `/api/admin/classes/${id}`,
+  CLASSES_GET: (classId: string) => `/api/admin/classes/${classId}`,
+  CLASSES_UPDATE: (classId: string) => `/api/admin/classes/${classId}`,
+  CLASSES_DELETE: (classId: string) => `/api/admin/classes/${classId}`,
+  CLASS_SCORESHEET: (classId: string) => `/api/admin/classes/${classId}/score-sheet`,
+  PUBLISH_CLASS_REPORT_CARDS: (classId: string) => `/api/classes/${classId}/publish-report-cards`,
 
   // Admin - Subjects
   SUBJECTS_CREATE: '/api/admin/subjects/create',
@@ -47,7 +52,14 @@ export const API_ENDPOINTS = {
   TERMS_LIST: (academicYearId: string) => `/api/admin/academic-years/${academicYearId}/terms`,
   ENROLLMENTS_LIST: (schoolId: string ) => `/api/students/${schoolId}/enrollment`,
   GET_STATS: `/api/admin/stats`,
+  PUBLISH_REPORT_CARD: (reportCardId: string) => `api/admin/report-cards/${reportCardId}/publish`,
 
+
+
+  //Admin - Students
+  ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/admin/students/${userId}/academic-summary`,
+  
+  
 
   // Students
   STUDENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/students`,
@@ -77,7 +89,6 @@ export const API_ENDPOINTS = {
   GET_REPORT_CARDS: (classId: string) => `/api/teachers/class/${classId}/report-cards`,
   GET_SINGLE_REPORT_CARD: (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
   UPDATE_REPORT_CARD : (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
-  PUBLISH_REPORT_CARD: ( classId: string, reportCardId: string) => `api/teachers/class/${classId}/report-cards/${reportCardId}`,
 
 
   // Parents

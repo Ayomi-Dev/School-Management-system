@@ -390,7 +390,6 @@ export const studentService = {
       totalSessions > 0
         ? parseFloat((((presentCount + lateCount) / totalSessions) * 100).toFixed(1))
         : 0;
-
     return NextResponse.json({
       data: {
         student,

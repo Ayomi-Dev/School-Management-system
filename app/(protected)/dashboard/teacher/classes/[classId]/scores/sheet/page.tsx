@@ -6,7 +6,7 @@ import { Loader } from '@/src/components/ui/Loader';
 import { Card } from '@/src/components/ui/Card';
 import { Search, ArrowUpDown, FileSpreadsheet } from 'lucide-react';
 import {useScoreSheet} from '@/src/hooks/queries/useScores';
-import { ScoreSheetCell, ScoreSheetStudent, ScoreSheetSubject } from '@/src/utils/teacher';
+import { ScoreSheetCell, ScoreSheetStudent, ScoreSheetSubject } from '@/app/(protected)/dashboard/teacher/components/teacher';
 
 
 function ScoreCell({ cell }: { cell: ScoreSheetCell | null }) {

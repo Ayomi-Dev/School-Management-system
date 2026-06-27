@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/src/components/ui/Button';
 import { useAssignSubjectTeacherMutation } from '@/src/hooks/queries/useAdmin';
 import { TeacherCombobox } from './ComboBox';
-import { SelectedTeacher } from '@/src/utils/teacher';
+import { SelectedTeacher } from '@/app/(protected)/dashboard/teacher/components/teacher';
 
 interface AssignSubjectTeacherModalProps {
   subjectName: string;
