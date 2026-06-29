@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const GET = async(req: NextRequest ) => {
     const auth = await requireSchoolRoles(req, ...[Role.ADMIN, Role.STUDENT, Role.TEACHER]);
     if(!auth.success){
-        return NextResponse.json({ error: "Unauthorized. Permission required"}, { status: 401})
+        return NextResponse.json({ error: auth.error }, { status: auth.status})
     }
     const { schoolId } = auth;
     const result = await academicYearService.listAllAcademicYears(schoolId as string)

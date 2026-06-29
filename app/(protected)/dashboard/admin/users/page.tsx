@@ -16,6 +16,7 @@ import { User } from '@/src/types';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 
+
 export default function UsersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -26,50 +27,42 @@ export default function UsersPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [page, setPage] = useState(1);
-
   const debouncedSearch = useDebounce(search, 300);
   const deleteUserMutation = useDeleteUserMutation();
-
   const setRoleFilter = (role: Role | 'ALL') => {
     const params = new URLSearchParams(searchParams.toString());
     if (role === 'ALL') {
       params.delete('type');
-    } else {
+    } 
+    else {
       params.set('type', role);
     }
     params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
     setPage(1);
   };
-
   const { data: usersData, isLoading } = useUsersList({
     role: roleFilter === 'ALL' ? undefined : roleFilter,
     search: debouncedSearch,
     page,
     limit: 10,
   });
-
   const users = useMemo(() => usersData?.data || [], [usersData]);
-
   const handleRowClick = (user: User) => {
     router.push(`/dashboard/admin/users/${user.id}`);
   };
-
   const handleEdit = (e: React.MouseEvent, user: User) => {
     e.stopPropagation(); // prevent row click from firing
     setSelectedUser(user);
     setIsEditModalOpen(true);
   };
-
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); // prevent row click from firing
     if (confirm('Are you sure you want to delete this user?')) {
       deleteUserMutation.mutate(id);
     }
   };
-
   const roles: Role[] = ['STUDENT', 'TEACHER', 'PARENT', 'BURSAR'];
-
   const statusColor = (status: string) => {
     const colors = {
       ACTIVE: 'bg-green-100 text-green-800',

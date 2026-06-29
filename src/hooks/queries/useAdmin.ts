@@ -5,6 +5,7 @@ import {
   CreateClassRequest,
   CreateSubjectRequest,
   CreateAcademicYearRequest,
+  StudentAcademicSummaryResponse,
 } from '@/src/types/api';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
 import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
@@ -172,7 +173,7 @@ export const useClassDetail = (classId: string) =>
     queryKey: queryKeys.classDetail(classId),
     queryFn:  () => adminService.getClassDetail(classId),
     enabled:  !!classId,
-  });
+});
  
 // ─── Class: score sheet ────────────────────────────────────────────────────────
 export const useClassScoreSheet = (classId: string, enabled: boolean) =>
@@ -343,15 +344,13 @@ export const useAdminPublishReportCardMutation = (userId: string) => {
 //students
 export const useStudentAcademicSummary = (
   userId: string,
-  enabled: boolean,
+  schoolId: string,
   termId?: string,
-) =>
-  useQuery({
+) => {
+  return  useQuery<StudentAcademicSummaryResponse>({
     queryKey: queryKeys.academicSummary(userId, termId),
-    queryFn:  () => adminService.getStudentAcademicSummary(userId, termId),
-    enabled:  enabled && !!userId,
+    queryFn:  () => adminService.getStudentAcademicSummary(userId, schoolId, termId),
+    enabled:  !!schoolId && !!userId,
   });
+}
  
- 
-
-

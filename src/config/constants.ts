@@ -21,13 +21,13 @@ export const API_ENDPOINTS = {
   // Admin - Users
   USERS_CREATE: '/api/admin/create-user',
   USERS_LIST: `/api/admin/users`,
-  USERS_GET: (id: string) => `/api/users/${id}`,
+  USERS_GET: (id: string) => `/api/admin/users/${id}`,
   USERS_CHANGE_PASSWORD: (id: string) => `/api/users/${id}/change-password`, 
   USERS_UPDATE: (id: string) => `api/admin/users/${id}`,
   USERS_DELETE: (id: string) => `api/admin/users/${id}`,
   GET_ADMIN_PROFILE: (id: string) => `api/admin/${id}/profile`,
   UPDATE_USER_STATUS: (userId: string) => `/api/admin/users/${userId}/status`,
-  GET_STUDENT_ACADEMIC_SUMMARY: (id: string) => `/admin/students/${id}/academic-summary`,
+  GET_STUDENT_ACADEMIC_SUMMARY: (id: string) => `/api/admin/students/${id}/academic-summary`,
 
 
   // Admin - Classes
@@ -79,7 +79,7 @@ export const API_ENDPOINTS = {
   GET_SCORE_HISTORY: (classId: string, subjectId: string) => `/api/teachers/class/${classId}/subjects/${subjectId}/scores/history`,
   GET_SCORE_ROSTER: (classId: string, subjectId: string) => `api/teachers/class/${classId}/subjects/${subjectId}/scores`,
   GET_MY_SUBJECTS: ( classId: string) => `/api/teachers/class/${classId}/subjects`,
-  ASSIGN_TEACHER_TO_CLASS: `/api/teachers/assign-class`,
+  ASSIGN_TEACHER_TO_CLASS: `/api/admin/teachers/assign-class`,
   GET_MY_STUDENTS: (classId: string) => `/api/teachers/class/${classId}/students`,
   GET_SCORE_SHEET: (classId: string) => `/api/teachers/class/${classId}/scores/sheet`,
   GET_SUBJECT_ASSIGNMENTS: `/api/teachers/me/subject-assignments`,

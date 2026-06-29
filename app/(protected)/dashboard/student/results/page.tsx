@@ -121,6 +121,7 @@ export default function ResultsPage() {
 
   const reportCards: ReportCard[] = data?.data?.reportCards ?? [];
   const allScores:   ScoreRecord[] = data?.data?.scores     ?? [];
+  console.log(data?.data)
 
   // ── Filter state ──────────────────────────────────────────────────────────
   // Build unique year options from report cards

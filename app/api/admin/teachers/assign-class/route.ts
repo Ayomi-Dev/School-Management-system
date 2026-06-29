@@ -4,15 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export const POST = async(req: NextRequest) => {
+    console.log(" route hit")
     const auth = await requireSchoolAdmin(req);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },
-            { status: auth.status}
+            { status: auth.status }
         )
     }
 
     const { schoolId } = auth
-    const result = await teacherServices.assignClassTeacher(req, schoolId as string);
+    const result = await teacherServices.assignClassTeacher(req, schoolId as string, auth.userId);
     return result;
 }

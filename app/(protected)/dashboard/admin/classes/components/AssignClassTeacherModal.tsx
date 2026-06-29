@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
@@ -31,15 +31,21 @@ export default function AssignClassTeacherModal({
 }: AssignClassTeacherModalProps) {
     const schoolId = useAuthStore((state) => state.user?.schoolId ?? ''); 
   const { data: activeYear } = useActiveAcademicYear(schoolId);
-  console.log(activeYear?.label)
-
+  
   const [selectedTeacher, setSelectedTeacher] = useState<SelectedTeacher | null>(null);
-  const [academicYearLabel, setAcademicYearLabel] = useState(activeYear?.label);
+  const [academicYearLabel, setAcademicYearLabel] = useState("");
   const [isClassTeacher, setIsClassTeacher] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   const { mutate, isPending } = useAssignClassTeacherMutation();
+  useEffect(() => {
+    if (activeYear?.label && academicYearLabel === '') {
+      setAcademicYearLabel(activeYear.label);
+    }
+  }, [activeYear?.label]);
 
+  
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -49,6 +55,7 @@ export default function AssignClassTeacherModal({
       return;
     }
     if (!academicYearLabel) {
+      console.log(academicYearLabel)
       setError('Enter an academic year (e.g. "2025/2026").');
       return;
     }
@@ -68,6 +75,8 @@ export default function AssignClassTeacherModal({
       },
     );
   };
+
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

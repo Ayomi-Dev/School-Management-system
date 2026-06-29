@@ -46,12 +46,7 @@ export interface TeacherListItem {
   employeeNumber: string;
   firstName: string;
   lastName: string;
-  department: string | null;
-  user: {
-    email: string;
-    userCode: string;
-    status: string;
-  };
+  department?: string | null;
 }
  
 export interface TeachersListParams {
@@ -62,9 +57,9 @@ export interface TeachersListParams {
 }
  
 export interface TeachersListResponse {
-  data:{
-    data: TeacherListItem[]
-  } ;
+  data: {
+    data:TeacherListItem[]
+  }
   meta: {
     total: number;
     page: number;

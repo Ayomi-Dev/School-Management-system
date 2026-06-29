@@ -1,3 +1,5 @@
+import { ClassLevel } from "./types";
+
 export interface ScoreSheet {
   term: string;
   year: string;
@@ -53,7 +55,7 @@ export interface ClassDetail {
     id: string;
     student: {
       id: string;
-      admissionNumber?: string;
+      studentNumber?: string;
       user: {
         id: string;
         firstName: string;
@@ -66,25 +68,28 @@ export interface ClassDetail {
   _count: { enrollments: number; subjects: number };
 }
 export interface UserProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  role: UserRole;
-  status: UserStatus;
-  createdAt: string;
-  studentProfile?: {
+  data:{
     id: string;
-    admissionNumber?: string;
-    dateOfBirth?: string;
-    currentClass?: { id: string; level: string };
-  };
-  teacherProfile?: {
-    id: string;
-    staffId?: string;
-    qualification?: string;
-    classAssignment?: { id: string; level: string };
-  };
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    role: UserRole;
+    status: UserStatus;
+    createdAt: string;
+    studentProfile?: {
+      id: string;
+      studentNumber?: string;
+      dateOfBirth?: string;
+      level?:ClassLevel
+    };
+    teacherProfile?: {
+      id: string;
+      staffId?: string;
+      qualification?: string;
+      classAssignment?: {class:{ id: string; level: string };}
+    };
+
+  }
 }
  

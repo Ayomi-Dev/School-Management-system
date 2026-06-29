@@ -22,7 +22,10 @@ export const adminService = {
   getUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) =>
     createApiClient().get(API_ENDPOINTS.USERS_LIST, { params }),
 
-  getUserProfile: (id: string): Promise<UserProfile> => createApiClient().get(API_ENDPOINTS.USERS_GET(id)),
+  getUserProfile: async(id: string): Promise<UserProfile> => {
+    const response = await createApiClient().get(API_ENDPOINTS.USERS_GET(id))
+    return response.data
+  },
   getAdmin: (id: string) => createApiClient().get(API_ENDPOINTS.GET_ADMIN_PROFILE(id)),
 
   createUser: (data: CreateUserFormData) => createApiClient().post(API_ENDPOINTS.USERS_CREATE, data),
@@ -155,17 +158,17 @@ export const adminService = {
   },
   getStudentAcademicSummary: async (
     userId: string,
+    schoolId: string,
     termId?: string,
   ): Promise<StudentAcademicSummaryResponse> => {
     const res = await createApiClient().get(
       API_ENDPOINTS.GET_STUDENT_ACADEMIC_SUMMARY(userId),
-      { params: termId ? { termId } : undefined },
+      { params: { schoolId, ...(termId && { termId }) }},
     );
-    return res.data.data;
+    return res.data;
   },
- 
   
- 
+
   getAcademicReport: (params?: { classId?: string; academicYearId?: string }) =>
     createApiClient().get(`${API_BASE}/reports/academic`, { params }),
 

@@ -197,7 +197,7 @@ export const teacherServices = {
   // Body: { teacherEmployeeNumber, isClassTeacher, academicYearLabel? }
   // className from route param; academicYearLabel defaults to current.
   // ----------------------------------------------------------------
-  async assignClassTeacher(req: NextRequest, schoolId: string) {
+  async assignClassTeacher(req: NextRequest, schoolId: string, userId: string) {
     try {
       const body = await req.json();
       const parsed = assignClassTeacherSchema.safeParse(body);
@@ -216,7 +216,7 @@ export const teacherServices = {
  
       try {
         [teacher, classRecord, academicYear] = await Promise.all([
-          resolveTeacher(schoolId, teacherEmployeeNumber),
+          resolveTeacher(schoolId, userId),
           resolveClassByName(schoolId, level),
           resolveAcademicYear(schoolId, academicYearLabel),
         ]);
@@ -224,6 +224,7 @@ export const teacherServices = {
         if (!classRecord) throw new ResolverError(`Class "${level}" not found.`);
       } catch (err) {
         if (err instanceof ResolverError) {
+          console.log("error nature",err.statusCode)
           return NextResponse.json({ error: err.message }, { status: err.statusCode });
         }
         throw err;
@@ -334,10 +335,10 @@ export const teacherServices = {
           orderBy: { lastName: "asc" },
           include: {
             user: { select: { email: true, userCode: true, status: true } },
+            classAssignment: { select: { isClassTeacher: true }}
           },
         }),
       ]);
-      console.log("teachers", teachers)
       return NextResponse.json({
         data: teachers,
         meta: buildPaginationMeta(total, page, limit),

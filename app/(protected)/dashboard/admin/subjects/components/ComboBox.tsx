@@ -4,6 +4,7 @@ import { useDebounce } from "@/src/hooks/useUtils";
 import { SelectedTeacher, TeacherComboboxProps } from "@/app/(protected)/dashboard/teacher/components/teacher";
 import { Check, ChevronDown, Loader2, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { TeacherListItem } from "@/src/types";
 
 export function TeacherCombobox({
   value,

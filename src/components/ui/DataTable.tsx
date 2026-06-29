@@ -37,7 +37,7 @@ export function DataTable<T extends { id: string }>({
     );
   }
 
-  if (isEmpty || data.length === 0) {
+  if (isEmpty || data?.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">{emptyMessage}</p>

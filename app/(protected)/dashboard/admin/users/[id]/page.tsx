@@ -24,12 +24,14 @@ import { ActionCard } from '../../components/actionGrade';
 import { TermSelector } from '../../components/termSelector';
 import { KpiBox } from '../../components/kpiBox';
 import { GradeChip } from '../../components/gradeChip';
-import { ReportCard } from '@/src/types';
+import { ReportCard, ScoreRecord } from '@/src/types';
+import { useAuthStore } from '@/src/stores/authStore';
 
 
 
 export default function UserProfilePage() {
-  const { userId } = useParams<{ userId: string }>();
+  const { id } = useParams<{ id: string }>();
+  const schoolId = useAuthStore((state) => state.user?.schoolId ?? '' )
   const router     = useRouter();
 
   const [summaryEnabled, setSummaryEnabled] = useState(false);
@@ -38,8 +40,8 @@ export default function UserProfilePage() {
   // termId for the score-table filter — client-side only, no refetch
   const [scoreTermId, setScoreTermId]       = useState<string | undefined>(undefined);
 
-  const { data: user, isLoading: userLoading, isError: userError } = useUserById(userId);
-
+  const { data: userData, isLoading: userLoading, isError: userError } = useUserById(id);
+  const user = userData?.data
   const isStudent = user?.role === 'STUDENT';
   const isTeacher = user?.role === 'TEACHER';
 
@@ -47,30 +49,30 @@ export default function UserProfilePage() {
     data: summary,
     isLoading: summaryLoading,
     refetch: refetchSummary,
-  } = useStudentAcademicSummary(userId, summaryEnabled && isStudent, summaryTermId);
+  } = useStudentAcademicSummary(id, schoolId, summaryTermId);
 
-  const statusMutation  = useUpdateUserStatusMutation(userId);
-  const publishMutation = useAdminPublishReportCardMutation(userId);
+  const statusMutation  = useUpdateUserStatusMutation(id);
+  const publishMutation = useAdminPublishReportCardMutation(id);
 
   // Scores filtered to the currently-selected term (client-side, instant)
   const visibleScores = useMemo(() => {
     if (!summary) return [];
-    if (!scoreTermId) return summary?.data.scores;
-    return summary?.data.scores.filter((s) => s.termId === scoreTermId);
+    if (!scoreTermId) return summary?.data?.scores;
+    return summary?.data?.scores?.filter((s) => s.termId === scoreTermId);
   }, [summary, scoreTermId]);
 
   // The report card matching the current term filter (if any)
   const matchingReportCard: ReportCard | undefined = useMemo(() => {
     if (!summary) return undefined;
     if (!scoreTermId) return undefined; // show publish action only when a term is selected
-    return summary?.data.reportCards.find((rc) => rc.termId === scoreTermId);
+    return summary?.data?.reportCards.find((rc) => rc.termId === scoreTermId);
   }, [summary, scoreTermId]);
 
   // Derived KPIs for the visible score set
   const avgScore = useMemo(() => {
-    const scored = visibleScores.filter((s) => s.totalScore !== null);
-    if (!scored.length) return null;
-    return (scored.reduce((acc, s) => acc + (s.totalScore ?? 0), 0) / scored.length).toFixed(1);
+    const scored = visibleScores?.filter((s) => s.totalScore !== null);
+    if (!scored?.length) return null;
+    return (scored?.reduce((acc, s) => acc + (s.totalScore ?? 0), 0) / scored?.length).toFixed(1);
   }, [visibleScores]);
 
   const handleFetchSummary = () => {
@@ -78,7 +80,7 @@ export default function UserProfilePage() {
     else { refetchSummary(); }
   };
 
-  // ── Loading / error states ──────────────────────────────────────────────────
+  // ── Loading / error states 
 
   if (userLoading) return <div className="flex items-center justify-center h-96"><Loader /></div>;
 
@@ -92,7 +94,7 @@ export default function UserProfilePage() {
     );
   }
 
-  const initials = `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase();
+  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase();
 
   const nextStatus: Record<UserStatus, UserStatus> = {
     ACTIVE: 'INACTIVE', INACTIVE: 'ACTIVE', PENDING: 'ACTIVE',
@@ -125,7 +127,7 @@ export default function UserProfilePage() {
               <span className="flex items-center gap-1.5">
                 <User size={13} />
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                  {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+                  {user?.role.charAt(0) + user?.role.slice(1).toLowerCase()}
                 </span>
               </span>
               <span className="flex items-center gap-1.5">
@@ -166,14 +168,14 @@ export default function UserProfilePage() {
               <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                 <GraduationCap size={15} />Student Info
               </h2>
-              <InfoRow label="Admission No."  value={user.studentProfile.admissionNumber} />
+              <InfoRow label="Admission No."  value={user.studentProfile.studentNumber} />
               <InfoRow
                 label="Date of Birth"
                 value={user.studentProfile.dateOfBirth
                   ? new Date(user.studentProfile.dateOfBirth).toLocaleDateString('en-NG', { dateStyle: 'medium' })
                   : undefined}
               />
-              <InfoRow label="Current Class"  value={user.studentProfile.currentClass?.level} />
+              <InfoRow label="Current Class"  value={user.studentProfile.level} />
             </Card>
           )}
 
@@ -184,12 +186,12 @@ export default function UserProfilePage() {
               </h2>
               <InfoRow label="Staff ID"       value={user.teacherProfile.staffId} />
               <InfoRow label="Qualification"  value={user.teacherProfile.qualification} />
-              <InfoRow label="Class Assigned" value={user.teacherProfile.classAssignment?.level} />
+              <InfoRow label="Class Assigned" value={user.teacherProfile.classAssignment?.class.level} />
             </Card>
           )}
 
           {/* Enrollment history (student only, shown after summary loads) */}
-          {isStudent && summary?.data.enrollments && summary?.data.enrollments.length > 0 && (
+          {isStudent && summary?.data?.enrollments && summary?.data?.enrollments.length > 0 && (
             <Card>
               <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Enrollment History</h2>
               <div className="space-y-2">
@@ -259,7 +261,7 @@ export default function UserProfilePage() {
                   title="View Assigned Class"
                   description="Go to this teacher's class details"
                   onClick={() => {
-                    const classId = user.teacherProfile?.classAssignment?.id;
+                    const classId = user.teacherProfile?.classAssignment?.class.id;
                     if (classId) router.push(`/admin/classes/${classId}`);
                   }}
                   loading={false}
@@ -278,13 +280,13 @@ export default function UserProfilePage() {
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
                   <FileText size={15} />Academic Summary
                 </h2>
-                {summary && (
+                {/* {summary && (
                   <TermSelector
-                    scores={summary?.data.scores}
+                    scores={summary?.data?.scores}
                     selectedTermId={scoreTermId}
                     onChange={setScoreTermId}
                   />
-                )}
+                )} */}
               </div>
 
               {summaryLoading ? (
@@ -300,24 +302,24 @@ export default function UserProfilePage() {
                     />
                     <KpiBox
                       label="Subjects"
-                      value={String(visibleScores.length)}
+                      value={String(visibleScores?.length)}
                       color="text-gray-800"
                     />
                     <KpiBox
                       label="Attendance"
-                      value={`${summary?.data.attendance.rate}%`}
-                      sub={`${summary?.data.attendance.present + summary?.data.attendance.late}/${summary?.data.attendance.total} sessions`}
-                      color={summary?.data.attendance.rate >= 75 ? 'text-green-600' : 'text-red-600'}
+                      value={`${summary?.data?.attendance?.rate}%`}
+                      sub={`${summary?.data?.attendance?.present + summary?.data?.attendance?.late}/${summary?.data?.attendance?.total} sessions`}
+                      color={summary?.data?.attendance?.rate >= 75 ? 'text-green-600' : 'text-red-600'}
                     />
                     <KpiBox
                       label="Absences"
-                      value={String(summary?.data.attendance.absent)}
-                      color={summary?.data.attendance.absent > 5 ? 'text-red-600' : 'text-gray-700'}
+                      value={String(summary?.data?.attendance?.absent)}
+                      color={summary?.data?.attendance?.absent > 5 ? 'text-red-600' : 'text-gray-700'}
                     />
                   </div>
 
                   {/* ── Score table ── */}
-                  {visibleScores.length > 0 ? (
+                  {visibleScores?.length > 0 ? (
                     <div className="overflow-x-auto rounded-lg border border-gray-100">
                       <table className="w-full text-sm">
                         <thead>
@@ -332,7 +334,7 @@ export default function UserProfilePage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {visibleScores.map((row) => (
+                          {visibleScores?.map((row) => (
                             <tr key={row.id} className="hover:bg-gray-50">
                               <td className="px-4 py-3 font-medium text-gray-900">
                                 {row.subject.name}
@@ -362,11 +364,11 @@ export default function UserProfilePage() {
                   )}
 
                   {/* ── Report cards ── */}
-                  {summary?.data.reportCards.length > 0 && (
+                  {summary?.data?.reportCards?.length > 0 && (
                     <div>
                       <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Report Cards</h3>
                       <div className="space-y-2">
-                        {summary?.data.reportCards
+                        {summary?.data?.reportCards
                           .filter((rc) => !scoreTermId || rc.termId === scoreTermId)
                           .map((rc) => (
                             <div
@@ -415,7 +417,7 @@ export default function UserProfilePage() {
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 text-center py-8">
-                  No academic data available.
+                  No academic data? available.
                 </p>
               )}
             </Card>

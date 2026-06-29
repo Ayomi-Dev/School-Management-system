@@ -277,14 +277,13 @@ export const adminServices = {
         )
     },
     async getUserById(schoolId: string, userId: string) {
-    try {
+      try {
       const user = await prisma.user.findFirst({
         where: {
           id: userId,
           OR: [
             { studentProfile: { schoolId } },
             { teacherProfile: { schoolId } },
-            { bursarProfile:  { schoolId } },
           ],
         },
         select: {
@@ -303,7 +302,6 @@ export const adminServices = {
               dateOfBirth:     true,
               enrollments: {
                 orderBy:  { enrolledAt: 'desc' },
-                take:     1,
                 select: {
                   class: { select: { id: true, level: true } },
                 },
@@ -313,11 +311,10 @@ export const adminServices = {
           teacherProfile: {
             select: {
               id:            true,
-              staffId:       true,
+              employeeNumber: true,
               qualification: true,
               classAssignment: {
-                take:   1,
-                select: { class: { select: { id: true, level: true } } },
+                select: { isClassTeacher: true,  class: { select: { id: true, level: true } } },
               },
             },
           },
@@ -337,29 +334,30 @@ export const adminServices = {
           studentProfile: studentProfile
             ? {
                 id:              studentProfile.id,
-                admissionNumber: studentProfile.studentNumber,
+                studentNumber:   studentProfile.studentNumber,
                 dateOfBirth:     studentProfile.dateOfBirth,
-                currentClass:    studentProfile.enrollments[0]?.class ?? null,
+                level:    studentProfile.enrollments[0]?.class.level ?? null,
               }
             : undefined,
           teacherProfile: teacherProfile
             ? {
                 id:             teacherProfile.id,
-                staffId:        teacherProfile.staffId,
+                employeeNumber: teacherProfile.employeeNumber,
                 qualification:  teacherProfile.qualification,
                 classAssignment: teacherProfile.classAssignment?.class ?? null,
               }
             : undefined,
         },
       });
-    } catch (error) {
-      console.error('[adminService.getUserProfile]', error);
-      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
-    }
-  },
-  async updateUserStatus(req: NextRequest, adminId: string, userId: string, schoolId: string) {
+      } 
+      catch (error) {
+        console.error('[adminService.getUserProfile]', error);
+        return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+      }
+    },
+    async updateUserStatus(req: NextRequest, adminId: string, userId: string, schoolId: string) {
     try {
-        const body   = await req.json();
+      const body   = await req.json();
       const parsed = updateStatusSchema.safeParse(body);
       if (!parsed.success) {
         return NextResponse.json(
@@ -376,8 +374,6 @@ export const adminServices = {
           OR: [
             { studentProfile: { schoolId } },
             { teacherProfile: { schoolId } },
-            { adminProfile:   { schoolId } },
-            { bursarProfile:  { schoolId } },
           ],
         },
         select: { id: true, status: true },
@@ -412,9 +408,9 @@ export const adminServices = {
       console.error('[adminService.updateUserStatus]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-  },
+    },
  
-   async getAdminById(id: string)  {
+    async getAdminById(id: string)  {
         const user = await prisma.user.findUnique(
             {
                 where: { id },
@@ -428,7 +424,7 @@ export const adminServices = {
             )
         }
         return NextResponse.json({ user})
-   },
+    },
 
     async getAllUsers(schoolId: string, params: PaginationMeta) {
         try{
@@ -558,7 +554,7 @@ export const adminServices = {
         )
     },
 
-   async adminPublishReportCard( schoolId: string, reportCardId: string) {
+    async adminPublishReportCard( schoolId: string, reportCardId: string) {
     try {
       const reportCard = await prisma.reportCard.findUnique({
         where:  { id: reportCardId },
@@ -600,8 +596,8 @@ export const adminServices = {
       console.error('[adminService.adminPublishReportCard]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-  },
-   async getClassDetail(schoolId: string, classId: string) {
+    },
+    async getClassDetail(schoolId: string, classId: string) {
     try {
       const classRecord = await prisma.class.findFirst({
         where: { id: classId, schoolId },
@@ -673,9 +669,9 @@ export const adminServices = {
       console.error('[adminService.getClassDetail]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-  },
+    },
 
-   async getClassScoreSheet(schoolId: string, classId: string) {
+    async getClassScoreSheet(schoolId: string, classId: string) {
     try {
       // Verify the class belongs to this school
       const classRecord = await prisma.class.findFirst({
@@ -780,9 +776,9 @@ export const adminServices = {
       console.error('[adminService.getClassScoreSheet]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-  },
+    },
 
-  async publishClassReportCards(schoolId: string, classId: string) {
+    async publishClassReportCards(schoolId: string, classId: string) {
     try {
       const classRecord = await prisma.class.findFirst({
         where:  { id: classId, schoolId },
@@ -832,7 +828,7 @@ export const adminServices = {
       console.error('[adminService.publishClassReportCards]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-  },
+    },
 };
 
 

@@ -107,7 +107,6 @@ export interface SelectedTeacher {
   employeeNumber: string;
   firstName: string;
   lastName: string;
-  classAssignment: { isClassTeacher: boolean}
 }
 
 export interface TeacherComboboxProps {
