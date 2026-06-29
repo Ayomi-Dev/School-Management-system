@@ -163,12 +163,13 @@ export const adminService = {
   ): Promise<StudentAcademicSummaryResponse> => {
     const res = await createApiClient().get(
       API_ENDPOINTS.GET_STUDENT_ACADEMIC_SUMMARY(userId),
-      { params: { schoolId, ...(termId && { termId }) }},
+      { params: { schoolId, ...(termId && { termId }) } },
     );
     return res.data;
   },
+ 
   
-
+ 
   getAcademicReport: (params?: { classId?: string; academicYearId?: string }) =>
     createApiClient().get(`${API_BASE}/reports/academic`, { params }),
 

@@ -87,7 +87,7 @@ export interface UserProfile {
       id: string;
       staffId?: string;
       qualification?: string;
-      classAssignment?: {class:{ id: string; level: string };}
+      classAssignment?: { id: string; level: string;}
     };
 
   }

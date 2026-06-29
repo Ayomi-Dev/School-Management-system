@@ -344,13 +344,13 @@ export const useAdminPublishReportCardMutation = (userId: string) => {
 //students
 export const useStudentAcademicSummary = (
   userId: string,
+  enabled: boolean,
   schoolId: string,
   termId?: string,
-) => {
-  return  useQuery<StudentAcademicSummaryResponse>({
+) =>
+  useQuery<StudentAcademicSummaryResponse>({
     queryKey: queryKeys.academicSummary(userId, termId),
     queryFn:  () => adminService.getStudentAcademicSummary(userId, schoolId, termId),
-    enabled:  !!schoolId && !!userId,
-  });
-}
+    enabled:  enabled && !!schoolId && !!userId,
+});
  

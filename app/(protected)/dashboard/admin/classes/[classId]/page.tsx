@@ -266,8 +266,8 @@ function StudentsTab({
                   <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
                     {u.firstName} {u.lastName}
                   </p>
-                  {enrollment.student.admissionNumber && (
-                    <p className="text-xs text-gray-500 truncate">{enrollment.student.admissionNumber}</p>
+                  {enrollment.student.studentNumber && (
+                    <p className="text-xs text-gray-500 truncate">{enrollment.student.studentNumber}</p>
                   )}
                   <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColor[u.status] ?? statusColor.INACTIVE}`}>
                     {u.status}

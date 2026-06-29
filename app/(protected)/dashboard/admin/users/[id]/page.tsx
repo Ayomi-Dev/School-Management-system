@@ -44,13 +44,15 @@ export default function UserProfilePage() {
   const user = userData?.data
   const isStudent = user?.role === 'STUDENT';
   const isTeacher = user?.role === 'TEACHER';
-
+  const summaryQueryEnabled = !userLoading && isStudent && summaryEnabled;
+  
+  
   const {
     data: summary,
     isLoading: summaryLoading,
     refetch: refetchSummary,
-  } = useStudentAcademicSummary(id, schoolId, summaryTermId);
-
+  } = useStudentAcademicSummary(id, summaryQueryEnabled, schoolId);
+  
   const statusMutation  = useUpdateUserStatusMutation(id);
   const publishMutation = useAdminPublishReportCardMutation(id);
 
@@ -104,7 +106,7 @@ export default function UserProfilePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* ── Back ── */}
       <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors">
         <ArrowLeft size={16} />Back to Users
@@ -186,7 +188,7 @@ export default function UserProfilePage() {
               </h2>
               <InfoRow label="Staff ID"       value={user.teacherProfile.staffId} />
               <InfoRow label="Qualification"  value={user.teacherProfile.qualification} />
-              <InfoRow label="Class Assigned" value={user.teacherProfile.classAssignment?.class.level} />
+              {/* <InfoRow label="Class Assigned" value={user.teacherProfile.classAssignment?.class.level} /> */}
             </Card>
           )}
 
@@ -261,8 +263,8 @@ export default function UserProfilePage() {
                   title="View Assigned Class"
                   description="Go to this teacher's class details"
                   onClick={() => {
-                    const classId = user.teacherProfile?.classAssignment?.class.id;
-                    if (classId) router.push(`/admin/classes/${classId}`);
+                    const classId = user.teacherProfile?.classAssignment?.id;
+                    if (classId) router.push(`/dashboard/admin/classes/${classId}`);
                   }}
                   loading={false}
                   variant="info"
@@ -417,7 +419,7 @@ export default function UserProfilePage() {
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 text-center py-8">
-                  No academic data? available.
+                  No academic data available.
                 </p>
               )}
             </Card>

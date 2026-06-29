@@ -25,6 +25,7 @@ export function TermSelector({
         });
       }
     }
+    console.log(seen)
     return Array.from(seen.values());
   }, [scores]);
 
