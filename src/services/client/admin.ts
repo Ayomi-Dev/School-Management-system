@@ -10,7 +10,7 @@ import {
 } from '@/src/types/api';
 import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
-import { ClassDetail, PublishReportCardResponse, ScoreSheet, UpdateUserStatusResponse, UserProfile } from '@/src/types/admin';
+import { ClassDetail, PublishReportCardResponse, ReportCardFullDetail, ScoreSheet, UpdateReportCardBody, UpdateReportCardResponse, UpdateUserStatusResponse, UserProfile } from '@/src/types/admin';
 
 const API_BASE = '/api/admin';
 
@@ -152,7 +152,16 @@ export const adminService = {
     reportCardId: string,
   ): Promise<PublishReportCardResponse> => {
     const res = await createApiClient().post(
-      API_ENDPOINTS.PUBLISH_REPORT_CARD(reportCardId),
+      API_ENDPOINTS.ADMIN_PUBLISH_REPORT_CARD(reportCardId),
+    );
+    return res.data;
+  },
+  
+  unpublishReportCard: async (
+    reportCardId: string,
+  ): Promise<PublishReportCardResponse> => {
+    const res = await createApiClient().patch(
+      API_ENDPOINTS.ADMIN_UNPUBLISH_REPORT_CARD(reportCardId),
     );
     return res.data;
   },
@@ -167,6 +176,23 @@ export const adminService = {
     );
     return res.data;
   },
+   getReportCard: async (reportCardId: string): Promise<ReportCardFullDetail> => {
+    const res = await createApiClient().get(
+      API_ENDPOINTS.GET_REPORT_CARD(reportCardId),
+    );
+    return res.data.data;
+  },
+  updateReportCard: async (
+    reportCardId: string,
+    body: UpdateReportCardBody,
+  ): Promise<UpdateReportCardResponse> => {
+    const res = await createApiClient().patch(
+      API_ENDPOINTS.ADMIN_UPDATE_REPORT_CARD(reportCardId),
+      body,
+    );
+    return res.data;
+  },
+ 
  
   
  

@@ -10,6 +10,7 @@ import { classService } from "../class/class.service";
 import { _levelOrder } from "@/src/utils/levelOrder";
 import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
 import { PaginationMeta } from "@/src/types";
+import { ReportCardStatus } from "@/app/generated/prisma/enums";
 
 export const adminServices = {
     //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
@@ -597,6 +598,38 @@ export const adminServices = {
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
     },
+
+    async adminUnpublishReportCard(schoolId: string, reportCardId: string) {
+    try {
+      const existing = await prisma.reportCard.findUnique({
+        where:  { id: reportCardId },
+        select: { id: true, status: true, student: { select: { schoolId: true } } },
+      });
+      if (!existing || existing.student.schoolId !== schoolId) {
+        return NextResponse.json({ error: 'Report card not found.' }, { status: 404 });
+      }
+      if (existing.status !== 'PUBLISHED') {
+        return NextResponse.json(
+          { error: 'This report card is not published.' },
+          { status: 409 },
+        );
+      }
+ 
+      const unpublished = await prisma.reportCard.update({
+        where:  { id: reportCardId },
+        data:   { status: 'DRAFT', publishedAt: null },
+        select: { id: true, status: true, publishedAt: true },
+      });
+ 
+      return NextResponse.json({
+        message: 'Report card unpublished. It is now editable.',
+        data: unpublished,
+      });
+    } catch (error) {
+      console.error('[adminService.adminUnpublishReportCard]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
     async getClassDetail(schoolId: string, classId: string) {
     try {
       const classRecord = await prisma.class.findFirst({
@@ -671,7 +704,7 @@ export const adminServices = {
     }
     },
 
-    async getClassScoreSheet(schoolId: string, classId: string) {
+  async getClassScoreSheet(schoolId: string, classId: string) {
     try {
       // Verify the class belongs to this school
       const classRecord = await prisma.class.findFirst({
@@ -684,6 +717,13 @@ export const adminServices = {
  
       // Pull all scores for all students currently enrolled in this class,
       // including the most-recent term info so we can label the sheet.
+      //
+      // NOTE: no `orderBy` across two different relations here.
+      // Prisma + MongoDB cannot sort on two parallel nested-relation arrays
+      // in a single query (e.g. term.academicYear.startDate AND
+      // student.user.firstName together) — it throws:
+      //   "cannot sort with keys that are parallel arrays"
+      // So we fetch unsorted and do all ordering in application code below.
       const scores = await prisma.score.findMany({
         where: {
           student: {
@@ -700,7 +740,7 @@ export const adminServices = {
             select: {
               id:           true,
               period:       true,
-              academicYear: { select: { label: true } },
+              academicYear: { select: { id: true, label: true, startDate: true } },
             },
           },
           student: {
@@ -711,10 +751,6 @@ export const adminServices = {
             },
           },
         },
-        orderBy: [
-          { term: { academicYear: { startDate: 'desc' } } },
-          { student: { user: { firstName: 'asc' } } },
-        ],
       });
  
       if (scores.length === 0) {
@@ -723,8 +759,13 @@ export const adminServices = {
         });
       }
  
-      // Use the term from the first score (most recent, given the orderBy)
-      const latestTerm = scores[0].term;
+      // Determine the most-recent term in-memory (by academicYear.startDate,
+      // falling back to whichever term appears most recently in the array).
+      const latestTerm = scores.reduce((latest, s) => {
+        const latestDate = new Date(latest.term.academicYear.startDate).getTime();
+        const currentDate = new Date(s.term.academicYear.startDate).getTime();
+        return currentDate > latestDate ? s : latest;
+      }, scores[0]).term;
  
       // Filter to that term only (scores are mixed-term if the student has history)
       const termScores = scores.filter((s) => s.term.id === latestTerm.id);
@@ -739,7 +780,7 @@ export const adminServices = {
         {
           studentId:       string;
           studentName:     string;
-          admissionNumber: string | null;
+          studentNumber: string | null;
           scores:          Record<string, { ca: number | null; exam: number | null; total: number | null; grade: string | null }>;
         }
       >();
@@ -752,7 +793,7 @@ export const adminServices = {
           studentMap.set(key, {
             studentId:       key,
             studentName:     name,
-            admissionNumber: s.student.studentNumber,
+            studentNumber: s.student.studentNumber,
             scores:          {},
           });
         }
@@ -764,19 +805,25 @@ export const adminServices = {
         };
       }
  
+      // Sort rows by student name alphabetically — done here in JS,
+      // not pushed down to Mongo, since that's what triggered the error.
+      const rows = Array.from(studentMap.values()).sort((a, b) =>
+        a.studentName.localeCompare(b.studentName),
+      );
+ 
       return NextResponse.json({
         data: {
           term:     latestTerm.period,
           year:     latestTerm.academicYear.label,
           subjects,
-          rows:     Array.from(studentMap.values()),
+          rows,
         },
       });
     } catch (error) {
       console.error('[adminService.getClassScoreSheet]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-    },
+  },
 
     async publishClassReportCards(schoolId: string, classId: string) {
     try {
@@ -829,6 +876,142 @@ export const adminServices = {
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
     },
+
+  async adminGetSingleReportCard(schoolId: string, reportCardId: string) {
+    try {
+      const card = await prisma.reportCard.findUnique({
+        where: { id: reportCardId },
+        select: {
+          id:              true,
+          status:          true,
+          totalScore:      true,
+          average:         true,
+          position:        true,
+          classSnapshot:   true,
+          teacherRemark:   true,
+          principalRemark: true,
+          publishedAt:     true,
+          termId:          true,
+          createdAt:       true,
+          updatedAt:       true,
+          student: {
+            select: {
+              id:            true,
+              firstName:     true,
+              lastName:      true,
+              studentNumber: true,
+              gender:        true,
+              schoolId:      true,
+              enrollments: {
+                orderBy: { enrolledAt: 'desc' },
+                take:    1,
+                select:  { classId: true, class: { select: { level: true } } },
+              },
+            },
+          },
+          term: {
+            select: { id: true, period: true, academicYear: { select: { label: true } } },
+          },
+        },
+      });
+ 
+      if (!card || card.student.schoolId !== schoolId) {
+        return NextResponse.json({ error: 'Report card not found.' }, { status: 404 });
+      }
+ 
+      const classId = card.student.enrollments[0]?.classId;
+ 
+      // Subject scores — complete ones only (matching what compile included)
+      const scores = await prisma.score.findMany({
+        where: {
+          studentId: card.student.id,
+          termId:    card.termId,
+          ...(classId ? { subject: { classId } } : {}),
+          caScore:   { not: null },
+          examScore: { not: null },
+        },
+        select: {
+          subjectId:   true,
+          caScore:     true,
+          examScore:   true,
+          totalScore:  true,
+          grade:       true,
+          gradeRemark: true,
+          subject: { select: { name: true, code: true } },
+        },
+        orderBy: { subject: { name: 'asc' } },
+      });
+ 
+      // Attendance summary — recomputed fresh so it reflects any corrections
+      // made after the initial compile.
+      const sessions = classId
+        ? await prisma.classSession.findMany({
+            where:  { classId, termId: card.termId, label: 'daily' },
+            select: { id: true },
+          })
+        : [];
+      const attendanceRows = sessions.length
+        ? await prisma.attendance.findMany({
+            where: {
+              studentId: card.student.id,
+              sessionId: { in: sessions.map((s) => s.id) },
+            },
+            select: { status: true },
+          })
+        : [];
+      const attendanceSummary = {
+        total:   sessions.length,
+        present: attendanceRows.filter((a) => a.status === 'PRESENT').length,
+        absent:  attendanceRows.filter((a) => a.status === 'ABSENT').length,
+        late:    attendanceRows.filter((a) => a.status === 'LATE').length,
+      };
+ 
+      return NextResponse.json({
+        data: {
+          reportCard: {
+            id:              card.id,
+            status:          card.status,
+            totalScore:      card.totalScore,
+            average:         card.average,
+            position:        card.position,
+            classSnapshot:   card.classSnapshot,
+            teacherRemark:   card.teacherRemark,
+            principalRemark: card.principalRemark,
+            publishedAt:     card.publishedAt,
+            createdAt:       card.createdAt,
+            updatedAt:       card.updatedAt,
+            term: {
+              id:           card.term.id,
+              period:       card.term.period,
+              academicYear: card.term.academicYear.label,
+            },
+            classLevel: card.student.enrollments[0]?.class.level ?? null,
+          },
+          student: {
+            id:            card.student.id,
+            firstName:     card.student.firstName,
+            lastName:      card.student.lastName,
+            studentNumber: card.student.studentNumber,
+            gender:        card.student.gender,
+          },
+          scores: scores.map((s) => ({
+            subjectId:   s.subjectId,
+            subjectName: s.subject.name,
+            subjectCode: s.subject.code,
+            caScore:     s.caScore,
+            examScore:   s.examScore,
+            totalScore:  s.totalScore,
+            grade:       s.grade,
+            gradeRemark: s.gradeRemark,
+          })),
+          attendanceSummary,
+        },
+      });
+    } catch (error) {
+      console.error('[adminService.adminGetSingleReportCard]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
 };
 
 

@@ -375,6 +375,7 @@ export default function UserProfilePage() {
                           .map((rc) => (
                             <div
                               key={rc.id}
+                              onClick={() => router.push(`/dashboard/admin/report-cards/${rc.id}`)}
                               className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-gray-200"
                             >
                               <div>

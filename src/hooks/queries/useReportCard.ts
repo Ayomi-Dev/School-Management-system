@@ -37,6 +37,7 @@ export const useCompileReportCard = (classId: string) => {
   });
 };
  
+//update remark by teacher
 export const useUpdateReportCardRemark = (classId: string, reportCardId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -51,16 +52,4 @@ export const useUpdateReportCardRemark = (classId: string, reportCardId: string)
   });
 };
  
-export const usePublishReportCard = (classId: string, reportCardId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => reportCardService.publishReportCard(classId, reportCardId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: reportCardKeys.detail(classId, reportCardId),
-      });
-      queryClient.invalidateQueries({ queryKey: reportCardKeys.list(classId) });
-    },
-  });
-};
  

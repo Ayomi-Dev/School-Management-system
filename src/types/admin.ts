@@ -92,4 +92,82 @@ export interface UserProfile {
 
   }
 }
+
+export interface ReportCardDetail {
+  id: string;
+  status: 'DRAFT' | 'PUBLISHED';
+  totalScore: number | null;
+  average: number | null;
+  position: number | null;
+  classSnapshot: string | null;
+  teacherRemark: string | null;
+  principalRemark: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  term: {
+    id: string;
+    period: string;
+    academicYear: string;
+  };
+  classLevel: string | null;
+}
  
+export interface ReportCardStudent {
+  id: string;
+  firstName: string;
+  lastName: string;
+  studentNumber: string;
+  gender: string;
+}
+ 
+export interface ReportCardScoreRow {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  caScore: number | null;
+  examScore: number | null;
+  totalScore: number | null;
+  grade: string | null;
+  gradeRemark: string | null;
+}
+ 
+export interface ReportCardAttendanceSummary {
+  total: number;
+  present: number;
+  absent: number;
+  late: number;
+}
+ 
+export interface ReportCardFullDetail {
+  reportCard: ReportCardDetail;
+  student: ReportCardStudent;
+  scores: ReportCardScoreRow[];
+  attendanceSummary: ReportCardAttendanceSummary;
+}
+ 
+// ─── Update report card (admin) ────────────────────────────────────────────────
+ 
+export interface UpdateReportCardBody {
+  teacherRemark?: string;
+  principalRemark?: string;
+}
+ 
+export interface UpdateReportCardResponse {
+  message: string;
+  data: {
+    id: string;
+    teacherRemark: string | null;
+    principalRemark: string | null;
+    status: 'DRAFT' | 'PUBLISHED';
+  };
+}
+
+export interface UnpublishReportCardResponse {
+  message: string;
+  data: {
+    id: string;
+    status: 'DRAFT';
+    publishedAt: null;
+  };
+}

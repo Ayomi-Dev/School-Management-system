@@ -46,6 +46,7 @@ export default function ClassDetailPage() {
     isLoading: scoreSheetLoading,
     refetch: refetchScoreSheet,
   } = useClassScoreSheet(classId, scoresheetEnabled);
+  console.log(scoreSheet)
 
   const publishMutation = usePublishClassReportCardsMutation(classId);
 
@@ -366,26 +367,27 @@ function ScoreSheetTab({
         <table className="w-full text-sm min-w-175">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide sticky left-0 bg-gray-50">
+              <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide sticky left-0 bg-gray-50">
                 Student
               </th>
               {scoreSheet.subjects.map((subj) => (
                 <th
                   key={subj}
-                  className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide"
-                  colSpan={3}
+                  className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide border-2 border-r"
+                  colSpan={4}
                 >
                   {subj}
                 </th>
               ))}
             </tr>
-            <tr className="bg-gray-50 border-b border-gray-200 text-[10px] text-gray-400 uppercase">
+            <tr className="bg-gray-50 text-[10px] text-gray-400 uppercase">
               <th className="px-4 py-2 text-left sticky left-0 bg-gray-50" />
               {scoreSheet.subjects.map((subj) => (
                 <>
-                  <th key={`${subj}-ca`} className="px-3 py-2 text-center">CA</th>
-                  <th key={`${subj}-ex`} className="px-3 py-2 text-center">Exam</th>
-                  <th key={`${subj}-gr`} className="px-3 py-2 text-center">Grd</th>
+                  <th key={`${subj}-ca`} className="px-3 py-2 text-center border-2 border-r-2">CA</th>
+                  <th key={`${subj}-ex`} className="px-3 py-2 text-center border-2 border-r-2">Exam</th>
+                  <th key={`${subj}-tot`} className="px-3 py-2 text-center border-2 border-r-2">Total</th>
+                  <th key={`${subj}-gr`} className="px-3 py-2 text-center border-2 border-r-2">Grd</th>
                 </>
               ))}
             </tr>
@@ -407,6 +409,7 @@ function ScoreSheetTab({
                     <>
                       <td key={`${row.studentId}-${subj}-ca`} className="px-3 py-3 text-center text-gray-600">{s.ca}</td>
                       <td key={`${row.studentId}-${subj}-ex`} className="px-3 py-3 text-center text-gray-600">{s.exam}</td>
+                      <td key={`${row.studentId}-${subj}-tot`} className="px-3 py-3 text-center text-gray-600">{s.total}</td>
                       <td key={`${row.studentId}-${subj}-gr`} className="px-3 py-3 text-center">
                         <span className={gradeColors[s.grade] ?? ''}>{s.grade}</span>
                       </td>
@@ -415,6 +418,7 @@ function ScoreSheetTab({
                     <>
                       <td key={`${row.studentId}-${subj}-ca`} className="px-3 py-3 text-center text-gray-300">—</td>
                       <td key={`${row.studentId}-${subj}-ex`} className="px-3 py-3 text-center text-gray-300">—</td>
+                      <td key={`${row.studentId}-${subj}-tot`} className="px-3 py-3 text-center text-gray-300">—</td>
                       <td key={`${row.studentId}-${subj}-gr`} className="px-3 py-3 text-center text-gray-300">—</td>
                     </>
                   );

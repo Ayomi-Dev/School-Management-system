@@ -49,7 +49,7 @@ export default function UsersPage() {
   });
   const users = useMemo(() => usersData?.data || [], [usersData]);
   const handleRowClick = (user: User) => {
-    router.push(`/dashboard/admin/users/${user.id}`);
+    router.push(`/dashboard/admin/users/${user.id}?${user.role}`);
   };
   const handleEdit = (e: React.MouseEvent, user: User) => {
     e.stopPropagation(); // prevent row click from firing

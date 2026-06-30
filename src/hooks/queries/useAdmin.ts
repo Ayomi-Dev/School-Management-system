@@ -28,6 +28,7 @@ const queryKeys = {
   reports: () => [...queryKeys.admin, 'reports'],
   settings: () => [...queryKeys.admin, 'settings'],
   teachers: () => [...queryKeys.admin, 'subjects'],
+  reportCard:       (reportCardId: string) => ['admin-report-card', reportCardId] as const,
   academicSummary: (userId: string, termId?: string) => ['admin-academic-summary', userId, termId ?? 'all'] as const,
   classScoreSheet: (classId: string) => ['admin-class-scoresheet', classId] as const,
 };
@@ -183,6 +184,8 @@ export const useClassScoreSheet = (classId: string, enabled: boolean) =>
     enabled:  enabled && !!classId,
   });
  
+
+  //report cards
 // ───publish all report cards ──────────────────────────────────────────
 export const usePublishClassReportCardsMutation = (classId: string) => {
   const queryClient = useQueryClient();
@@ -198,6 +201,68 @@ export const usePublishClassReportCardsMutation = (classId: string) => {
   });
 };
 
+//get single report card
+export const useReportCard = (reportCardId: string, enabled: boolean = true) =>
+  useQuery({
+    queryKey: queryKeys.reportCard(reportCardId),
+    queryFn:  () => adminService.getReportCard(reportCardId),
+    enabled:  enabled && !!reportCardId,
+  });
+
+
+  //update a student's report card
+export const useUpdateReportCardMutation = (reportCardId: string, userId?: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (body: { teacherRemark?: string; principalRemark?: string }) =>
+      adminService.updateReportCard(reportCardId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+      }
+      success('Report card updated');
+    },
+    onError: () => error('Failed to update report card'),
+  });
+};
+
+//publish student's report's card
+export const useAdminPublishReportCardMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (reportCardId: string) =>
+      adminService.publishReportCard(reportCardId),
+    onSuccess: (_, reportCardId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
+      success('Report card published successfully');
+    },
+    onError: () => error('Failed to publish report card'),
+  });
+};
+export const useAdminUnpublishReportCardMutation = (userId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (reportCardId: string) =>
+      adminService.unpublishReportCard(reportCardId),
+    onSuccess: (_, reportCardId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
+      success('Report card unpublished successfully');
+    },
+    onError: () => error('Failed to unpublish report card'),
+  });
+};
+ 
+ 
+  //teachers
 export const useTeachersList = (params?: TeachersListParams) => {
   return useQuery({
     queryKey: [...queryKeys.teachers(), params],
@@ -324,22 +389,6 @@ export const useUpdateSettingsMutation = () => {
     },
   });
 };
-
-export const useAdminPublishReportCardMutation = (userId: string) => {
-  const queryClient = useQueryClient();
-  const { success, error } = useToast();
- 
-  return useMutation({
-    mutationFn: (reportCardId: string) =>
-      adminService.publishReportCard(reportCardId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
-      success('Report card published successfully');
-    },
-    onError: () => error('Failed to publish report card'),
-  });
-};
-
 
 //students
 export const useStudentAcademicSummary = (

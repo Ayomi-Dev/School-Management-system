@@ -37,7 +37,7 @@ export const API_ENDPOINTS = {
   CLASSES_UPDATE: (classId: string) => `/api/admin/classes/${classId}`,
   CLASSES_DELETE: (classId: string) => `/api/admin/classes/${classId}`,
   CLASS_SCORESHEET: (classId: string) => `/api/admin/classes/${classId}/score-sheet`,
-  PUBLISH_CLASS_REPORT_CARDS: (classId: string) => `/api/classes/${classId}/publish-report-cards`,
+  PUBLISH_CLASS_REPORT_CARDS: (classId: string) => `/api/admin/classes/${classId}/publish-report-cards`,
 
   // Admin - Subjects
   SUBJECTS_CREATE: '/api/admin/subjects/create',
@@ -52,12 +52,24 @@ export const API_ENDPOINTS = {
   TERMS_LIST: (academicYearId: string) => `/api/admin/academic-years/${academicYearId}/terms`,
   ENROLLMENTS_LIST: (schoolId: string ) => `/api/students/${schoolId}/enrollment`,
   GET_STATS: `/api/admin/stats`,
-  PUBLISH_REPORT_CARD: (reportCardId: string) => `api/admin/report-cards/${reportCardId}/publish`,
+  ADMIN_PUBLISH_REPORT_CARD: (reportCardId: string) =>
+    `/api/admin/report-cards/${reportCardId}/publish`,
 
+  ADMIN_UNPUBLISH_REPORT_CARD: (reportCardId: string) =>
+    `/api/admin/report-cards/${reportCardId}/unpublish`,
 
+  GET_REPORT_CARD: (reportCardId: string) =>
+    `/api/admin/report-cards/${reportCardId}`,
 
+  ADMIN_UPDATE_REPORT_CARD: (reportCardId: string) =>
+    `/api/admin/report-cards/${reportCardId}`,
+ 
+ 
+  
+  
+  
   //Admin - Students
-  ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/admin/students/${userId}/academic-summary`,
+  ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/api/admin/students/${userId}/academic-summary`,
   
   
 

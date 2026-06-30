@@ -16,7 +16,6 @@ import {
 import {
   useReportCard,
   useUpdateReportCardRemark,
-  usePublishReportCard,
 } from '@/src/hooks/queries/useReportCard';
 import { AttendanceSummary, ScoreEntry } from '@/src/types';
 
@@ -135,8 +134,6 @@ export default function EditReportCardPage() {
   const { data, isLoading } = useReportCard(classId, reportCardId);
   const { mutate: saveRemark, isPending: isSavingRemark } =
     useUpdateReportCardRemark(classId, reportCardId);
-  const { mutate: publish, isPending: isPublishing } =
-    usePublishReportCard(classId, reportCardId);
 
   const [remark, setRemark] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -162,19 +159,6 @@ export default function EditReportCardPage() {
         setMessage({
           type: 'error',
           text: err?.response?.data?.error ?? 'Could not save remark.',
-        }),
-    });
-  };
-
-  const handlePublish = () => {
-    setMessage(null);
-    publish(undefined, {
-      onSuccess: () =>
-        setMessage({ type: 'success', text: 'Report card published successfully.' }),
-      onError: (err: any) =>
-        setMessage({
-          type: 'error',
-          text: err?.response?.data?.error ?? 'Could not publish report card.',
         }),
     });
   };
@@ -299,7 +283,7 @@ export default function EditReportCardPage() {
                       ${isPublished
                         ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
                         : 'border-gray-300 text-gray-900'}`}
-        />
+          />
         {card.principalRemark && (
           <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <p className="text-xs font-semibold text-blue-700 mb-1">Principal's Remark</p>
@@ -331,16 +315,6 @@ export default function EditReportCardPage() {
           >
             <Save size={16} />
             {isSavingRemark ? 'Saving...' : 'Save Remark'}
-          </Button>
-          <Button
-            variant="primary"
-            className="flex items-center gap-2 flex-1"
-            onClick={handlePublish}
-            disabled={isPublishing || !remark.trim()}
-            title={!remark.trim() ? 'Add a remark before publishing' : undefined}
-          >
-            <Send size={16} />
-            {isPublishing ? 'Publishing...' : 'Publish Report Card'}
           </Button>
         </div>
       )}

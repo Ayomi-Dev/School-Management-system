@@ -3,8 +3,7 @@ import { adminServices } from "@/src/services/admin/admin.service";
 import { ClassParamsContext } from "@/src/types";
 import { NextRequest, NextResponse } from "next/server";
 
-
-export const POST = async(req:NextRequest, context: ClassParamsContext) => {
+export const PATCH = async(req:NextRequest, context: ClassParamsContext) => {
     const auth = await requireSchoolAdmin(req);
     if(!auth.success){
         return NextResponse.json(
@@ -14,6 +13,6 @@ export const POST = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { schoolId } = auth
     const { reportCardId } = await context.params
-    const result = await adminServices.adminPublishReportCard(schoolId as string, reportCardId);
+    const result = await adminServices.adminUnpublishReportCard(schoolId as string, reportCardId);
     return result;
 }

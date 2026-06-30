@@ -1,6 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { ReportCardStatus } from "@/app/generated/prisma/enums";
-import { scoreServices  } from "@/src/services/scores/scores.service";
 import { NextRequest, NextResponse } from "next/server";
 import { compileSchema, updateReportCardSchema } from "@/src/validators/reportCardSchema";
 
@@ -362,7 +361,6 @@ export const reportCardServices = {
   }
   },  
 
-
   async getSingleReportCard(teacherId: string, classId: string, reportCardId: string) {
     try{
       const teacher = await prisma.teacherProfile.findUnique({
@@ -506,7 +504,7 @@ export const reportCardServices = {
     console.error('[reportCardService.getOne]', error);
     return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
   } 
-},
+  },
       /**
        * Bulk-generate report cards for all students in a class for a given term.
        */
@@ -535,12 +533,6 @@ export const reportCardServices = {
       });
       },
 
-      async unpublishReportCard(reportCardId: string) {
-        return prisma.reportCard.update({
-          where: { id: reportCardId },
-          data: { status: ReportCardStatus.DRAFT, publishedAt: null },
-        });
-      },
 
       // ============================================================
       // UPDATE REPORT CARD
@@ -593,7 +585,7 @@ export const reportCardServices = {
  
         if (!existing || existing.student.enrollments.length === 0) {
           return NextResponse.json(
-            { error: 'Report card not found for this class.' },
+            { error: 'Report card not found for this student in this class.' },
             { status: 404 },
           );
         }

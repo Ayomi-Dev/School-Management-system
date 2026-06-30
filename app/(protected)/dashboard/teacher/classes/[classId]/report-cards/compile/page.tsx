@@ -92,6 +92,7 @@ function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowP
         <Button
           variant="outline"
           size="sm"
+          disabled={card.status === "PUBLISHED"}
           onClick={() =>
             router.push(
               `/dashboard/teacher/classes/${classId}/report-cards/edit/${card.reportCardId}`,
@@ -102,7 +103,7 @@ function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowP
         </Button>
         <button
           onClick={() => onRecompile(card.studentId)}
-          disabled={isRecompiling}
+          disabled={isRecompiling || card.status === "PUBLISHED"}
           title="Recompile (recalculate scores and position)"
           className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors
                      text-gray-400 hover:text-gray-700 disabled:opacity-40"
