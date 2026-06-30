@@ -16,6 +16,7 @@ import {
   BookOpen, BarChart2, CheckCircle2, XCircle,
   Clock, FileText, Send, AlertCircle,
   GraduationCap, Users, ChevronDown,
+  User2,
 } from 'lucide-react';
 import { UserStatus } from '@/src/types/admin';
 import { StatusBadge } from '../../components/statusBadge';
@@ -44,8 +45,8 @@ export default function UserProfilePage() {
   const user = userData?.data
   const isStudent = user?.role === 'STUDENT';
   const isTeacher = user?.role === 'TEACHER';
+  const isParent = user?.role === "PARENT"
   const summaryQueryEnabled = !userLoading && isStudent && summaryEnabled;
-  
   
   const {
     data: summary,
@@ -186,9 +187,28 @@ export default function UserProfilePage() {
               <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
                 <Users size={15} />Teacher Info
               </h2>
-              <InfoRow label="Staff ID"       value={user.teacherProfile.staffId} />
+              <InfoRow label="Staff ID"       value={user.teacherProfile.employeeNumber} />
               <InfoRow label="Qualification"  value={user.teacherProfile.qualification} />
-              {/* <InfoRow label="Class Assigned" value={user.teacherProfile.classAssignment?.class.level} /> */}
+              <InfoRow label="Class Assigned" value={user.teacherProfile.classAssignment?.level} />
+            </Card>
+          )}
+
+          {isParent && user.guardianProfile && (
+            <Card>
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <User2 size={15} />Parent Info
+              </h2>
+              <InfoRow label="Relationship"  value={user.guardianProfile.relationship} />
+              <div className="text-sm">
+                <h2 className='text-center text-black'>Children({user.guardianProfile.students.length})</h2>
+                {user.guardianProfile.students.map((s) => (
+                  <div key={s.id} className='border-b-black border-2'>
+                    <InfoRow label="Name"  value={`${s.firstName} ${s.lastName}`} />
+                    <InfoRow label="Student No"  value={s.studentNumber} />
+                    <InfoRow label="Class"  value={s.level} />
+                  </div>
+                ))}
+              </div>
             </Card>
           )}
 

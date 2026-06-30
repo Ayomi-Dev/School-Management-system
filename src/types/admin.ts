@@ -1,4 +1,5 @@
-import { ClassLevel } from "./types";
+import { StudentInfo } from "./api";
+import { ClassLevel, Relationship } from "./types";
 
 export interface ScoreSheet {
   term: string;
@@ -85,9 +86,14 @@ export interface UserProfile {
     };
     teacherProfile?: {
       id: string;
-      staffId?: string;
+      employeeNumber?: string;
       qualification?: string;
       classAssignment?: { id: string; level: string;}
+    };
+    guardianProfile?: {
+      id: string;
+      relationship: Relationship
+      students: StudentInfo[]
     };
 
   }

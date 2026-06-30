@@ -285,6 +285,7 @@ export const adminServices = {
           OR: [
             { studentProfile: { schoolId } },
             { teacherProfile: { schoolId } },
+            { guardianProfile: { userId  } },
           ],
         },
         select: {
@@ -319,6 +320,13 @@ export const adminServices = {
               },
             },
           },
+          guardianProfile: {
+            select: {
+              id: true,
+              students: true,
+              relationship: true
+            }
+          }
         },
       });
  
@@ -327,7 +335,7 @@ export const adminServices = {
       }
  
       // Flatten the nested class/enrollment so the frontend gets a clean shape
-      const { studentProfile, teacherProfile, ...rest } = user;
+      const { studentProfile, teacherProfile, guardianProfile, ...rest } = user;
  
       return NextResponse.json({
         data: {
@@ -348,6 +356,13 @@ export const adminServices = {
                 classAssignment: teacherProfile.classAssignment?.class ?? null,
               }
             : undefined,
+          guardianProfile: guardianProfile
+          ? {
+            id: guardianProfile.id,
+            students: guardianProfile.students,
+            relationship: guardianProfile.relationship
+          }
+          : undefined
         },
       });
       } 

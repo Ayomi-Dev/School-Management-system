@@ -322,7 +322,8 @@ export interface StudentInfo {
   firstName:     string;
   lastName:      string;
   studentNumber: string;
-  gender: string
+  gender: string;
+  level: ClassLevel
 }
  
 export interface ScoreRecord {

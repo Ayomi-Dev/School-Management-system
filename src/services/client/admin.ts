@@ -10,7 +10,7 @@ import {
 } from '@/src/types/api';
 import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
-import { ClassDetail, PublishReportCardResponse, ReportCardFullDetail, ScoreSheet, UpdateReportCardBody, UpdateReportCardResponse, UpdateUserStatusResponse, UserProfile } from '@/src/types/admin';
+import { ClassDetail, PublishReportCardResponse, ReportCardFullDetail, ScoreSheet, UnpublishReportCardResponse, UpdateReportCardBody, UpdateReportCardResponse, UpdateUserStatusResponse, UserProfile } from '@/src/types/admin';
 
 const API_BASE = '/api/admin';
 
@@ -156,10 +156,10 @@ export const adminService = {
     );
     return res.data;
   },
-  
+
   unpublishReportCard: async (
     reportCardId: string,
-  ): Promise<PublishReportCardResponse> => {
+  ): Promise<UnpublishReportCardResponse> => {
     const res = await createApiClient().patch(
       API_ENDPOINTS.ADMIN_UNPUBLISH_REPORT_CARD(reportCardId),
     );
