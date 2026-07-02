@@ -183,6 +183,7 @@ export default function UserProfilePage() {
                   : undefined}
               />
               <InfoRow label="Current Class"  value={user.studentProfile.level} />
+              <InfoRow label="Guardian"  value={user.studentProfile.guardian ? `${user.studentProfile.guardian.firstName} ${user.studentProfile.guardian.lastName} (${user.studentProfile.guardian.phone})` : undefined} />
             </Card>
           )}
 
@@ -317,13 +318,13 @@ export default function UserProfilePage() {
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
                   <FileText size={15} />Academic Summary
                 </h2>
-                {/* {summary && (
+                {summary && (
                   <TermSelector
                     scores={summary?.data?.scores}
                     selectedTermId={scoreTermId}
                     onChange={setScoreTermId}
                   />
-                )} */}
+                )}
               </div>
 
               {summaryLoading ? (

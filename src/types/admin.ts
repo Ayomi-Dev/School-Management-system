@@ -83,6 +83,7 @@ export interface UserProfile {
       studentNumber?: string;
       dateOfBirth?: string;
       level?:ClassLevel
+      guardian: { id: string; firstName: string; lastName: string; phone: string } | null
     };
     teacherProfile?: {
       id: string;

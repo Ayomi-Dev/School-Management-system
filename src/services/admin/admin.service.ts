@@ -303,6 +303,10 @@ export const adminServices = {
               id:              true,
               studentNumber:   true,
               dateOfBirth:     true,
+              guardian: {
+                select: {
+                  id: true, firstName: true, lastName: true, phone: true } ,
+              },
               enrollments: {
                 orderBy:  { enrolledAt: 'desc' },
                 select: {
@@ -347,6 +351,7 @@ export const adminServices = {
                 studentNumber:   studentProfile.studentNumber,
                 dateOfBirth:     studentProfile.dateOfBirth,
                 level:    studentProfile.enrollments[0]?.class.level ?? null,
+                guardian: studentProfile.guardian
               }
             : undefined,
           teacherProfile: teacherProfile
@@ -841,7 +846,7 @@ export const adminServices = {
     }
   },
 
-    async publishClassReportCards(schoolId: string, classId: string) {
+  async publishClassReportCards(schoolId: string, classId: string) {
     try {
       const classRecord = await prisma.class.findFirst({
         where:  { id: classId, schoolId },
@@ -891,7 +896,7 @@ export const adminServices = {
       console.error('[adminService.publishClassReportCards]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-    },
+  },
 
   async adminGetSingleReportCard(schoolId: string, reportCardId: string) {
     try {
