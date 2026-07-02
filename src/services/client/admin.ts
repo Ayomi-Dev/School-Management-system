@@ -7,10 +7,23 @@ import {
   CreateAcademicYearRequest,
   CreateTermRequest,
   StudentAcademicSummaryResponse,
+  Class,
 } from '@/src/types/api';
 import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
-import { ClassDetail, PublishReportCardResponse, ReportCardFullDetail, ScoreSheet, UnpublishReportCardResponse, UpdateReportCardBody, UpdateReportCardResponse, UpdateUserStatusResponse, UserProfile } from '@/src/types/admin';
+import { ClassDetail, 
+  PublishReportCardResponse, 
+  ReportCardFullDetail, 
+  ScoreSheet, 
+  UnpublishReportCardResponse, 
+  UpdateReportCardBody, 
+  UpdateReportCardResponse, 
+  UpdateUserStatusResponse, 
+  UserProfile,
+  ParentListItem,
+  LinkStudentToParentBody,
+  LinkStudentToParentResponse
+ } from '@/src/types/admin';
 
 const API_BASE = '/api/admin';
 
@@ -100,7 +113,7 @@ export const adminService = {
   assignSubjectToTeacher: (payload: AssignSubjectTeacherPayload) => createApiClient().post(API_ENDPOINTS.SUBJECTS_ASSIGN_TEACHER, payload),
   removeSubjectAssignment: (payLoad: AssignSubjectTeacherPayload) => createApiClient().post(API_ENDPOINTS.SUBJECTS_REMOVE_TEACHER, payLoad),
 
-  // Academic Year Management
+  // Academic Year Management 
   getAcademicYears: (params?: { page?: number; limit?: number }) =>
     createApiClient().get(`${API_BASE}/academics`, { params }),
 
@@ -192,10 +205,7 @@ export const adminService = {
     );
     return res.data;
   },
- 
- 
-  
- 
+
   getAcademicReport: (params?: { classId?: string; academicYearId?: string }) =>
     createApiClient().get(`${API_BASE}/reports/academic`, { params }),
 
@@ -218,6 +228,24 @@ export const adminService = {
   //teachers
   getTeachers: (params?: TeachersListParams ): Promise<TeachersListResponse> => createApiClient().get(`${API_BASE}/teachers`, { params }),
 
+  //parents
+   getParentsList: async (): Promise<ParentListItem[]> => {
+    const res = await createApiClient().get(API_ENDPOINTS.GET_PARENTS_LIST());
+    return res.data.data;
+  },
+ 
+  // Links a student to a parent, creating a Guardian record if absent.
+  linkStudentToParent: async (
+    studentUserId: string,
+    body: LinkStudentToParentBody,
+  ): Promise<LinkStudentToParentResponse> => {
+    const res = await createApiClient().post(
+      API_ENDPOINTS.LINK_STUDENT_TO_PARENT(studentUserId),
+      body,
+    );
+    return res.data;
+  },
+ 
  
 };
 

@@ -220,11 +220,12 @@ export const teacherServices = {
           resolveClassByName(schoolId, level),
           resolveAcademicYear(schoolId, academicYearLabel),
         ]);
- 
+        console.log("error nature", classRecord)
+
         if (!classRecord) throw new ResolverError(`Class "${level}" not found.`);
       } catch (err) {
         if (err instanceof ResolverError) {
-          console.log("error nature",err.statusCode)
+          // console.log("error nature",err.statusCode)
           return NextResponse.json({ error: err.message }, { status: err.statusCode });
         }
         throw err;

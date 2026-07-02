@@ -1,18 +1,16 @@
 import { requireSchoolAdmin } from "@/src/lib/middleware/requireRole";
-import { teacherServices } from "@/src/services/teacher/teacher.service";
+import { adminServices } from "@/src/services/admin/admin.service";
 import { NextRequest, NextResponse } from "next/server";
 
-
-export const POST = async(req: NextRequest) => {
+export const GET = async(req: NextRequest) => {
     const auth = await requireSchoolAdmin(req);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },
-            { status: auth.status }
+            { status: auth.status}
         )
     }
-
     const { schoolId } = auth
-    const result = await teacherServices.assignClassTeacher(req, schoolId as string, auth.userId);
+    const result = await adminServices.getParentsList(schoolId as string)
     return result;
 }

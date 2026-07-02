@@ -195,6 +195,9 @@ export const classService = {
           teacherAssignments: { 
             select: {id: true, teacherId: true, teacher: true, isClassTeacher: true}
           },
+          subjects: {
+            select: { id: true, name: true, code: true}
+          },
           _count: {
             select: { enrollments: true, subjectTeachers: true, subjects: true },
           },

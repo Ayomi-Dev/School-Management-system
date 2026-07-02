@@ -106,6 +106,8 @@ export const API_ENDPOINTS = {
   // Parents
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,
   PARENTS_GET: (id: string) => `/api/parents/${id}`,
+  GET_PARENTS_LIST: () => `/api/admin/parents`,
+  LINK_STUDENT_TO_PARENT: (studentId: string) => `/api/admin/students/${studentId}/link`,
 
   //Bursar
   BURSAR_GET: (id: string) => `/api/bursar/${id}`,

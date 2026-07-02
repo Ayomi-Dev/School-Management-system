@@ -31,6 +31,7 @@ const queryKeys = {
   reportCard:       (reportCardId: string) => ['admin-report-card', reportCardId] as const,
   academicSummary: (userId: string, termId?: string) => ['admin-academic-summary', userId, termId ?? 'all'] as const,
   classScoreSheet: (classId: string) => ['admin-class-scoresheet', classId] as const,
+  parentsList: ()=> ['admin-parents-list']               as const,
 };
 
 // Stats Queries
@@ -402,4 +403,34 @@ export const useStudentAcademicSummary = (
     queryFn:  () => adminService.getStudentAcademicSummary(userId, schoolId, termId),
     enabled:  enabled && !!schoolId && !!userId,
 });
+
+
+//parents
+export const useParentsList = (enabled: boolean) =>
+  useQuery({
+    queryKey: queryKeys.parentsList(),
+    queryFn:  () => adminService.getParentsList(),
+    enabled,
+    staleTime: 30_000, // parents list changes rarely — cache for 30s
+  });
+
+  // Invalidates the student's user profile (which may show a linked guardian)
+// and the parents list (linkedCount on the selected parent just changed).
+ 
+export const useLinkStudentToParentMutation = (studentUserId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (parentUserId: string) =>
+      adminService.linkStudentToParent(studentUserId, { parentUserId }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userById(studentUserId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.parentsList() });
+      success(res.message);
+    },
+    onError: (err: Error) => error(err.message ?? 'Failed to link parent'),
+  });
+}
+ 
  

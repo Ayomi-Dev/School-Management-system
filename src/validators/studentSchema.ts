@@ -69,7 +69,7 @@ export const listStudentsQuerySchema = z.object({
 });
 
 export const linkStudentToParentSchema = z.object({
-  parentUserId: z.string().min(1).optional(),
+  parentUserId: z.string().min(1),
 })
 
 

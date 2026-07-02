@@ -177,3 +177,28 @@ export interface UnpublishReportCardResponse {
     publishedAt: null;
   };
 }
+
+export interface LinkStudentToParentBody {
+  parentUserId: string;
+}
+ 
+export interface LinkStudentToParentResponse {
+  message: string;
+  data: {
+    studentId:   string;
+    guardianId:  string;
+    wasExisting: boolean;
+  };
+}
+ 
+export interface ParentListItem {
+  id: string;           // User.id
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  status: string;
+  guardianId: string | null;   // null if no Guardian record yet
+  linkedCount: number;          // how many students already linked
+}
+ 

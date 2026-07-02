@@ -11,6 +11,7 @@ import { _levelOrder } from "@/src/utils/levelOrder";
 import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
 import { PaginationMeta } from "@/src/types";
 import { ReportCardStatus } from "@/app/generated/prisma/enums";
+import { linkStudentToParentSchema } from "@/src/validators/studentSchema";
 
 export const adminServices = {
     //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
@@ -1024,6 +1025,115 @@ export const adminServices = {
       });
     } catch (error) {
       console.error('[adminService.adminGetSingleReportCard]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+  async getParentsList(schoolId: string) {
+    try {
+      // Parents are school-scoped through their guardian profile or directly
+      // through a parentProfile if your schema has one. Here we use the User
+      // table filtered by role=PARENT and joined to the school via Guardian.
+      // Adjust the where clause if your schema attaches parents differently.
+      const parents = await prisma.user.findMany({
+        where: {
+          role:   'PARENT',
+          schoolId,
+        },
+        select: {
+          id:        true,
+          firstName: true,
+          lastName:  true,
+          email:     true,
+          phone:     true,
+          status:    true,
+          guardianProfile: {
+            select: {
+              id:     true,
+              _count: { select: { students: true } },
+            },
+          },
+        },
+        orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+      });
+ 
+      return NextResponse.json({
+        data: parents.map((p) => ({
+          id:          p.id,
+          firstName:   p.firstName,
+          lastName:    p.lastName,
+          email:       p.email,
+          phone:       p.phone,
+          status:      p.status,
+          guardianId:  p.guardianProfile?.id   ?? null,
+          linkedCount: p.guardianProfile?._count.students ?? 0,
+        })),
+      });
+    } catch (error) {
+      console.error('[adminService.getParentsList]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+   async linkStudentToParent(
+    req:           NextRequest,
+    schoolId:       string,
+    studentUserId: string,
+  ) {
+    try {
+      const body   = await req.json();
+      const parsed = linkStudentToParentSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+          { status: 400 },
+        );
+      }
+      const { parentUserId } = parsed.data;
+ 
+      // ── Verify student belongs to this school ─────────────────────
+      const studentProfile = await prisma.studentProfile.findFirst({
+        where:  { userId: studentUserId, schoolId },
+        select: { id: true },
+      });
+      if (!studentProfile) {
+        return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
+      }
+ 
+      // ── Verify parent belongs to this school ──────────────────────
+      const parentUser = await prisma.user.findFirst({
+        where: {
+          id:   parentUserId,
+          role: 'PARENT',
+          schoolId,
+        },
+        select: { id: true },
+      });
+      if (!parentUser) {
+        return NextResponse.json({ error: 'Parent not found.' }, { status: 404 });
+      }
+ 
+      // ── Delegate to the helper inside a transaction ───────────────
+      const result = await prisma.$transaction((tx) =>
+        linkStudentToGuardians(tx, studentProfile.id, { parentUserId }),
+      );
+ 
+      return NextResponse.json({
+        message: result.wasExisting
+          ? 'Student linked to existing guardian.'
+          : 'Guardian record created and student linked.',
+        data: result,
+      });
+    } catch (error) {
+      // Surface domain errors from the helper as 409s
+      if (error instanceof Error) {
+        const domainErrors = [
+          'already linked to this parent',
+          'must have a phone number',
+        ];
+        if (domainErrors.some((msg) => error.message.includes(msg))) {
+          return NextResponse.json({ error: error.message }, { status: 409 });
+        }
+      }
+      console.error('[adminService.linkStudentToParent]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
   },

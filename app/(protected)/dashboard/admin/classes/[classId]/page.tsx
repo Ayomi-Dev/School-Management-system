@@ -46,7 +46,6 @@ export default function ClassDetailPage() {
     isLoading: scoreSheetLoading,
     refetch: refetchScoreSheet,
   } = useClassScoreSheet(classId, scoresheetEnabled);
-  console.log(scoreSheet)
 
   const publishMutation = usePublishClassReportCardsMutation(classId);
 

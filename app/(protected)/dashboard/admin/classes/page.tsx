@@ -15,6 +15,7 @@ export default function ClassesPage() {
   const classes = useMemo(() => classesData?.data.data || [], [classesData]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
+  console.log(classes)
 
   const [classToAssign, setClassToAssign] = useState<{
     id: string;
@@ -88,9 +89,9 @@ export default function ClassesPage() {
                 {/* Class Details */}
                 <div className="space-y-2 py-4 border-y border-gray-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Department:</span>
+                    <span className="text-sm text-gray-600">Subjects:</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {classItem.department || 'N/A'}
+                      {classItem._count.subjects || 'N/A'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -125,7 +126,7 @@ export default function ClassesPage() {
                     onClick={() => setClassToAssign({ id: classItem.id, level: classItem.level })}
                   >
                     <UserCog size={16} />
-                    {classItem.teacherAssignment ? 'Reassign Teacher' : 'Assign Teacher'}
+                    {classItem.teacherAssignments[0]?.isClassTeacher ? 'Reassign Teacher' : 'Assign Teacher'}
                   </Button>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1">

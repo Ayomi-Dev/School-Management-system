@@ -17,6 +17,7 @@ import {
   Clock, FileText, Send, AlertCircle,
   GraduationCap, Users, ChevronDown,
   User2,
+  UserPlus,
 } from 'lucide-react';
 import { UserStatus } from '@/src/types/admin';
 import { StatusBadge } from '../../components/statusBadge';
@@ -27,6 +28,7 @@ import { KpiBox } from '../../components/kpiBox';
 import { GradeChip } from '../../components/gradeChip';
 import { ReportCard, ScoreRecord } from '@/src/types';
 import { useAuthStore } from '@/src/stores/authStore';
+import LinkParentModal from '../components/linkToStudentModal';
 
 
 
@@ -40,13 +42,15 @@ export default function UserProfilePage() {
   const [summaryTermId, setSummaryTermId]   = useState<string | undefined>(undefined);
   // termId for the score-table filter — client-side only, no refetch
   const [scoreTermId, setScoreTermId]       = useState<string | undefined>(undefined);
+  const [linkParentOpen, setLinkParentOpen] = useState(false);
+
 
   const { data: userData, isLoading: userLoading, isError: userError } = useUserById(id);
   const user = userData?.data
   const isStudent = user?.role === 'STUDENT';
   const isTeacher = user?.role === 'TEACHER';
   const isParent = user?.role === "PARENT"
-  const summaryQueryEnabled = !userLoading && isStudent && summaryEnabled;
+  const summaryQueryEnabled = !userLoading && isStudent && summaryEnabled; //determines when to fire student's summary hook
   
   const {
     data: summary,
@@ -265,6 +269,7 @@ export default function UserProfilePage() {
                   variant="warning"
                 />
               )}
+              
 
               {isStudent && (
                 <ActionCard
@@ -273,6 +278,16 @@ export default function UserProfilePage() {
                   description="Load scores, attendance & report cards"
                   onClick={handleFetchSummary}
                   loading={summaryLoading}
+                  variant="info"
+                />
+              )}
+              {isStudent && (
+                <ActionCard
+                  icon={<UserPlus size={18} className="text-teal-600" />}
+                  title="Link Parent"
+                  description="Assign a parent/guardian to this student"
+                  onClick={() => setLinkParentOpen(true)}
+                  loading={false}
                   variant="info"
                 />
               )}
@@ -447,6 +462,13 @@ export default function UserProfilePage() {
           )}
         </div>
       </div>
+      {linkParentOpen && isStudent && (
+        <LinkParentModal
+          studentUserId={id}
+          studentName={`${user.firstName} ${user.lastName}`}
+          onClose={() => setLinkParentOpen(false)}
+        />
+      )}
     </div>
   );
 }
