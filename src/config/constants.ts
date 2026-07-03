@@ -108,9 +108,12 @@ export const API_ENDPOINTS = {
   PARENTS_GET: (id: string) => `/api/parents/${id}`,
   GET_PARENTS_LIST: () => `/api/admin/parents`,
   LINK_STUDENT_TO_PARENT: (studentId: string) => `/api/admin/students/${studentId}/link`,
+  GET_LINKED_STUDENTS: () => '/api/parents/students',
+  GET_STUDENT_SUMMARY: (studentId: string) => `/api/parents/students/${studentId}/summary`,
+  GET_STUDENT_REPORT_CARD: (reportCardId: string) => `/api/parents/students/report-card/${reportCardId}`,
 
   //Bursar
-  BURSAR_GET: (id: string) => `/api/bursar/${id}`,
+  BURSAR_GET: (id: string) => `/api/bursar/${id}`, 
 } as const;
 
 export const API_CONFIG = {

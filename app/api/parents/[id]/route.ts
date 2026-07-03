@@ -1,6 +1,6 @@
 import { Role } from "@/app/generated/prisma/enums";
 import { requireSchoolRoles } from "@/src/lib/middleware/requireRole";
-import { academicYearService, enrollmentService } from "@/src/services/academics/academic.service";
+import { parentService } from "@/src/services/parent/parent";
 import { studentService } from "@/src/services/student/student.service";
 import { ParamsContext } from "@/src/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -23,7 +23,7 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
     const { schoolId } = auth
     const { id } = await context.params
 
-    const result = studentService.getStudentById(id, schoolId)
+    const result = parentService.getParentById(id, schoolId)
     return result
 }
 

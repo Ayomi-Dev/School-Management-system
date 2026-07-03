@@ -1,5 +1,5 @@
 export type ParamsContext = {
-    params: Promise<{id: string}>
+    params: Promise<{id: string, studentId: string}>
 }
 
 export type ClassParamsContext = {

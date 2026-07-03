@@ -117,6 +117,16 @@ export async function resolveClassByName(
 
 }
 
+// ─── RESOLVE PARENT ──────────────────────────────────────────────────────────
+export async function resolveGuardian(parentUserId: string) {
+  const guardian = await prisma.guardian.findUnique({
+    where:  { userId: parentUserId },
+    select: { id: true },
+  });
+  return guardian?.id ?? null;
+}
+
+
 // ─────────────────────────────────────────────────────────────
 // SUBJECT
 // ─────────────────────────────────────────────────────────────
