@@ -1,6 +1,7 @@
 import { getApiClient } from '@/src/config/api';
 import { API_ENDPOINTS } from '@/src/config/constants';
-import { User, CreateUserRequest, PaginatedResponse } from '@/src/types/api';
+import { PaginatedResponse } from '@/src/types';
+import { User, CreateUserRequest, } from '@/src/types/api';
 
 const client = getApiClient();
 
@@ -11,7 +12,7 @@ export const userService = {
     limit = 20,
     filters?: { role?: string; search?: string }
   ): Promise<PaginatedResponse<User>> => {
-    const response = await client.get(API_ENDPOINTS.USERS_LIST(schoolId), {
+    const response = await client.get(API_ENDPOINTS.USERS_LIST, {
       params: { page, limit, ...filters },
     });
     return response.data;
@@ -39,7 +40,7 @@ export const userService = {
     query: string,
     role?: string
   ): Promise<User[]> => {
-    const response = await client.get(API_ENDPOINTS.USERS_LIST(schoolId), {
+    const response = await client.get(API_ENDPOINTS.USERS_LIST, {
       params: { search: query, role, limit: 10 },
     });
     return response.data.data;

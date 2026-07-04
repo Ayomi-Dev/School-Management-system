@@ -16,7 +16,6 @@ import { StudentCard } from './components/studentCard';
 
 export default function ParentDashboard() {
   const { data: students , isLoading, isError } = useLinkedStudents();
-  console.log('students', students);
 
   if (isLoading) {
     return (
@@ -36,7 +35,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 border-2 border-amber-400">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">My Children</h1>
@@ -45,7 +44,7 @@ export default function ParentDashboard() {
         </p>
       </div>
 
-      {/* {students.length === 0 ? (
+      {students?.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
           <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
             <Users size={28} className="text-gray-400" />
@@ -59,11 +58,11 @@ export default function ParentDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {students.map((student, i) => (
+          {students?.map((student, i) => (
             <StudentCard key={student.studentId} student={student} index={i} />
           ))}
         </div>
-      )} */}
+      )}
     </div>
   );
 }

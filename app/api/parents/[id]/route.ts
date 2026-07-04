@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export const GET = async(req: NextRequest, context: ParamsContext) => {
-    const auth = await requireSchoolRoles(req, ...[Role.STUDENT]);
+    const auth = await requireSchoolRoles(req, ...[Role.PARENT]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },
@@ -20,10 +20,9 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
             { status: 403 }
         )
     }
-    const { schoolId } = auth
     const { id } = await context.params
 
-    const result = parentService.getParentById(id, schoolId)
+    const result = parentService.getParentById(id)
     return result
 }
 

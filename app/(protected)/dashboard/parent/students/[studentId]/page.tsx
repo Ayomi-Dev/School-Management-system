@@ -83,6 +83,7 @@ function TermSelector({
 
   return (
     <div className="relative">
+      term
       <select
         value={selectedTermId ?? ''}
         onChange={(e) => onChange(e.target.value || undefined)}
@@ -477,7 +478,7 @@ export default function StudentDetailPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full mx-auto px-4 py-8 space-y-6">
       {/* Back */}
       <button
         onClick={() => router.back()}

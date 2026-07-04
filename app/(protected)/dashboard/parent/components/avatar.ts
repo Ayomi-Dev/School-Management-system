@@ -6,6 +6,6 @@ const AVATAR_GRADIENTS = [
   'from-amber-400 to-orange-500',
 ];
 
-function avatarGradient(index: number) {
+export function avatarGradient(index: number) {
   return AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length];
 }

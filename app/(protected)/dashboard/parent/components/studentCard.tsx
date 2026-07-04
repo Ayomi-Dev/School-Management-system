@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { attendanceColor } from "./attendanceColor";
 import { LinkedStudent } from "@/src/types/parent";
 import { BookOpen, ChevronRight, FileText, GraduationCap, TrendingUp } from "lucide-react";
+import { avatarGradient } from "./avatar";
 
 export function StudentCard({ student, index }: { student: LinkedStudent; index: number }) {
   const router  = useRouter();
@@ -13,7 +14,7 @@ export function StudentCard({ student, index }: { student: LinkedStudent; index:
 
   return (
     <button
-      onClick={() => router.push(`/parent/students/${student.studentId}`)}
+      onClick={() => router.push(`/dashboard/parent/students/${student.studentId}`)}
       className="group w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 overflow-hidden"
     >
       {/* Card top — coloured band */}

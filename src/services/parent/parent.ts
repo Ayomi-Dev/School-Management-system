@@ -3,12 +3,12 @@ import { prisma } from '@/src/lib/prisma/client';
 import { resolveGuardian } from '@/src/utils/resolvers';
 
 
-// ─── Service ──────────────────────────────────────────────────────────────────
+// ─── Service ───────
 
 export const parentService = {
-    async getParentById(parentId: string, schoolId: string) {
+    async getParentById(parentId: string) {
         const parent = await prisma.guardian.findUnique(
-            { where: { id: parentId } }
+            { where: { userId: parentId } }
         )
         if(!parent){
             return NextResponse.json(
@@ -16,7 +16,10 @@ export const parentService = {
                 { status: 404 }
             )
         }
-        return parent;
+        return NextResponse.json(
+            { data: parent },
+            { status: 200 }
+        );
     },
   // ───────────────────────────────────────────────────────────────────────────
   // GET /parent/students
@@ -129,8 +132,6 @@ export const parentService = {
           };
         }),
       );
-      console.log('[parentService.getLinkedStudents] enriched', enriched);
-
       return NextResponse.json({ data: enriched });
     } catch (error) {
       console.error('[parentService.getLinkedStudents]', error);

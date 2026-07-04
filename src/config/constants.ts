@@ -63,11 +63,7 @@ export const API_ENDPOINTS = {
 
   ADMIN_UPDATE_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
- 
- 
-  
-  
-  
+
   //Admin - Students
   ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/api/admin/students/${userId}/academic-summary`,
   
