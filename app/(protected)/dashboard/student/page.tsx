@@ -40,11 +40,11 @@ const StudentDashboardPage = ( ) => {
     
       // Flatten defensively in case the API ever returns nested arrays
       const subjects = (enrollmentData?.data?.class.subjects ?? []) as Subject[];
-      const selectedClass =( enrollmentData?.data.class) as Class
+      const selectedClass =( enrollmentData?.data?.class) as Class
       const termId = (enrollmentData?.data?.termId as string) ?? '';
       const { data: summaryData, isLoading: isSummaryLoading, isError: isSummaryError } =
         useStudentAcademicSummary({
-          studentId: profile?.id as string,
+          studentId: profile?.id as string, 
           schoolId,
           termId
       });

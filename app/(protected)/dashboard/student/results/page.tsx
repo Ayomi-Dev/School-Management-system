@@ -121,7 +121,6 @@ export default function ResultsPage() {
 
   const reportCards: ReportCard[] = data?.data?.reportCards ?? [];
   const allScores:   ScoreRecord[] = data?.data?.scores     ?? [];
-  console.log(data?.data)
 
   // ── Filter state ──────────────────────────────────────────────────────────
   // Build unique year options from report cards
@@ -162,7 +161,6 @@ export default function ResultsPage() {
     ? Math.round(scoredSubjects.reduce((acc, s) => acc + (s.totalScore ?? 0), 0) / scoredSubjects.length)
     : null;
   const tscore = allScores.reduce((acc, s) => acc + (s.totalScore ?? 0), 0)
-    console.log(activeCard, selectedCardId, selectedYearId)
   // ── Loading / error states ─────────────────────────────────────────────────
   if (isLoading) {
     return (

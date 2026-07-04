@@ -33,7 +33,6 @@ export default function SubjectsPage() {
   // Flatten defensively in case the API ever returns nested arrays
   const subjects = enrollmentData?.data?.class.subjects ?? [];
   const selectedClass = enrollmentData?.data.class;
-  console.log("selectedclass:")
 
   const isLoading = isYearsLoading || (isSubjectsLoading && !!yearId);
 

@@ -219,6 +219,8 @@ export interface ParentProfile {
   role: "PARENT";
   id: string;
   userId: string;
+  firstName: string;
+  lastName: string;
   user?: User;
   relationship?: string;
   occupation?: string;

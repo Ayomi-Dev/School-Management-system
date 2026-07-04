@@ -9,7 +9,6 @@ import { Loader } from '@/src/components/ui/Loader';
 
 const StudentProfilePage = () => {
   const { profile } = useProfileStore()
-  const router = useRouter()
   if(!profile){
     return <Loader />
   }

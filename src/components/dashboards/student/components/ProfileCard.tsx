@@ -4,11 +4,10 @@ import { Card } from '@/src/components/ui/Card';
 import { StudentProfile } from '@/src/types';
 
 interface ProfileCardProps {
-  profile: StudentProfile
+  profile: StudentProfile 
 }
 
 export function ProfileCard({ profile }: ProfileCardProps) {
-  
   const getInitials = (firstName?: string, lastName?: string): string => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
@@ -60,8 +59,8 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         </div>
 
         <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-          <p className="text-xs font-medium text-gray-600 uppercase mb-1">Guardians</p>
-          {/* <p className="text-lg font-semibold text-gray-800">{profile?.guardian.id}</p> */}
+          <p className="text-xs font-medium text-gray-600 uppercase mb-1">Guardian</p>
+          <p className="text-lg font-semibold text-gray-800">{profile?.guardian.firstName} {profile?.guardian.lastName}</p>
         </div>
       </div>
     </Card>
