@@ -15,7 +15,6 @@ export default function ClassesPage() {
   const classes = useMemo(() => classesData?.data.data || [], [classesData]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
-  console.log(classes)
 
   const [classToAssign, setClassToAssign] = useState<{
     id: string;

@@ -9,28 +9,60 @@ import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
 import { UserLoginInput } from '@/src/validators/userLoginSchema';
 
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') return error;
+
+  if (error && typeof error === 'object') {
+    const candidate = error as Record<string, unknown>;
+
+    if (typeof candidate.error === 'string') return candidate.error;
+    if (typeof candidate.message === 'string') return candidate.message;
+
+    const response = candidate.response;
+    if (response && typeof response === 'object') {
+      const responseData = (response as { data?: unknown }).data;
+      if (responseData && typeof responseData === 'object') {
+        const responsePayload = responseData as Record<string, unknown>;
+        if (typeof responsePayload.error === 'string') return responsePayload.error;
+        if (typeof responsePayload.message === 'string') return responsePayload.message;
+      }
+    }
+  }
+
+  return ERROR_MESSAGES.UNKNOWN_ERROR;
+};
+
 export const useLoginMutation = () => { //this is a mutation because it changes auth state
   const { setUser, setError: setAuthError } = useAuthStore();
   const { success, error: toastError } = useToast();
 
-  return useMutation({
-    mutationFn: async (credentials: UserLoginInput) => {
-      const result = await authService.login(credentials);
-      return result;
+  const loginMutation = useMutation({
+    mutationFn: async (data: UserLoginInput) => {
+      try {
+        return await authService.login(data);
+      } catch (error) {
+        const message = getErrorMessage(error);
+        setAuthError(message);
+        toastError(message);
+        return null;
+      }
     },
-    
     onSuccess: (data) => {
+      if (!data) return;
+
       // Backend handles token cookies - frontend only stores user
       setUser(data.user);
       success(SUCCESS_MESSAGES.LOGIN_SUCCESS);
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
     },
-    onError: (error: any) => {
-      const message = error?.error || ERROR_MESSAGES.UNKNOWN_ERROR;
-      setAuthError(message);
-      toastError(message);
-    },
-  });
+  })
+
+  const handleLogin = async (data: UserLoginInput) => {
+    await loginMutation.mutateAsync(data);
+    return loginMutation.isSuccess;
+  };
+
+  return { loginMutation, handleLogin };
 };
 
 export const useLogoutMutation = () => {
@@ -75,7 +107,7 @@ export const useRefreshAuthMutation = () => {
     },
     onError: (error: any) => {
       const message = error?.error || ERROR_MESSAGES.UNKNOWN_ERROR;
-      toastError(message); 
+      toastError(message);
     }
   })
 }
