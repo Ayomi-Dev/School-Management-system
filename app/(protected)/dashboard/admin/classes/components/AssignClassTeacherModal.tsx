@@ -18,7 +18,7 @@ interface AssignClassTeacherModalProps {
 
 /**
  * Calls POST /schools/:schoolId/classes/teacher (assignClassTeacher)
- * Body: { teacherEmployeeNumber, isClassTeacher, academicYearLabel, level }
+ * Body: { teacherId, isClassTeacher, academicYearLabel, level }
  *
  * academicYearLabel defaults to the currently active academic year so the
  * admin doesn't have to type it for the common case, but stays editable in
@@ -55,14 +55,13 @@ export default function AssignClassTeacherModal({
       return;
     }
     if (!academicYearLabel) {
-      console.log(academicYearLabel)
       setError('Enter an academic year (e.g. "2025/2026").');
       return;
     }
 
     mutate(
       {
-        teacherEmployeeNumber: selectedTeacher.employeeNumber,
+        teacherId: selectedTeacher.id,
         isClassTeacher,
         academicYearLabel: academicYearLabel,
         level: classLevel,
@@ -100,7 +99,7 @@ export default function AssignClassTeacherModal({
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Teacher Employee Number
+              Teacher
             </label> 
             <TeacherCombobox value={selectedTeacher} onChange={setSelectedTeacher} />
           </div>

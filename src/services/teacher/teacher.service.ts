@@ -4,7 +4,6 @@ import { computeTotalAndGrade, resolveAssessmentConfig } from "@/src/utils/gradi
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
 import { resolveAcademicYear, resolveClassByName, ResolverError, resolveScoreAccess, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { markAttendanceSchema } from "@/src/validators/attendanceSchema";
-import { compileSchema } from "@/src/validators/reportCardSchema";
 import { saveScoresSchema } from "@/src/validators/scoreSchema";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
 import { NextRequest, NextResponse } from "next/server";
@@ -45,7 +44,7 @@ export const teacherServices = {
         );
       }
 
-      const { subjectName, level, teacherNumber } = parsed.data;
+      const { subjectName, level, teacherId } = parsed.data;
       let teacher:     { id: string };
       let classRecord: { id: string; level: string; department: string | null };
       let term:        { id: string };
@@ -53,7 +52,7 @@ export const teacherServices = {
       try {
         // ── Step 1: resolve teacher + class + term in parallel (neither depends on the other)
         [teacher, classRecord, term] = await Promise.all([
-          resolveTeacher(schoolId, teacherNumber),
+          resolveTeacher(teacherId, schoolId),
           prisma.class.findFirst({
             where:  { schoolId, level },
             select: { id: true, level: true, department: true },
@@ -118,7 +117,7 @@ export const teacherServices = {
       });
 
       return NextResponse.json({
-        message:  `"${subjectName}" assigned to ${teacherNumber} for ${level}.`,
+        message:  `"${subjectName}" assigned to ${teacherId} for ${level}.`,
         data: assignment,
       });
     } 
@@ -147,7 +146,7 @@ export const teacherServices = {
         );
       }
  
-      const { subjectName, level, teacherNumber } = parsed.data;
+      const { subjectName, level, teacherId } = parsed.data;
 
       let teacher: { id: string };
       let subject: { id: string };
@@ -156,7 +155,7 @@ export const teacherServices = {
  
       try {
         [teacher, classRecord, subject, term] = await Promise.all([
-          resolveTeacher(schoolId, teacherNumber),
+          resolveTeacher(teacherId, schoolId),
           resolveClassByName(schoolId, level),
           resolveSubject(schoolId, subjectName),
           resolveTerm(schoolId)
@@ -197,7 +196,7 @@ export const teacherServices = {
   // Body: { teacherEmployeeNumber, isClassTeacher, academicYearLabel? }
   // className from route param; academicYearLabel defaults to current.
   // ----------------------------------------------------------------
-  async assignClassTeacher(req: NextRequest, schoolId: string, userId: string) {
+  async assignClassTeacher(req: NextRequest, schoolId: string) {
     try {
       const body = await req.json();
       const parsed = assignClassTeacherSchema.safeParse(body);
@@ -207,8 +206,9 @@ export const teacherServices = {
           { status: 400 }
         );
       }
- 
-      const { teacherEmployeeNumber, isClassTeacher, academicYearLabel, level } = parsed.data;
+  
+      const {teacherId, isClassTeacher, academicYearLabel, level } = parsed.data;
+      console.log("teacher id:", teacherId, "level:", level, "academicYearLabel:", academicYearLabel)
  
       let teacher:      { id: string  };
       let classRecord:  { level: ClassLevel; id: string; department: Department | null; } | null
@@ -216,7 +216,7 @@ export const teacherServices = {
  
       try {
         [teacher, classRecord, academicYear] = await Promise.all([
-          resolveTeacher(schoolId, userId),
+          resolveTeacher(teacherId, schoolId),
           resolveClassByName(schoolId, level),
           resolveAcademicYear(schoolId, academicYearLabel),
         ]);
@@ -225,7 +225,6 @@ export const teacherServices = {
         if (!classRecord) throw new ResolverError(`Class "${level}" not found.`);
       } catch (err) {
         if (err instanceof ResolverError) {
-          // console.log("error nature",err.statusCode)
           return NextResponse.json({ error: err.message }, { status: err.statusCode });
         }
         throw err;
@@ -242,7 +241,7 @@ export const teacherServices = {
         update: { isClassTeacher },
       });
       return NextResponse.json({
-        message: `${teacherEmployeeNumber} assigned to ${classRecord.level} (${academicYear.label}).`,
+        message: `${teacherId} assigned to ${classRecord.level} (${academicYear.label}).`,
         data: assignment,
       });
     } catch (error) {
@@ -257,16 +256,20 @@ export const teacherServices = {
   // ----------------------------------------------------------------
   async getAssignments(schoolId: string, userId: string, termPeriod?: TermPeriod) {
     try {
-      let teacher: { id: string; firstName: string; lastName: string; employeeNumber: string };
-      try {
-        teacher = await resolveTeacher(userId, schoolId);
-      } catch (err) { 
-        if (err instanceof ResolverError) {
-          return NextResponse.json({ error: err.message }, { status: err.statusCode });
+      // let teacher: { id: string; firstName: string; lastName: string; employeeNumber: string };
+      const teacher = await prisma.teacherProfile.findFirst(
+        {
+          where: { userId, schoolId},
+          select: { id: true, firstName: true, lastName: true, employeeNumber: true}
         }
-        throw err;
+      )
+      if(!teacher){
+        return NextResponse.json(
+          { error: "Teacher not found." },
+          { status: 404 }
+        )
       }
- 
+      
       // Optionally scope subject assignments to one term
       let termId: string | undefined;
       if (termPeriod) {
@@ -349,7 +352,6 @@ export const teacherServices = {
       return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
     }
   },
-
   async manageAttendance(req: NextRequest, userId: string,  classId: string) {
     try {
       const teacherProfile = await prisma.teacherProfile.findUnique(
@@ -649,7 +651,6 @@ export const teacherServices = {
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
   },
-
   async getScoreRoster( teacherId: string, classId: string, subjectId: string){
       try{
         const teacher = await prisma.teacherProfile.findUnique({
@@ -1245,5 +1246,294 @@ export const teacherServices = {
       console.error('[teacherService.getMySubjectAssignments]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
+  },
+  async getTeacherOverview(teacherId: string) {
+    try{
+      const teacher = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId },
+      select: { id: true, schoolId: true, firstName: true, lastName: true },
+    });
+    if (!teacher) {
+      return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+    }
+ 
+    // Resolve both assignment types and active term in parallel —
+    // all three are independent of each other.
+    const [classAssignment, subjectAssignments, term] = await Promise.all([
+      prisma.teacherClassAssignment.findUnique({
+        where: { teacherId: teacher.id },
+        select: {
+          isClassTeacher: true,
+          class: { select: { id: true, level: true } },
+        },
+      }),
+      prisma.subjectTeacher.findMany({
+        where: { teacherId: teacher.id },
+        select: {
+          subject: { select: { id: true, name: true } },
+          class:   { select: { id: true, level: true } },
+        },
+        orderBy: [{ class: { level: 'asc' } }, { subject: { name: 'asc' } }],
+      }),
+      prisma.term.findFirst({
+        where: { isCurrent: true },
+        select: { id: true, academicYearId: true },
+      }),
+    ]);
+ 
+    // ── CLASS TEACHER SECTION ────────────────────────────────────────────────
+ 
+    let classSection = null;
+ 
+    if (classAssignment && term) {
+      const classId = classAssignment.class.id;
+ 
+      // Normalize today to midnight for session lookup
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+ 
+      const [
+        studentCount,
+        todaySession,
+        reportCardCounts,
+        recentAttendanceSessions,
+        recentScores,
+        recentReportCards,
+      ] = await Promise.all([
+        // How many students in the class this academic year
+        prisma.enrollment.count({
+          where: { classId, academicYearId: term.academicYearId },
+        }),
+ 
+        // Today's daily session — tells us if attendance is done, in
+        // progress, or not started yet
+        prisma.classSession.findFirst({
+          where: { classId, date: today, label: 'daily' },
+          select: {
+            id: true,
+            isCompleted: true,
+            _count: { select: { attendances: true } },
+            attendances: {
+              where: { status: { not: 'UNMARKED' } },
+              select:  { id: true },
+            },
+          },
+        }),
+ 
+        // Report card compile/publish progress this term
+        prisma.reportCard.groupBy({
+          by:     ['status'],
+          where:  {
+            termId:  term.id,
+            student: {
+              enrollments: { some: { classId, academicYearId: term.academicYearId } },
+            },
+          },
+          _count: { status: true },
+        }),
+ 
+        // Last 5 attendance sessions for this class (activity feed)
+        prisma.classSession.findMany({
+          where:   { classId, termId: term.id, label: 'daily' },
+          orderBy: { date: 'desc' },
+          take:    5,
+          select:  {
+            id:          true,
+            date:        true,
+            isCompleted: true,
+            _count:      { select: { attendances: true } },
+          },
+        }),
+ 
+        // Last 5 score saves by this teacher for this class
+        prisma.score.findMany({
+          where: {
+            enteredById: teacher.id,
+            subject:     { classId },
+            termId:      term.id,
+          },
+          orderBy: { updatedAt: 'desc' },
+          take:    5,
+          select:  {
+            updatedAt: true,
+            student:   { select: { firstName: true, lastName: true } },
+            subject:   { select: { name: true } },
+            totalScore: true,
+          },
+        }),
+ 
+        // Last 5 report card compiles for this class this term
+        prisma.reportCard.findMany({
+          where: {
+            termId:  term.id,
+            student: {
+              enrollments: { some: { classId, academicYearId: term.academicYearId } },
+            },
+          },
+          orderBy: { updatedAt: 'desc' },
+          take:    5,
+          select:  {
+            id:        true,
+            status:    true,
+            updatedAt: true,
+            student:   { select: { firstName: true, lastName: true } },
+          },
+        }),
+      ]);
+ 
+      // Compute today's attendance state
+      const markedCount    = todaySession?.attendances.length ?? 0;
+      const totalInSession = todaySession?._count.attendances ?? 0;
+      const attendanceState = !todaySession
+        ? 'not_started'
+        : todaySession.isCompleted
+        ? 'completed'
+        : markedCount > 0
+        ? 'in_progress'
+        : 'not_started';
+ 
+      // Report card progress counts
+      const rcByStatus: Record<string, number> = {};
+      reportCardCounts.forEach((row) => {
+        rcByStatus[row.status] = row._count.status;
+      });
+      const totalEnrolled   = studentCount;
+      const compiledCount   = (rcByStatus['DRAFT'] ?? 0) + (rcByStatus['PUBLISHED'] ?? 0);
+      const publishedCount  = rcByStatus['PUBLISHED'] ?? 0;
+      const pendingCount    = totalEnrolled - compiledCount;
+ 
+      // Build unified activity feed — merge attendance, scores, report
+      // cards into one list, sort by date desc, take top 5.
+      const activityEvents = [
+        ...recentAttendanceSessions.map((s) => ({
+          type:      'attendance' as const,
+          label:     s.isCompleted ? 'Attendance marked' : 'Attendance started',
+          detail:    `${s._count.attendances} students · ${
+            s.isCompleted ? 'Complete' : 'Incomplete'
+          }`,
+          timestamp: s.date,
+        })),
+        ...recentScores.map((s) => ({
+          type:      'score' as const,
+          label:     `Score entered — ${s.subject.name}`,
+          detail:    `${s.student.firstName} ${s.student.lastName}${
+            s.totalScore != null ? ` · ${s.totalScore}/100` : ''
+          }`,
+          timestamp: s.updatedAt,
+        })),
+        ...recentReportCards.map((r) => ({
+          type:      'report_card' as const,
+          label:     r.status === 'PUBLISHED' ? 'Report card published' : 'Report card compiled',
+          detail:    `${r.student.firstName} ${r.student.lastName}`,
+          timestamp: r.updatedAt,
+        })),
+      ]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 5);
+ 
+      classSection = {
+        classId:        classId,
+        className:      classAssignment.class.level,
+        isClassTeacher: classAssignment.isClassTeacher,
+        studentCount,
+        attendance: {
+          state:        attendanceState,
+          markedCount,
+          totalCount:   totalInSession,
+          sessionId:    todaySession?.id ?? null,
+        },
+        reportCards: {
+          totalEnrolled,
+          compiledCount,
+          publishedCount,
+          pendingCount,
+        },
+        recentActivity: activityEvents,
+      };
+    }
+ 
+    // ── SUBJECT TEACHER SECTION ──────────────────────────────────────────────
+ 
+    let subjectSection = null;
+ 
+    if (subjectAssignments.length > 0 && term) {
+      // For each unique class the teacher teaches subjects in, get the
+      // most recent score they entered per subject.
+      const subjectIds = [...new Set(subjectAssignments.map((a) => a.subject.id))];
+ 
+      const recentSubjectScores = await prisma.score.findMany({
+        where: {
+          enteredById: teacher.id,
+          subjectId:   { in: subjectIds },
+          termId:      term.id,
+        },
+        orderBy: { updatedAt: 'desc' },
+        take:    5,
+        select:  {
+          updatedAt: true,
+          student:   { select: { firstName: true, lastName: true } },
+          subject:   { select: { id: true, name: true } },
+          caScore:   true,
+          examScore: true,
+          totalScore: true,
+        },
+      });
+ 
+      // Group subject assignments by class for the summary cards
+      const classSummaryMap = new Map<
+        string,
+        { classId: string; className: string; subjects: { subjectId: string; subjectName: string; lastEntryAt: Date | null }[] }
+      >();
+ 
+      for (const a of subjectAssignments) {
+        const key = a.class.id;
+        if (!classSummaryMap.has(key)) {
+          classSummaryMap.set(key, {
+            classId:   a.class.id,
+            className: a.class.level,
+            subjects:  [],
+          });
+        }
+        // Find last score entry for this subject
+        const lastScore = recentSubjectScores.find(
+          (s) => s.subject.id === a.subject.id,
+        );
+        classSummaryMap.get(key)!.subjects.push({
+          subjectId:   a.subject.id,
+          subjectName: a.subject.name,
+          lastEntryAt: lastScore?.updatedAt ?? null,
+        });
+      }
+ 
+      const activityFeed = recentSubjectScores.map((s) => ({
+        type:      'score' as const,
+        label:     `Score entered — ${s.subject.name}`,
+        detail:    `${s.student.firstName} ${s.student.lastName}${
+          s.totalScore != null ? ` · ${s.totalScore}/100` : ''
+        }`,
+        timestamp: s.updatedAt,
+      }));
+ 
+      subjectSection = {
+        classes:        Array.from(classSummaryMap.values()),
+        recentActivity: activityFeed,
+      };
+    }
+ 
+    return NextResponse.json({
+      data: {
+        teacher: {
+          firstName: teacher.firstName,
+          lastName:  teacher.lastName,
+        },
+        classSection,
+        subjectSection,
+      },
+    });
+  } 
+  catch (error) {
+    console.error('[teacherService.getOverview]', error);
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
   }
+}
 }

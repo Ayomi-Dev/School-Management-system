@@ -47,7 +47,7 @@ export default function AssignSubjectTeacherModal({
       {
         subjectName,
         level: classLevel,
-        teacherNumber: selectedTeacher.employeeNumber,
+        teacherId: selectedTeacher.id,
       },
       {
         onSuccess: () => onSuccess(),

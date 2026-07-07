@@ -36,5 +36,18 @@ export const useMySubjectAssignments = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export const useTeacherOverview = () => {
+  return useQuery({
+    queryKey: ['teacher', 'overview'],
+    queryFn:  () => teacherService.getOverview(),
+    // Overview is the first thing a teacher sees — keep stale time short
+    // so it reflects recent marking/score activity without needing a manual
+    // refresh. 60s is a reasonable balance between freshness and request
+    // volume.
+    staleTime: 60 * 1000,
+  });
+}
+
  
  

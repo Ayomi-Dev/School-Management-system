@@ -53,7 +53,7 @@ export interface AssignedClass {
   }
 }
 export interface AssignClassTeacherPayload {
-  teacherEmployeeNumber: string;
+  teacherId: string;
   isClassTeacher: boolean;
   academicYearLabel: string;
   level: string;
@@ -85,7 +85,7 @@ export interface TeacherSidebarProps {
 export interface AssignSubjectTeacherPayload {
   subjectName: string;
   level: string;
-  teacherNumber: string;
+  teacherId: string;
 }
  
 export interface AssignSubjectTeacherResponse {
@@ -240,6 +240,56 @@ export interface ScoreSheetResponse {
     meta: { termId: string, term: TermPeriod };
   };
 }
+
+// ─── ACTIVITY LOG  FOR TEACHER OVERVIEW DATA─────────────────────────────────────────────────────────────
+export type ActivityEventType = 'attendance' | 'score' | 'report_card';
+ 
+export interface ActivityEvent {
+  type:      ActivityEventType;
+  label:     string;
+  detail:    string;
+  timestamp: string;
+}
+ 
+export type AttendanceState = 'not_started' | 'in_progress' | 'completed';
+ 
+export interface TeacherOverviewResponse {
+  data: {
+    teacher: { firstName: string; lastName: string };
+    classSection: {
+      classId:        string;
+      className:      string;
+      isClassTeacher: boolean;
+      studentCount:   number;
+      attendance: {
+        state:      AttendanceState;
+        markedCount: number;
+        totalCount:  number;
+        sessionId:   string | null;
+      };
+      reportCards: {
+        totalEnrolled:  number;
+        compiledCount:  number;
+        publishedCount: number;
+        pendingCount:   number;
+      };
+      recentActivity: ActivityEvent[];
+    } | null;
+    subjectSection: {
+      classes: {
+        classId:   string;
+        className: string;
+        subjects: {
+          subjectId:   string;
+          subjectName: string;
+          lastEntryAt: string | null;
+        }[];
+      }[];
+      recentActivity: ActivityEvent[];
+    } | null;
+  };
+}
+ 
  
 
 // ─── NAV FACTORY ──────────────────────────────────────────────────────────────
@@ -256,7 +306,7 @@ export function buildClassNavSections(classId: string): NavSection[] {
       items: [
         {
           label: 'Overview',
-          href: base,
+          href: `/dashboard/teacher`,
           icon: '🏫',
         },
         {
@@ -271,14 +321,14 @@ export function buildClassNavSections(classId: string): NavSection[] {
             },
             {
               label: 'Student Profiles',
-              href: `${base}/students/profiles`,
+              href: `#`,
               icon: '👤',
             },
           ],
         },
         {
           label: 'Attendance',
-          href: `${base}/attendance/mark`,
+          href: `#`,
           icon: '✅',
           children: [
             {

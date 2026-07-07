@@ -13,6 +13,6 @@ export const POST = async(req: NextRequest) => {
     }
 
     const { schoolId } = auth
-    const result = await teacherServices.assignClassTeacher(req, schoolId as string, auth.userId);
+    const result = await teacherServices.assignClassTeacher(req, schoolId as string);
     return result;
 }

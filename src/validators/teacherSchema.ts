@@ -39,7 +39,7 @@ export const assignSubjectToTeacherSchema = z.object({
   subjectName:  z.string().min(1),    // resolved to Subject by name within school
   level:    classLevelEnum,    // resolved to Class by name within school
   // termId resolved server-side from current active term unless overridden
-  teacherNumber: z.string().min(1)
+  teacherId: z.string().min(1)
 });
 
 
@@ -49,7 +49,7 @@ export const assignSubjectToTeacherSchema = z.object({
 // Route: POST /schools/:schoolId/classes/:className/teacher
 export const assignClassTeacherSchema = z.object({
   level: classLevelEnum,
-  teacherEmployeeNumber: z.string().min(1),
+  teacherId: z.string().min(1),
   isClassTeacher:        z.boolean().default(false),
   // academicYearLabel optional — falls back to current active year
   academicYearLabel:     z.string().optional(),

@@ -47,6 +47,7 @@ export interface TeacherListItem {
   firstName: string;
   lastName: string;
   department?: string | null;
+  classAssignment: { isClassTeacher: boolean; }
 }
  
 export interface TeachersListParams {

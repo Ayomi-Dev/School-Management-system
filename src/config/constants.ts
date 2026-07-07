@@ -91,6 +91,7 @@ export const API_ENDPOINTS = {
   GET_MY_STUDENTS: (classId: string) => `/api/teachers/class/${classId}/students`,
   GET_SCORE_SHEET: (classId: string) => `/api/teachers/class/${classId}/scores/sheet`,
   GET_SUBJECT_ASSIGNMENTS: `/api/teachers/me/subject-assignments`,
+  GET_OVERVIEW: `/api/teachers/me/overview`,
 
   //Report cards
   COMPILE_REPORT_CARDS: (classId: string) => `/api/teachers/class/${classId}/report-cards/compile`,

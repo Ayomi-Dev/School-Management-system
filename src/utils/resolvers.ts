@@ -152,7 +152,7 @@ export async function resolveSubject(schoolId: string, subjectName: string) {
 
 export async function resolveTeacher(userId: string, schoolId: string, ) {
   const teacher = await prisma.teacherProfile.findFirst({
-    where: { userId, schoolId, },
+    where: { id: userId, schoolId },
     select: { id: true, firstName: true, lastName: true, employeeNumber: true, classAssignment: true },
   });
 
@@ -161,7 +161,6 @@ export async function resolveTeacher(userId: string, schoolId: string, ) {
       `Teacher with  not found.`
     );
   }
-
   return teacher;
 }
 

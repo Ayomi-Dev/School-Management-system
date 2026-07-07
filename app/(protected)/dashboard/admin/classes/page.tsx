@@ -44,7 +44,7 @@ export default function ClassesPage() {
       </div>
 
       {/* Classes Grid */}
-      {isLoading ? (
+      {isLoading ? ( 
         <div className="flex items-center justify-center h-96">
           <Loader />
         </div>

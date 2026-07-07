@@ -69,7 +69,7 @@ export function TeacherCombobox({
       {/* Selected teacher chip (shown when closed and a value exists) */}
       {value && !isOpen && (
         <p className="mt-1.5 text-xs text-gray-500">
-          {value.employeeNumber}
+          {value.firstName} {value.lastName} ({value.employeeNumber})
         </p>
       )}
 
@@ -100,12 +100,18 @@ export function TeacherCombobox({
                           firstName: teacher.firstName,
                           lastName: teacher.lastName,
                         })
+                    
                       }
+                      disabled={teacher.classAssignment && teacher.classAssignment.isClassTeacher}
                       className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors ${
                         isSelected
                           ? 'bg-blue-50 text-blue-700 font-medium'
                           : 'hover:bg-gray-50 text-gray-700'
-                      }`}
+                        }
+                        ${teacher.classAssignment && teacher.classAssignment.isClassTeacher
+                          ? 'opacity-50 cursor-not-allowed'
+                          : ''}`
+                        }
                     >
                       <span>
                         <span className="font-medium">

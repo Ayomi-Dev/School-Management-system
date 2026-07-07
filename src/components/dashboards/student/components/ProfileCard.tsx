@@ -60,7 +60,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
         <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
           <p className="text-xs font-medium text-gray-600 uppercase mb-1">Guardian</p>
-          <p className="text-lg font-semibold text-gray-800">{profile?.guardian.firstName} {profile?.guardian.lastName}</p>
+          <p className="text-lg font-semibold text-gray-800">{profile?.guardian?.firstName} {profile?.guardian?.lastName}</p>
         </div>
       </div>
     </Card>

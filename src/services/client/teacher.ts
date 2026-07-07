@@ -1,7 +1,7 @@
 import { getApiClient } from "@/src/config/api";
 import { API_ENDPOINTS } from "@/src/config/constants";
 import { PaginatedResponse, SaveScoresPayload, ScoreHistoryEntry, ScoreHistoryParams, ScoreRosterResponse, StudentProfile, TeacherProfile } from "@/src/types";
-import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudentsResponse, MySubjectAssignmentsResponse, MySubjectsResponse, ScoreSheetResponse } from "@/app/(protected)/dashboard/teacher/components/teacher";
+import { AssignedClass, AttendanceHistoryEntry, AttendanceHistoryParams, DailyRosterResponse, MarkAttendancePayload, MyStudentsResponse, MySubjectAssignmentsResponse, MySubjectsResponse, ScoreSheetResponse, TeacherOverviewResponse } from "@/app/(protected)/dashboard/teacher/components/teacher";
 
 
 
@@ -91,6 +91,8 @@ export const teacherService = {
     compileReportCards: async(classId: string) => {
       const response = await client.post(API_ENDPOINTS.COMPILE_REPORT_CARDS(classId))
       return response.data
-    }
+    },
+    getOverview: (): Promise<TeacherOverviewResponse> =>
+    client.get(API_ENDPOINTS.GET_OVERVIEW).then(r => r.data),
 }
 
