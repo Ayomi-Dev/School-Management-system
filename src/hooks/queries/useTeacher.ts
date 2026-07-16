@@ -12,11 +12,11 @@ export const useMyClass = () => {
 
 
 export const useMyClassStudents = (classId: string) => {
-    return useQuery({
-        queryKey: queryKeys.teachers.myStudents(),
-        queryFn: () => teacherService.getStudentsForMyClass(classId),
-        enabled: !!classId,
-    })
+  return useQuery({
+    queryKey: queryKeys.teachers.myStudents(),
+    queryFn: () => teacherService.getStudentsForMyClass(classId),
+    enabled: !!classId,
+  })
 }
 
 export const useMySubjectsForClass = (classId: string) => {

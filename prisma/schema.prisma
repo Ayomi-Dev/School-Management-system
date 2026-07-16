@@ -153,6 +153,7 @@ model School {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  branding  SchoolBranding?
 
   users           User[]
   academicYears   AcademicYear[]
@@ -169,6 +170,34 @@ model School {
   createdBy   SuperAdminProfile? @relation("SchoolCreatedBy", fields:   [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction )
 
   @@map("schools")
+}
+ 
+model SchoolBranding {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  schoolId     String   @unique @db.ObjectId
+ 
+  // Colours — stored as hex strings e.g. "#1D4ED8"
+  primaryColor String?
+  accentColor  String?
+ 
+  // Logo & favicon — store the full public URL after upload
+  logoUrl      String?
+  faviconUrl   String?
+ 
+  // Identity fields
+  motto        String?
+  address      String?
+  phone        String?
+  email        String?
+  website      String?
+ 
+  // Report card footer text (printed on student report cards)
+  reportCardFooter String?
+ 
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+ 
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================

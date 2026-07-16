@@ -54,18 +54,24 @@ export const API_ENDPOINTS = {
   GET_STATS: `/api/admin/stats`,
   ADMIN_PUBLISH_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}/publish`,
-
   ADMIN_UNPUBLISH_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}/unpublish`,
-
   GET_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
-
   ADMIN_UPDATE_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
 
   //Admin - Students
   ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/api/admin/students/${userId}/academic-summary`,
+
+
+  //Admin - school branding
+  /** GET  /admin/school/branding */
+  GET_SCHOOL_BRANDING: () => '/api/admin/school/branding',
+  /** PATCH /admin/school/branding — body: UpdateSchoolBrandingBody */
+  UPDATE_SCHOOL_BRANDING: () => '/admin/school/branding',
+  /** POST /admin/school/branding/logo-upload-url */
+  GET_LOGO_UPLOAD_URL: () => '/api/admin/school/branding/logo-upload-url',
   
   
 

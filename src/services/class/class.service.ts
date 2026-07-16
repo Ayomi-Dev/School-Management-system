@@ -63,6 +63,7 @@ export const classService = {
       );
     }
     const order = _levelOrder(level)
+    
 
     const classLevel = await prisma.class.create({
       data: { 

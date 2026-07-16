@@ -12,7 +12,6 @@ import { ClassTeacherSection, SubjectTeacherSection } from './components/overvii
 
 export default function TeacherDashboardPage() {
   const { data, isLoading, error } = useTeacherOverview();
-
   const overview     = data?.data;
   const classSection = overview?.classSection;
   const subSection   = overview?.subjectSection;
@@ -37,7 +36,6 @@ export default function TeacherDashboardPage() {
       </Card>
     );
   }
-
   const hasNothing = !classSection && !subSection;
 
   return (

@@ -29,7 +29,7 @@ const ACTIVITY_ICON: Record<string, React.ReactNode> = {
   score:       <ClipboardList size={15} className="text-blue-600"    />,
   report_card: <FileText size={15} className="text-violet-600"  />,
 };
-
+ 
 // ─── activity feed ────────────────────────────────────────────────────────────
 
 function ActivityFeed({ events }: { events: ActivityEvent[] }) {
@@ -168,7 +168,7 @@ export function ClassTeacherSection({
             router.push(`/dashboard/teacher/classes/${section.classId}/students/list`)
           }
           className="text-xs text-emerald-600 hover:text-emerald-700 font-medium
-                     flex items-center gap-1"
+                     flex items-center gap-1 cursor-pointer"
         >
           View students <ArrowRight size={12} />
         </button>
