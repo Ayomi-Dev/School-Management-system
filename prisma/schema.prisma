@@ -139,6 +139,14 @@ enum PaymentStatus {
   PAID
   NOT_PAID
 }
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+ 
 // ============================================================
 // SCHOOL
 // ============================================================
@@ -164,6 +172,7 @@ model School {
   feeStructures   FeeStructure[]
   announcements   Announcement[]
   notifications   Notification[]
+  timetableSlots TimetableSlot[]
   assessmentConfit AssessmentConfig?
   gradeScales GradeScale[]
   createdById  String?            @map("created_by_id") @db.ObjectId
@@ -365,6 +374,7 @@ model Class {
   feeStructures      FeeStructure[]
   announcements      Announcement[]
   subjects           Subject[]
+  timetableSlots     TimetableSlot[]
 
   @@unique([schoolId, level])
   @@index([schoolId])
@@ -382,11 +392,43 @@ model Subject {
   scores          Score[]
   subjectTeachers SubjectTeacher[]
   class      Class                 @relation(fields: [classId], references: [id], onDelete: Cascade)
+  timetableSlots TimetableSlot[]
 
   @@unique([classId, name])   // "Mathematics" is unique per class, not per school
   @@index([schoolId])
   @@map("subjects")
 }
+
+
+model TimetableSlot {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+ 
+  classId   String    @db.ObjectId
+  subjectId String    @db.ObjectId
+  teacherId String    @db.ObjectId   // TeacherProfile.id
+ 
+  dayOfWeek DayOfWeek
+  startTime String    // "08:00"  — stored as HH:MM string
+  endTime   String    // "09:00"
+  room      String?
+ 
+  schoolId  String    @db.ObjectId   // denormalised for fast school-scoped queries
+ 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+ 
+  class    Class          @relation(fields: [classId],   references: [id], onDelete: Cascade)
+  subject  Subject        @relation(fields: [subjectId], references: [id])
+  teacher  TeacherProfile @relation(fields: [teacherId], references: [id])
+  school   School         @relation(fields: [schoolId],  references: [id])
+ 
+  // A class cannot have two slots that start at the same time on the same day
+  @@unique([classId, dayOfWeek, startTime])
+ 
+  // A teacher cannot be double-booked at the same time on the same day
+  @@unique([teacherId, dayOfWeek, startTime])
+}
+ 
 
 model CodeCounter {
   id       String  @id @default(auto()) @map("_id") @db.ObjectId
@@ -501,6 +543,7 @@ model TeacherProfile {
   classSessions     ClassSession[]
   attendancesMarked Attendance[]             @relation("AttendanceMarkedBy")
   scoresEntered     Score[]                  @relation("ScoreEnteredBy")
+  timetableSlots    TimetableSlot[]
   qualification     String?
   employeeType      EmployeeType?           @map("employee_type")
 
