@@ -335,3 +335,11 @@ export async function resolveScoreAccess(
 
   return { allowed: false, reason: null };
 }
+
+export async function resolveAdminSchool(adminId: string) {
+  const admin = await prisma.user.findUnique({
+    where:  { id: adminId, role: "ADMIN" },
+    select: { schoolId: true },
+  });
+  return admin?.schoolId ?? null;
+}
