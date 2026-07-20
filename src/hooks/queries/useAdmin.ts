@@ -11,6 +11,8 @@ import { CreateUserFormData } from '@/src/validators/adminSchema';
 import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { TeachersListParams, UserStatus } from '@/src/types';
 import { queryClient } from '@/src/lib/queryClient';
+import { timetableService } from '@/src/services/client/timetable';
+import { CreateTimetableSlotBody, UpdateTimetableSlotBody } from '@/src/types/timetable';
 
 const queryKeys = {
   admin: ['admin'],
@@ -24,14 +26,15 @@ const queryKeys = {
   academicYears: () => [...queryKeys.admin, 'academicYears'],
   academicYearById: (id: string) => [...queryKeys.admin, 'academicYears', id],
   terms: (academicYearId: string) => [...queryKeys.admin, 'terms', academicYearId],
-  timetable: (classId?: string) => [...queryKeys.admin, 'timetable', classId],
   reports: () => [...queryKeys.admin, 'reports'],
   settings: () => [...queryKeys.admin, 'settings'],
   teachers: () => [...queryKeys.admin, 'subjects'],
   reportCard:       (reportCardId: string) => ['admin-report-card', reportCardId] as const,
   academicSummary: (userId: string, termId?: string) => ['admin-academic-summary', userId, termId ?? 'all'] as const,
   classScoreSheet: (classId: string) => ['admin-class-scoresheet', classId] as const,
-  parentsList: ()=> ['admin-parents-list']               as const,
+  parentsList: ()=> ['admin-parents-list'] as const,
+  timetable:    (classId: string) => ['timetable', classId]         as const,
+  classTeachers:(classId: string) => ['timetable-teachers', classId] as const,
 };
 
 // Stats Queries
@@ -357,14 +360,67 @@ export const useCreateAcademicYearMutation = () => {
 };
 
 // Timetable Queries
-export const useTimetable = (classId?: string) => {
-  return useQuery({
+export const useClassTimetable = (classId: string) =>
+  useQuery({
     queryKey: queryKeys.timetable(classId),
-    queryFn: () => adminService.getTimetable(classId),
-    enabled: !!classId,
-    staleTime: 5 * 60 * 1000,
+    queryFn:  () => timetableService.getTimetable(classId),
+    enabled:  !!classId,
+  });
+ 
+// Fetched only when the create/edit modal opens (enabled flag).
+export const useClassTeachers = (classId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: queryKeys.classTeachers(classId),
+    queryFn:  () => timetableService.getClassTeachers(classId),
+    enabled:  enabled && !!classId,
+    staleTime: 60_000,
+  });
+ 
+export const useCreateSlotMutation = (classId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (body: CreateTimetableSlotBody) =>
+      timetableService.createSlot(classId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
+      success('Timetable slot added');
+    },
+    onError: (err: Error) => error(err.message ?? 'Failed to add slot'),
   });
 };
+ 
+export const useUpdateSlotMutation = (classId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: ({ slotId, body }: { slotId: string; body: UpdateTimetableSlotBody }) =>
+      timetableService.updateSlot(classId, slotId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
+      success('Slot updated');
+    },
+    onError: (err: Error) => error(err.message ?? 'Failed to update slot'),
+  });
+};
+ 
+export const useDeleteSlotMutation = (classId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error } = useToast();
+ 
+  return useMutation({
+    mutationFn: (slotId: string) => timetableService.deleteSlot(classId, slotId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
+      success('Slot removed');
+    },
+    onError: () => error('Failed to delete slot'),
+  });
+};
+
+
 
 // Settings Queries
 export const useSettings = () => {
