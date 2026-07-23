@@ -14,3 +14,20 @@ export const USER_SELECT = { //Defines a reusable selection set for Prisma queri
   userCode:           true,
   lastLoginAt: true
 } as const;
+
+export const SLOT_SELECT = {
+  id:        true,
+  classId:   true,
+  dayOfWeek: true,
+  startTime: true,
+  endTime:   true,
+  room:      true,
+  subject: { select: { id: true, name: true, code: true } },
+  teacher: {
+    select: {
+      id:   true,
+      user: { select: { id: true, firstName: true, lastName: true } },
+    },
+  },
+} as const;
+ 

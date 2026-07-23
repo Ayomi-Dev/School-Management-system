@@ -3,5 +3,10 @@ export type ParamsContext = {
 }
 
 export type ClassParamsContext = {
-    params: Promise<{ classId: string, subjectId: string, reportCardId: string}>
+    params: Promise<{ 
+        classId: string, 
+        subjectId: string, 
+        reportCardId: string,
+        slotId: string
+    }>
 }

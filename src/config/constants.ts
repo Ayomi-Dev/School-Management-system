@@ -64,23 +64,23 @@ export const API_ENDPOINTS = {
   //Timetable
   /** GET  /admin/classes/:classId/timetable */
   GET_TIMETABLE: (classId: string) =>
-    `/admin/classes/${classId}/timetable`,
+    `/api/admin/classes/${classId}/timetable`,
  
   /** GET  /admin/classes/:classId/timetable/teachers */
   GET_CLASS_TEACHERS: (classId: string) =>
-    `/admin/classes/${classId}/timetable/teachers`,
+    `/api/admin/classes/${classId}/timetable/teachers`,
  
   /** POST /admin/classes/:classId/timetable */
   CREATE_SLOT: (classId: string) =>
-    `/admin/classes/${classId}/timetable`,
+    `/api/admin/classes/${classId}/timetable`,
  
   /** PATCH /admin/classes/:classId/timetable/:slotId */
   UPDATE_SLOT: (classId: string, slotId: string) =>
-    `/admin/classes/${classId}/timetable/${slotId}`,
+    `/api/admin/classes/${classId}/timetable/${slotId}`,
  
   /** DELETE /admin/classes/:classId/timetable/:slotId */
   DELETE_SLOT: (classId: string, slotId: string) =>
-    `/admin/classes/${classId}/timetable/${slotId}`,
+    `/api/admin/classes/${classId}/timetable/${slotId}`,
 
   //Admin - Students
   ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/api/admin/students/${userId}/academic-summary`,
