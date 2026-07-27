@@ -120,7 +120,7 @@ export const adminService = {
   getAcademicYearById: (id: string) => createApiClient().get(`${API_BASE}/academic-years/${id}`),
 
   createAcademicYear: (data: CreateAcademicYearRequest) =>
-    createApiClient().post(`${API_BASE}/academic-years`, data),
+    createApiClient().post(`${API_BASE}/academics`, data),
 
   updateAcademicYear: (id: string, data: Partial<CreateAcademicYearRequest>) =>
     createApiClient().put(`${API_BASE}/academic-years/${id}`, data),

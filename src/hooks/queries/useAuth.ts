@@ -112,7 +112,6 @@ export const useRefreshAuthMutation = () => {
   })
 }
 
-
 export const useAccountSetupMutation = () => {
   const { success, error: toastError } = useToast();
 

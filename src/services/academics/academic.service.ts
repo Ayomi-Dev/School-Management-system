@@ -2,6 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { TermPeriod } from "@/app/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
 import { resolveTermByPeriod } from "@/src/utils/resolvers";
+import { createAcademicYearSchema } from "@/src/validators/schoolSchema";
 
 
 // ACADEMIC YEAR SERVICE
@@ -18,9 +19,20 @@ export const academicYearService = {
    * If isCurrent=true, unsets any existing current year first.
    */
     async createAcademicYear( 
+      req: NextRequest,
       tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
       schoolId: string,
-      {label, startDate, endDate, isCurrent}: AcademicYearType) {
+      ) {
+        const body = await req.json()
+        const parsedBody = createAcademicYearSchema.safeParse(body)
+        if(!parsedBody.success){
+          return NextResponse.json(
+            { error: "validation failed", details: parsedBody.error.flatten().fieldErrors },
+            { status: 400 }
+          )
+        }
+
+        const { label, startDate, endDate, isCurrent } = parsedBody.data
         // Demotes existing current year if setting a new one
         if (isCurrent) {
           await tx.academicYear.updateMany({
@@ -29,10 +41,15 @@ export const academicYearService = {
           });
         }
         
-        return tx.academicYear.create({
-          data: { schoolId, label, startDate, endDate, isCurrent: isCurrent ?? false },
-        });
-    },
+        return  NextResponse.json(
+          {
+            message: "Academic year created.",
+            data: await tx.academicYear.create({
+            data: { schoolId, label, startDate, endDate, isCurrent: isCurrent ?? false },
+          }),
+        }, { status: 201 } 
+        );
+      },
  
     async listAllAcademicYears(schoolId: string) {
       try {
@@ -183,7 +200,7 @@ export const termService = {
 
  
     async updateTerm(schoolId: string, {
-        academicYearId, period, startDate, endDate, isCurrent
+      academicYearId, period, startDate, endDate, isCurrent
     }: TermType) {
       try {
         const termId = await resolveTermByPeriod(schoolId, period, academicYearId).then(t => t.id);

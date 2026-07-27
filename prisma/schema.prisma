@@ -399,7 +399,6 @@ model Subject {
   @@map("subjects")
 }
 
-
 model TimetableSlot {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
  
@@ -429,7 +428,6 @@ model TimetableSlot {
   @@unique([teacherId, dayOfWeek, startTime])
 }
  
-
 model CodeCounter {
   id       String  @id @default(auto()) @map("_id") @db.ObjectId
   schoolId String  @map("school_id") @db.ObjectId
@@ -440,7 +438,6 @@ model CodeCounter {
 
   @@unique([schoolId, type, year, term])
 }
-
 // ============================================================
 // STUDENTS
 // ============================================================
@@ -498,7 +495,6 @@ model StudentProfile {
   @@index([guardianId])       // ← index for guardian lookups
   @@map("student_profiles")
 }
-
 
 model Enrollment {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId

@@ -10,7 +10,6 @@ import {
 import { CreateUserFormData } from '@/src/validators/adminSchema';
 import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
 import { TeachersListParams, UserStatus } from '@/src/types';
-import { queryClient } from '@/src/lib/queryClient';
 import { timetableService } from '@/src/services/client/timetable';
 import { CreateTimetableSlotBody, UpdateTimetableSlotBody } from '@/src/types/timetable';
 
@@ -276,7 +275,6 @@ export const useTeachersList = (params?: TeachersListParams) => {
   });
 };
 
-
 // Subject Queries
 export const useSubjectsList = (params?: { page?: number; limit?: number; search?: string }) => {
   return useQuery({
@@ -384,8 +382,8 @@ export const useCreateSlotMutation = (classId: string) => {
     mutationFn: (body: CreateTimetableSlotBody) =>
       timetableService.createSlot(classId, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
       success('Timetable slot added');
+      queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
     },
     onError: (err: Error) => error(err.message ?? 'Failed to add slot'),
   });
@@ -470,7 +468,7 @@ export const useParentsList = (enabled: boolean) =>
     staleTime: 30_000, // parents list changes rarely — cache for 30s
   });
 
-  // Invalidates the student's user profile (which may show a linked guardian)
+// Invalidates the student's user profile (which may show a linked guardian)
 // and the parents list (linkedCount on the selected parent just changed).
  
 export const useLinkStudentToParentMutation = (studentUserId: string) => {

@@ -13,7 +13,8 @@ export default function SessionsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { data: yearsData, isLoading } = useAcademicYearsList();
 
-  const years = useMemo(() => yearsData?.data || [], [yearsData]);
+  const years = useMemo(() => yearsData?.data.data || [], [yearsData]);
+  console.log(years)
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -53,7 +54,7 @@ export default function SessionsPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-bold text-gray-900">{year.name}</h3>
+                    <h3 className="text-lg font-bold text-gray-900">{year.label}</h3>
                     {year.isActive && (
                       <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                         <CheckCircle size={14} />
@@ -69,11 +70,11 @@ export default function SessionsPage() {
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-900 mb-3">Terms</p>
                     <div className="space-y-2">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-center justify-between p-2 bg-white rounded border border-gray-200">
+                      {year.terms.map((term: any) => (
+                        <div key={term.id} className="flex items-center justify-between p-2 bg-white rounded border border-gray-200">
                           <div>
-                            <p className="text-sm font-medium">Term {i}</p>
-                            <p className="text-xs text-gray-500">Jan 2024 - Apr 2024</p>
+                            <p className="text-sm text-black font-bold">{term.period}</p>
+                            <p className="text-xs text-gray-500">{formatDate(term.startDate)} - {formatDate(term.endDate)}</p>
                           </div>
                           <button className="text-gray-400 hover:text-gray-600">
                             ✕

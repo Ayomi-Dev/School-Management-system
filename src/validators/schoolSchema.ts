@@ -36,18 +36,31 @@ export type CreatSchoolRequest = z.infer<typeof createSchoolAndAdminSchema>
 // ACADEMIC YEAR & TERM
 // ============================================================
 
+// export const createAcademicYearSchema = z.object({
+//   label: z
+//     .string()
+//     .min(1)
+//     .regex(/^\d{4}\/\d{4}$/, 'Label must be in the format "2024/2025"'),
+//   startDate: z.coerce.date(),
+//   endDate: z.coerce.date(),
+//   isCurrent: z.boolean().optional().default(false),
+// }).refine((d) => d.endDate > d.startDate, {
+//   message: "endDate must be after startDate",
+//   path: ["endDate"],
+// });
+
 export const createAcademicYearSchema = z.object({
-  label: z
-    .string()
-    .min(1)
-    .regex(/^\d{4}\/\d{4}$/, 'Label must be in the format "2024/2025"'),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
-  isCurrent: z.boolean().optional().default(false),
-}).refine((d) => d.endDate > d.startDate, {
-  message: "endDate must be after startDate",
-  path: ["endDate"],
-});
+  label: z.string().min(4, 'Academic year name is required (e.g., 2024-2025)'),
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().min(1, 'End date is required'),
+  isCurrent: z.boolean().optional(),
+}).refine(
+  (data) => new Date(data.startDate) < new Date(data.endDate),
+  {
+    message: 'Start date must be before end date',
+    path: ['endDate'],
+  }
+);
 
 export const updateAcademicYearSchema = createAcademicYearSchema;
 

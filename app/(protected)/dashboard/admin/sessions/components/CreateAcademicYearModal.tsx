@@ -7,19 +7,20 @@ import { useCreateAcademicYearMutation } from '@/src/hooks/queries/useAdmin';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { X } from 'lucide-react';
+import { createAcademicYearSchema } from '@/src/validators/schoolSchema';
 
-const createAcademicYearSchema = z.object({
-  name: z.string().min(4, 'Academic year name is required (e.g., 2024-2025)'),
-  startDate: z.string().min(1, 'Start date is required'),
-  endDate: z.string().min(1, 'End date is required'),
-  isActive: z.boolean().optional(),
-}).refine(
-  (data) => new Date(data.startDate) < new Date(data.endDate),
-  {
-    message: 'Start date must be before end date',
-    path: ['endDate'],
-  }
-);
+// const createAcademicYearSchema = z.object({
+//   name: z.string().min(4, 'Academic year name is required (e.g., 2024-2025)'),
+//   startDate: z.string().min(1, 'Start date is required'),
+//   endDate: z.string().min(1, 'End date is required'),
+//   isActive: z.boolean().optional(),
+// }).refine(
+//   (data) => new Date(data.startDate) < new Date(data.endDate),
+//   {
+//     message: 'Start date must be before end date',
+//     path: ['endDate'],
+//   }
+// );
 
 type CreateAcademicYearFormData = z.infer<typeof createAcademicYearSchema>;
 
@@ -33,16 +34,17 @@ export default function CreateAcademicYearModal({ onClose, onSuccess }: CreateAc
   const { register, handleSubmit, formState: { errors } } = useForm<CreateAcademicYearFormData>({
     resolver: zodResolver(createAcademicYearSchema),
     defaultValues: {
-      isActive: false,
+      isCurrent: false,
     },
   });
 
   const onSubmit = async (data: CreateAcademicYearFormData) => {
+    console.log('Submitting data:', data);
     await createAcademicYearMutation.mutateAsync({
-      name: data.name,
+      label: data.label,
       startDate: new Date(data.startDate).toISOString(),
       endDate: new Date(data.endDate).toISOString(),
-      isActive: data.isActive,
+      isCurrent: data.isCurrent,
     });
     onSuccess();
   };
@@ -68,9 +70,9 @@ export default function CreateAcademicYearModal({ onClose, onSuccess }: CreateAc
               Academic Year Name *
             </label>
             <Input
-              {...register('name')}
+              {...register('label')}
               placeholder="e.g., 2024-2025"
-              error={errors.name?.message}
+              error={errors.label?.message}
             />
           </div>
 
@@ -99,7 +101,7 @@ export default function CreateAcademicYearModal({ onClose, onSuccess }: CreateAc
           <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
             <input
               type="checkbox"
-              {...register('isActive')}
+              {...register('isCurrent')}
               id="isActive"
               className="rounded"
             />

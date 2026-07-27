@@ -113,11 +113,12 @@ export interface AcademicYear {
 }
 
 export interface CreateAcademicYearRequest {
-  name: string;
+  label: string;
   startDate: string;
   endDate: string;
-  isActive?: boolean;
+  isCurrent?: boolean;
 }
+
 export type EnrollmentWithDetails = {
   id:          string;
   enrolledAt:  string;

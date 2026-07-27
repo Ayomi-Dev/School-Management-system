@@ -46,7 +46,7 @@ export const API_ENDPOINTS = {
   SUBJECTS_REMOVE_TEACHER: '/api/admin/teachers/remove-subject',
 
   // Admin - Academic
-  ACADEMIC_YEARS_CREATE: '/api/admin/academic-years/create',
+  ACADEMIC_YEARS_CREATE: '/api/admin/academics',
   ACADEMIC_YEARS_LIST: (schoolId: string) => `/api/admin/academics`,
   TERMS_CREATE: '/api/admin/terms/create',
   TERMS_LIST: (academicYearId: string) => `/api/admin/academic-years/${academicYearId}/terms`,
