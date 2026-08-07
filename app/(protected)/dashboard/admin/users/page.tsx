@@ -30,10 +30,10 @@ export default function UsersPage() {
   const debouncedSearch = useDebounce(search, 300);
   const deleteUserMutation = useDeleteUserMutation();
   const setRoleFilter = (role: Role | 'ALL') => {
-    const params = new URLSearchParams(searchParams.toString());
+  const params = new URLSearchParams(searchParams.toString());
     if (role === 'ALL') {
       params.delete('type');
-    } 
+    }
     else {
       params.set('type', role);
     }

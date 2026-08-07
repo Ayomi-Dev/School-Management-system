@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { FormInput } from '@/src/components/forms/FormInput';
 import { Button } from '@/src/components/ui/Button';
 import { useLoginMutation } from '@/src/hooks/queries/useAuth';
@@ -11,8 +11,12 @@ import { UserLoginInput, userLoginSchema } from '@/src/validators/userLoginSchem
 import { useAuthStore } from '@/src/stores/authStore';
 
 const isDev = process.env.NODE_ENV === 'development';
-
+const roles = ["admin", "student", "teacher", "parent", "bursar"]
 export default function LoginPage() {
+  const searchParams = useSearchParams().get("role") as string
+  const capsParams = searchParams?.charAt(0).toUpperCase() + searchParams?.slice(1)
+  console.log(capsParams)
+  const isParamsTrue = roles.includes(searchParams as string)
   const router = useRouter();
   const { user, error: authError, setError: setAuthError } = useAuthStore();
   const { handleLogin, loginMutation } = useLoginMutation();
@@ -46,7 +50,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-lg shadow-lg p-8">
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">School Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{isParamsTrue ? `Welcome ${capsParams}` : "School Portal"}</h1>
             <p className="text-gray-600">Sign in to your account</p>
           </div>
 
