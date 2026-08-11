@@ -15,8 +15,7 @@ const roles = ["admin", "student", "teacher", "parent", "bursar"]
 export default function LoginPage() {
   const searchParams = useSearchParams().get("role") as string
   const capsParams = searchParams?.charAt(0).toUpperCase() + searchParams?.slice(1)
-  console.log(capsParams)
-  const isParamsTrue = roles.includes(searchParams as string)
+  const isParamsTrue = roles.includes(searchParams)
   const router = useRouter();
   const { user, error: authError, setError: setAuthError } = useAuthStore();
   const { handleLogin, loginMutation } = useLoginMutation();

@@ -153,6 +153,7 @@ enum DayOfWeek {
 
 model School {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String    @unique
   name      String
   address   String?
   phone     String?

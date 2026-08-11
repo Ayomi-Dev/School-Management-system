@@ -13,6 +13,7 @@ export const GET = async(req: NextRequest ) => {
     const result = await academicYearService.listAllAcademicYears(schoolId as string)
     return result;
 }
+
 export const POST = async(req: NextRequest ) => {
     const auth = await requireSchoolRoles(req, ...[Role.ADMIN]);
     if(!auth.success){

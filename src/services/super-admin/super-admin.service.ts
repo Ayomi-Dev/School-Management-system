@@ -7,6 +7,7 @@ import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
 import { currentSession, generateUserCode, getCurrentTerm, getCurrentTermSpan } from "../../utils/userCode";
 import { academicYearService, termService } from "../academics/academic.service";
+import { resolveAcademicYear } from "@/src/utils/resolvers";
 
 
 
@@ -83,8 +84,6 @@ export const superAdminServices = {
 
             // ------current academic year data-------------
             const session = currentSession();
-            const startYear = session[0]
-            const endYear   = session[1]
             const period    = getCurrentTerm();
             const {startDate, endDate} = getCurrentTermSpan()
 
@@ -94,13 +93,14 @@ export const superAdminServices = {
                         {
                             data: {
                                 name: schoolData.name,
+                                slug: schoolData.slug,
                                 address: schoolData.address,
                                 phone: schoolData.phone,
                                 logoUrl: schoolData.logoUrl,
                                 email: schoolData.email,
                                 isActive: true,
                                 ...(superAdminProfile
-                                    ? { createdById: superAdminProfile.id }
+                                    ? { createdById: superAdminProfile.id as string }
                                     : {}
                                 )
                             },
@@ -108,15 +108,14 @@ export const superAdminServices = {
                         }
                     )
                     //create academic year and term related to the school
-                    const academicYear = await academicYearService.createAcademicYear(tx, school.id, { 
-                        label: session, 
-                        startDate: new Date(`${startYear}/09/01`), 
-                        endDate: new Date(`${endYear}/07/31`), 
-                        isCurrent: true 
-                    })
+                    const academicYear = await academicYearService.createAcademicYear(req, tx, school.id)
+                    const existingYear = await resolveAcademicYear(school.id)
+                    if(!existingYear){
+                        throw new Error("Academic year not found after creation.")
+                    }
 
                     const term = await termService.createTerm(tx, school.id, {
-                        academicYearId: academicYear.id as string,
+                        academicYearId: existingYear.id,
                         period,
                         startDate,
                         endDate,

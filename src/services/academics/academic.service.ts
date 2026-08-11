@@ -1,7 +1,7 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { TermPeriod } from "@/app/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
-import { resolveTermByPeriod } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { createAcademicYearSchema } from "@/src/validators/schoolSchema";
 
 
@@ -165,6 +165,7 @@ export const termService = {
         endDate, 
         isCurrent
     }: TermType) {
+      const year = await resolveAcademicYear(schoolId);
       const academicYear = await tx.academicYear.updateMany({
         where: { schoolId, isCurrent: true },
         data:  { isCurrent: false },
@@ -175,7 +176,7 @@ export const termService = {
     
         // Unique check: one period per academic year
       const existingTerm = await prisma.term.findUnique({
-        where: { academicYearId_period: { academicYearId, period } },
+        where: { academicYearId_period: { academicYearId: year.id, period } },
         select: { id: true },
       }); 
       if (existingTerm) {

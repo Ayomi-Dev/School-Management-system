@@ -13,19 +13,22 @@ export const POST = async(req: NextRequest) => {
       
     if(!parsed.success) {
         return NextResponse.json(
-            { error: "Invalid request", details: parsed.error.flatten().fieldErrors },
-            { status: 400 }
+          { error: "Invalid request", details: parsed.error.flatten().fieldErrors },
+          { status: 400 }
         )
     }
     const { email, password } = parsed.data
-    const user = await prisma.user.findUnique({
-        where: { email },
+    const user = await prisma.user.findFirst({
+        where: {
+          email,
+          role: "SUPER_ADMIN"
+        },
         select: USER_SELECT  //This ensures we get the passwordHash field along with other necessary user details, which is crucial for verifying the password and generating tokens.
     })
     //verifies that a user with the provided email exists and has the SUPER_ADMIN role. If no such user is found, it returns a 401 Unauthorized response indicating that the credentials are invalid.
     if(!user || user.role !== "SUPER_ADMIN") {
       return NextResponse.json(
-          { error: "Invalid credentials" },
+        { error: "Invalid credentials" },
           { status: 401}
       )
     }
