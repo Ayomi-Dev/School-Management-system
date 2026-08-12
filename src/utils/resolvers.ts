@@ -27,14 +27,11 @@ export async function resolveAcademicYear(
   schoolId: string,
   label?: string // if undefined → fall back to isCurrent=true
 ) {
-  const where = label
-    ? { schoolId, label }
-    : { schoolId, isCurrent: true };
-
   const year = await prisma.academicYear.findFirst({
-    where,
+    where: { schoolId, label },
     select: { id: true, label: true, isCurrent: true },
   });
+  console.log(`Resolved academic year for school ${schoolId} with label ${label}:`, year);
 
   if (!year) {
     const msg = label

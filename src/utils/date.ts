@@ -1,4 +1,3 @@
-import { TermPeriod } from "../types/types";
 
 export const currentAcademicYearLabel = () => {
     const year = new Date().getFullYear();

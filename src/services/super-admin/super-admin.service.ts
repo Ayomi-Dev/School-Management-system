@@ -6,8 +6,8 @@ import { passwordServices } from "../passwords/password.service";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
 import { currentSession, generateUserCode, getCurrentTerm, getCurrentTermSpan } from "../../utils/userCode";
-import { academicYearService, termService } from "../academics/academic.service";
-import { resolveAcademicYear } from "@/src/utils/resolvers";
+import { termService } from "../academics/academic.service";
+import { currentAcademicYearLabel } from "@/src/utils/date";
 
 
 
@@ -108,18 +108,32 @@ export const superAdminServices = {
                         }
                     )
                     //create academic year and term related to the school
-                    const academicYear = await academicYearService.createAcademicYear(req, tx, school.id)
-                    const existingYear = await resolveAcademicYear(school.id)
+                    const { currentAcademicYearEnd, currentAcademicYearStart } = currentAcademicYearLabel()
+                    const academicYear = await tx.academicYear.create({
+                        data: {
+                            schoolId: school.id,
+                            label: session,
+                            startDate: new Date(`${currentAcademicYearStart}-09-01`),
+                            endDate: new Date(`${currentAcademicYearEnd}-07-31`),
+                            isCurrent: true
+                        }
+                    })
+                    const existingYear = await tx.academicYear.findFirst({
+                        where: { schoolId: school.id, label: session },
+                        select: { id: true, label: true, isCurrent: true}
+                    })
                     if(!existingYear){
                         throw new Error("Academic year not found after creation.")
                     }
 
-                    const term = await termService.createTerm(tx, school.id, {
-                        academicYearId: existingYear.id,
-                        period,
-                        startDate,
-                        endDate,
-                        isCurrent: true 
+                    const term = await tx.term.create({
+                        data: {
+                            startDate,
+                            endDate,
+                            period,
+                            isCurrent: true,
+                            academicYearId: existingYear.id,
+                        }
                     })
 
                     if (!adminData || !hashedTempPassword || !hashedToken) {

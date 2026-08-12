@@ -164,8 +164,7 @@ export const termService = {
         period, startDate, 
         endDate, 
         isCurrent
-    }: TermType) {
-      const year = await resolveAcademicYear(schoolId);
+    }: TermType) {;
       const academicYear = await tx.academicYear.updateMany({
         where: { schoolId, isCurrent: true },
         data:  { isCurrent: false },
@@ -350,3 +349,5 @@ export const enrollmentService = {
   );
   },
 }
+
+

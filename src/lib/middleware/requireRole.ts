@@ -2,7 +2,7 @@ import { Role } from "@/app/generated/prisma/enums";
 import { getSession } from "../auth/session";
 import { NextRequest } from "next/server";
 
-interface AuthSuccess {
+export interface AuthSuccess {
     success: true;
     userId: string;
     schoolId: string | null;

@@ -23,7 +23,7 @@ export const getCurrentTerm = ():TermPeriod => {
   const month = new Date().getMonth() + 1;
 
   if (month <= 4) return TermPeriod.SECOND; //Jan-april is second term
-  if (month <= 8) return TermPeriod.THIRD; // may to august is third term
+  if (month <= 7) return TermPeriod.THIRD; // may to august is third term
   return TermPeriod.FIRST; // september to december is first term of the next session
 };
 
