@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { classService } from "@/src/services/class/class.service";
-import { requireSchoolAdmin } from "@/src/lib/middleware/requireRole";
+import { Role } from "@/app/generated/prisma/enums";
+import { requireRoleForTenant } from "@/src/lib/tenant";
 
 export const POST = async( req: NextRequest) => {
-    const auth = await requireSchoolAdmin(req)
+    const auth = await requireRoleForTenant(req, [Role.ADMIN])
     if (!auth.success) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -14,7 +15,7 @@ export const POST = async( req: NextRequest) => {
 
 
 export const GET = async(req: NextRequest) => {
-    const auth = await requireSchoolAdmin(req)
+    const auth = await requireRoleForTenant(req, [Role.ADMIN])
     if (!auth.success) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

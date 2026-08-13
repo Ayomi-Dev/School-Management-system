@@ -1,11 +1,11 @@
 import { Role } from "@/app/generated/prisma/enums";
-import { requireSchoolRoles } from "@/src/lib/middleware/requireRole";
+import { requireRoleForTenant } from "@/src/lib/tenant";
 import { reportCardServices } from "@/src/services/reportCard/reportCard.service";
 import { ClassParamsContext } from "@/src/types";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async(req: NextRequest, context: ClassParamsContext) => {
-    const auth = await requireSchoolRoles(req, ...[Role.TEACHER, Role.ADMIN]);
+    const auth = await requireRoleForTenant(req, [Role.TEACHER, Role.ADMIN]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },
@@ -21,7 +21,7 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
 
 
 export const PATCH = async(req: NextRequest, context: ClassParamsContext)  => {
-     const auth = await requireSchoolRoles(req, ...[Role.TEACHER, Role.ADMIN]);
+     const auth = await requireRoleForTenant(req, [Role.TEACHER, Role.ADMIN]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "./lib/auth/session";
 import { enforceRoleAccess, extractSlug, resolveSlugToId } from "./lib/middleware/helpers";
 
-const PUBLIC_PATHS = ["/api/auth/login", "/api/auth/refresh"];
+const PUBLIC_PATHS = ["/api/auth/login"];
 const BYPASS_PATHS = ["/_next", "/favicon.ico", "/api/health"];
 
 
@@ -16,7 +16,7 @@ export const middleware = async(req: NextRequest) => {
     }
 
     //extracting sub-domain slug
-    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "localhost:3000"
+    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "http://faithschool.localhost:3000"
     const slug = extractSlug(host, appDomain);
 
     if (!slug) {  // No subdomain — show a "school not found" or root landing page
@@ -39,43 +39,50 @@ export const middleware = async(req: NextRequest) => {
     requestHeaders.set("x-school-id", schoolId);
     requestHeaders.set("x-school-slug", slug);
 
-    if (!PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-        const token = req.cookies.get("access_token")?.value;
-
-        if (!token) {
-          return NextResponse.redirect(
-            new URL(`/auth/login`, req.url) // stays on same subdomain
-          );
-        }
-
-        try {
-            const payload  = await verifyAccessToken(token); // Verify the access token and extract the payload (user info, schoolId, etc.)    
-
-            // Critical: make sure this token belongs to THIS school
-            if (payload.schoolId !== schoolId) {
-              const res = NextResponse.redirect(new URL("/auth/login", req.url));
-              res.cookies.delete("access_token");
-              res.cookies.delete("refresh_token");
-              return res;
-            }
-
-            requestHeaders.set("x-user-id", payload.userId);
-            requestHeaders.set("x-user-role", payload.role);
-
-            // Role-based path guard
-            const roleRedirect = enforceRoleAccess(pathname, payload.role as string);
-            if (roleRedirect) {
-                return NextResponse.redirect(new URL(roleRedirect, req.url));
-            }
-        } 
-        catch {
-            const res = NextResponse.redirect(new URL("/auth/login", req.url));
-            res.cookies.delete("access_token");
-            return res;
-        }
-
+    // Always forward the school context header even for public (non-protected) paths
+    if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
         return NextResponse.next({ request: { headers: requestHeaders } });
     }
+
+    // Protected path: enforce authentication
+    const token = req.cookies.get("access_token")?.value;
+
+    if (!token) {
+      return NextResponse.redirect(
+        new URL(`/auth/login`, req.url) //stays on same subdomain
+      );
+    }
+
+    try {
+        const payload  = await verifyAccessToken(token); // Verify the access token and extract the payload (user info, schoolId, etc.)    
+
+        // Critical: make sure this token belongs to THIS school
+        if (payload.schoolId !== schoolId) {
+          const res = NextResponse.redirect(new URL("/auth/login", req.url));
+          res.cookies.delete("access_token");
+          res.cookies.delete("refresh_token");
+          return res;
+        }
+
+        requestHeaders.set("x-user-id", payload.userId);
+        requestHeaders.set("x-user-role", payload.role);
+
+        // Role-based path guard
+        const roleRedirect = enforceRoleAccess(pathname, payload.role as string);
+        if (roleRedirect) {
+            return NextResponse.redirect(new URL(roleRedirect, req.url));
+        }
+    } 
+    catch (err) {
+        console.log("Middleware token verify error:", err);
+        const res = NextResponse.redirect(new URL("/auth/login", req.url));
+        res.cookies.delete("access_token");
+        res.cookies.delete("refresh_token");
+        return res;
+    }
+
+    return NextResponse.next({ request: { headers: requestHeaders } });
+    
 }
 
 export const config = {

@@ -6,7 +6,6 @@ import { passwordServices } from "../passwords/password.service";
 import { USER_SELECT } from "@/src/lib/prisma/fields";
 import { provisionAdminSchema, ProvisionAdminInput } from "@/src/validators/adminSchema";
 import { currentSession, generateUserCode, getCurrentTerm, getCurrentTermSpan } from "../../utils/userCode";
-import { termService } from "../academics/academic.service";
 import { currentAcademicYearLabel } from "@/src/utils/date";
 
 

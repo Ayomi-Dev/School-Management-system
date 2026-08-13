@@ -1,11 +1,12 @@
-import { requireSchoolAdmin } from "@/src/lib/middleware/requireRole";
+import { Role } from "@/app/generated/prisma/enums";
+import { requireRoleForTenant } from "@/src/lib/tenant";
 import { timetableService } from "@/src/services/timetable/timetable.service";
 import { ClassParamsContext,  } from "@/src/types";
 import { NextRequest, NextResponse } from "next/server";
 
 //makes changes to the timetable
 export const PATCH = async(req:NextRequest, context: ClassParamsContext) => {
-    const auth = await requireSchoolAdmin(req);
+    const auth = await requireRoleForTenant(req, [Role.ADMIN]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error},
@@ -20,7 +21,7 @@ export const PATCH = async(req:NextRequest, context: ClassParamsContext) => {
 
 //Deletes timetable
 export const DELETE = async(req:NextRequest, context: ClassParamsContext) => {
-    const auth = await requireSchoolAdmin(req);
+    const auth = await requireRoleForTenant(req, [Role.ADMIN]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error},
