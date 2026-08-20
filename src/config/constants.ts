@@ -1,7 +1,7 @@
 // API Configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_APP_DOMAIN ?? '' ;
 
-export const API_ENDPOINTS = {
+export const API_ENDPOINTS = { 
   // Auth
   AUTH_LOGIN: '/api/auth/login',
   AUTH_SUPER_ADMIN_LOGIN: '/api/auth/super-admin/login',

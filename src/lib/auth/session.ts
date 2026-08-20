@@ -33,6 +33,10 @@ export const buildTokenCookies = ( // sets the access and refresh tokens as secu
     sameSite: "lax",
     path:     "/",
     maxAge:   30 * 60, //30mins lifespan for access token to limit the window of opportunity for an attacker if the token is compromised. This short lifespan encourages regular token refreshes, which can help mitigate risks associated with token theft.
+    domain:
+        isProd
+          ? ".myapp.edu.ng"    // leading dot = all subdomains
+          : undefined,         // no domain in dev (localhost)
   });
   res.cookies.set("refresh_token", rawRefresh, {
     httpOnly: true,
@@ -40,6 +44,10 @@ export const buildTokenCookies = ( // sets the access and refresh tokens as secu
     sameSite: "lax",
     path:     "/api/auth/refresh", //scopes the refresh token cookie to only be sent to the refresh endpoint, reducing the attack surface for CSRF attacks and ensuring it's only used where needed.
     maxAge:   7 * 24 * 60 * 60, //rate limiting refresh tokens to only be sent to the refresh endpoint and expire after 7 days. This reduces the attack surface for token theft and misuse.
+    domain:
+        isProd
+          ? ".myapp.edu.ng"    // leading dot = all subdomains
+          : undefined,         // no domain in dev (localhost)
   });
 }
 

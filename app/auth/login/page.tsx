@@ -3,14 +3,13 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FormInput } from '@/src/components/forms/FormInput';
 import { Button } from '@/src/components/ui/Button';
 import { useLoginMutation } from '@/src/hooks/queries/useAuth';
 import { UserLoginInput, userLoginSchema } from '@/src/validators/userLoginSchema';
 import { useAuthStore } from '@/src/stores/authStore';
 
-const isDev = process.env.NODE_ENV === 'development';
 const roles = ["admin", "student", "teacher", "parent", "bursar"]
 export default function LoginPage() {
   const searchParams = useSearchParams().get("role") as string

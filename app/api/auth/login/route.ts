@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginSchema } from "@/src/validators/authSchema";
 import { authService } from "@/src/services/auth/auth.service";
-import { testDb } from "@/src/utils/test";
+import { getCorsHeaders, handlePreflight } from "@/src/lib/cors";
 
+
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
 
 export const POST = async( req: NextRequest) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
+
   const body   = await req.json()
   const parsed = loginSchema.safeParse(body); //parses the incoming request body against a predefined schema (loginSchema) to validate the structure and types of the login credentials. If the parsing fails, it returns an error response with details about what went wrong, helping the client understand how to correct their request.
  
