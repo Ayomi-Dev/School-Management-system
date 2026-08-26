@@ -440,6 +440,7 @@ export const adminServices = {
             }
         )
         if(!user){
+            console.log("Admin user not found for id:", id)
             return NextResponse.json(
                 { error: "Sorry, no user with this ID found."},
                 { status: 404}
@@ -482,6 +483,7 @@ export const adminServices = {
     },
 
     async getStats(schoolId: string) {
+      console.log("[adminService.getStats] Fetching stats for schoolId:", schoolId);
         const [
             totalStudents,
             totalTeachers,

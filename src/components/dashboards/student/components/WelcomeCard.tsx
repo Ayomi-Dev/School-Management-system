@@ -9,6 +9,7 @@ interface WelcomeCardProps {
 
 export function WelcomeCard({ profile }: WelcomeCardProps) {
   const greeting = getGreeting();
+  console.log(greeting, profile)
 
   return (
     <Card className="bg-linear-to-r from-blue-600 to-blue-800 text-white p-8 rounded-lg shadow-lg">

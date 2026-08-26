@@ -22,6 +22,7 @@ interface AdminProps {
 
 export default function AdminDashboardPage({ profile }: AdminProps) {
   const { data: stats,  isLoading } = useAdminStats();
+  console.log("AdminDashboardPage profile and stats:", profile, stats);
 
   if (isLoading) {
     return (

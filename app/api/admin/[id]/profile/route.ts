@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export const GET = async(req: NextRequest, context: ParamsContext) => {
-    const auth = await requireRoleForTenant(req, [Role.ADMIN]);
+    const auth = await requireRoleForTenant(req, ["ADMIN"]);
     console.log("Auth result in GET /admin/profile:", auth);
     if(!auth.success){
         return NextResponse.json(

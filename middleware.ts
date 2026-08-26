@@ -1,6 +1,3 @@
-// middleware.ts
-// ❌ Remove this — middleware ONLY runs on the edge runtime
-// export const runtime = "nodejs"
 
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
@@ -22,7 +19,7 @@ const BYPASS_PATHS = [
   "/_next",
   "/favicon.ico",
   "/api/health",
-  "/api/internal",        // ← internal resolver must never loop back through middleware
+  "/api/internal/resolve-school",        // ← internal resolver must never loop back through middleware
   "/school-not-found",
   "/not-found",
 ];
@@ -30,8 +27,14 @@ const BYPASS_PATHS = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get("host") ?? "";
+  const isApiRoute = pathname.startsWith("/api/");
 
-  console.log("[middleware] hit →", pathname, "| host:", host);
+  console.log(`[middleware] ${req.method} ${host}${pathname}`, isApiRoute);
+
+  const isBypass = BYPASS_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+
+  console.log(`[middleware]   bypass=${isBypass} public=${isPublic}`);
 
   // ── 1. Hard bypass — no processing at all ───────────────────
   if (BYPASS_PATHS.some((p) => pathname.startsWith(p))) {
@@ -46,7 +49,10 @@ export async function middleware(req: NextRequest) {
   console.log("[middleware] slug:", slug, "| appDomain:", appDomain);
 
   if (!slug) {
-    return NextResponse.redirect(new URL("/not-found", req.url));
+    return isApiRoute
+      ? NextResponse.json({ error: "Unknown tenant" }, { status: 400 })
+      : NextResponse.redirect(new URL("/not-found", req.url));
+    // return NextResponse.redirect(new URL("/not-found", req.url));
   }
 
   // ── 3. Resolve slug → schoolId via internal API ─────────────
@@ -54,11 +60,13 @@ export async function middleware(req: NextRequest) {
   //    internal API route — but we must use an absolute URL with
   //    the correct protocol and the non-subdomained base URL.
   const schoolId = await resolveSlugToId(slug, req);
-
   console.log("[middleware] schoolId:", schoolId);
 
   if (!schoolId) {
-    return NextResponse.rewrite(new URL("/school-not-found", req.url));
+    return isApiRoute
+      ? NextResponse.json({ error: "School not found" }, { status: 404 })
+      : NextResponse.rewrite(new URL("/school-not-found", req.url));
+    // return NextResponse.rewrite(new URL("/school-not-found", req.url));
   }
 
   // ── 4. Inject school context headers into every request ─────
@@ -68,7 +76,7 @@ export async function middleware(req: NextRequest) {
 
   // ── 5. Public paths — school context injected, no auth needed
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    console.log("[middleware] public path — skipping auth:", pathname);
+    console.log("[middleware] public path — skipping auth:", pathname, requestHeaders.get("x-school-id"));
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
@@ -76,8 +84,12 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get("access_token")?.value;
 
   if (!token) {
-    console.log("[middleware] no token — redirecting to login");
-    return NextResponse.redirect(new URL("/auth/login", req.url));
+    // console.log("[middleware] no token — redirecting to login");
+    console.log("[middleware] no token for:", pathname);
+    return isApiRoute
+      ? NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+      : NextResponse.redirect(new URL("/auth/login", req.url));
+    // return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
   try {
@@ -102,13 +114,6 @@ export async function middleware(req: NextRequest) {
 
     requestHeaders.set("x-user-id", session.userId);
     requestHeaders.set("x-user-role", session.role);
-
-    // Role-based route guard
-    const roleRedirect = enforceRoleAccess(pathname, session.role);
-    if (roleRedirect) {
-      console.log("[middleware] role redirect:", session.role, "→", roleRedirect);
-      return NextResponse.redirect(new URL(roleRedirect, req.url));
-    }
 
     return NextResponse.next({ request: { headers: requestHeaders } });
   } catch (err) {
