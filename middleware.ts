@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { enforceRoleAccess, extractSlug, resolveSlugToId } from "@/src/lib/middleware/helpers";
 
-console.log("[middleware] module loaded");
 
 // ── Paths that skip auth but still need school context ──────────
 const PUBLIC_PATHS = [
@@ -28,25 +27,17 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get("host") ?? "";
   const isApiRoute = pathname.startsWith("/api/");
-
-  console.log(`[middleware] ${req.method} ${host}${pathname}`, isApiRoute);
-
   const isBypass = BYPASS_PATHS.some((p) => pathname.startsWith(p));
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
-  console.log(`[middleware]   bypass=${isBypass} public=${isPublic}`);
-
   // ── 1. Hard bypass — no processing at all ───────────────────
   if (BYPASS_PATHS.some((p) => pathname.startsWith(p))) {
-    console.log("[middleware] bypassed:", pathname);
-    return NextResponse.next();
+    return NextResponse.next(); 
   }
 
   // ── 2. Extract tenant slug from subdomain ───────────────────
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "";
   const slug = extractSlug(host, appDomain);
-
-  console.log("[middleware] slug:", slug, "| appDomain:", appDomain);
 
   if (!slug) {
     return isApiRoute
@@ -55,13 +46,11 @@ export async function middleware(req: NextRequest) {
     // return NextResponse.redirect(new URL("/not-found", req.url));
   }
 
-  // ── 3. Resolve slug → schoolId via internal API ─────────────
+  // ── 3. Resolve slug to schoolId via internal API ─────────────
   //    Edge runtime can't use Prisma directly, so we call our
   //    internal API route — but we must use an absolute URL with
   //    the correct protocol and the non-subdomained base URL.
   const schoolId = await resolveSlugToId(slug, req);
-  console.log("[middleware] schoolId:", schoolId);
-
   if (!schoolId) {
     return isApiRoute
       ? NextResponse.json({ error: "School not found" }, { status: 404 })
@@ -84,12 +73,9 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get("access_token")?.value;
 
   if (!token) {
-    // console.log("[middleware] no token — redirecting to login");
-    console.log("[middleware] no token for:", pathname);
     return isApiRoute
       ? NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
       : NextResponse.redirect(new URL("/auth/login", req.url));
-    // return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
   try {
@@ -105,7 +91,6 @@ export async function middleware(req: NextRequest) {
 
     // Cross-tenant check
     if (session.schoolId !== schoolId) {
-      console.warn("[middleware] schoolId mismatch — clearing cookies");
       const res = NextResponse.redirect(new URL("/auth/login", req.url));
       res.cookies.delete("access_token");
       res.cookies.delete("refresh_token");
