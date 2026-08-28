@@ -10,35 +10,33 @@ import { classService } from "../class/class.service";
 import { _levelOrder } from "@/src/utils/levelOrder";
 import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
 import { PaginationMeta } from "@/src/types";
-import { ReportCardStatus } from "@/app/generated/prisma/enums";
 import { linkStudentToParentSchema } from "@/src/validators/studentSchema";
 
 export const adminServices = {
-    //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
-    async provisionUser(req: NextRequest, schoolId: string ) {
-        try{
-            const body = await req.json()
-            const parsedBody = adminCreateUserSchema.safeParse(body)
-            if (!parsedBody.success) {
-                return NextResponse.json(
-                    {
-                        error: "Validation failed",
-                        details: parsedBody.error.flatten().fieldErrors,
-                    },
-                    { status: 400 }
-                );
-            }
+  //creates a new user (teacher, student, or parent) under the admin's school with a temporary password and a unique user code. The user will receive an email with the temporary password and a set-up token to complete their account setup.
+  async provisionUser(req: NextRequest, schoolId: string ) {
+    try{
+      const body = await req.json()
+      const parsedBody = adminCreateUserSchema.safeParse(body)
+      if (!parsedBody.success) {
+        return NextResponse.json(
+            {
+                error: "Validation failed",
+                details: parsedBody.error.flatten().fieldErrors,
+            },
+            { status: 400 }
+        );
+      }
     
-            const userInput = parsedBody.data
-
-            //get school id
-            const idForSchool = await prisma.school.findFirst(
-                {
-                    where: { id: schoolId },
-                    select: { id: true }
-                }
-            )
-            if(!idForSchool) {
+      const userInput = parsedBody.data
+      //get school id
+      const idForSchool = await prisma.school.findFirst(
+        {
+            where: { id: schoolId },
+            select: { id: true }
+        }
+      )
+          if(!idForSchool) {
                 return NextResponse.json(
                     { error: "School id is missing."},
                     { status: 400 }
@@ -231,17 +229,16 @@ export const adminServices = {
                     user: newUser, token: rawSetUpToken
                 }
             )
-        }
-        catch(error){
-            console.error("Error provisioning user:", error); 
-            return NextResponse.json(
-                { error: `"An unexpected error occurred while provisioning the user" ${error}` },
-                { status: 500 }
-            )
-        }
-    },
-
-    async updateUser(req: NextRequest, id: string){
+    }
+    catch(error){
+      console.error("Error provisioning user:", error); 
+      return NextResponse.json(
+          { error: `"An unexpected error occurred while provisioning the user" ${error}` },
+          { status: 500 }
+      )
+    }
+  },
+  async updateUser(req: NextRequest, id: string){
         const body = await req.json()
         const parsedBody = adminUpdateUserSchema.safeParse(body)
         if(!parsedBody.success){
@@ -277,8 +274,8 @@ export const adminServices = {
             { message: "User details updated successfully", updatedUser},
             { status: 200 }
         )
-    },
-    async getUserById(schoolId: string, userId: string) {
+  },
+  async getUserById(schoolId: string, userId: string) {
       try {
       const user = await prisma.user.findFirst({
         where: {
@@ -376,8 +373,8 @@ export const adminServices = {
         console.error('[adminService.getUserProfile]', error);
         return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
       }
-    },
-    async updateUserStatus(req: NextRequest, adminId: string, userId: string, schoolId: string) {
+  },
+  async updateUserStatus(req: NextRequest, adminId: string, userId: string, schoolId: string) {
     try {
       const body   = await req.json();
       const parsed = updateStatusSchema.safeParse(body);
@@ -430,26 +427,24 @@ export const adminServices = {
       console.error('[adminService.updateUserStatus]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-    },
- 
-    async getAdminById(id: string)  {
-        const user = await prisma.user.findUnique(
-            {
-                where: { id },
-                select: { id: true, userCode: true, firstName: true, lastName: true, role: true, status: true, createdAt: true, isActive: true, email: true }
-            }
-        )
-        if(!user){
-            console.log("Admin user not found for id:", id)
-            return NextResponse.json(
-                { error: "Sorry, no user with this ID found."},
-                { status: 404}
-            )
-        }
-        return NextResponse.json({ user})
-    },
+  },
 
-    async getAllUsers(schoolId: string, params: PaginationMeta) {
+  async getAdminById(id: string)  {
+      const user = await prisma.user.findUnique(
+          {
+              where: { id },
+              select: { id: true, userCode: true, firstName: true, lastName: true, role: true, status: true, createdAt: true, isActive: true, email: true }
+          }
+      )
+      if(!user){
+          return NextResponse.json(
+              { error: "Sorry, no user with this ID found."},
+              { status: 404}
+          )
+      }
+      return NextResponse.json({ user})
+  },
+  async getAllUsers(schoolId: string, params: PaginationMeta) {
         try{
         const { role, search, page = 1, limit = 10 } = params;
         const whereClause: any = { schoolId };
@@ -480,9 +475,8 @@ export const adminServices = {
             { status: 500 }
         )
         }
-    },
-
-    async getStats(schoolId: string) {
+  },
+  async getStats(schoolId: string) {
       console.log("[adminService.getStats] Fetching stats for schoolId:", schoolId);
         const [
             totalStudents,
@@ -556,9 +550,8 @@ export const adminServices = {
       { status: 201 }
 
     );
-    },
-
-    async getAdminProfile(id: string, schoolId: string) {
+  },
+  async getAdminProfile(id: string, schoolId: string) {
         const user = await prisma.user.findUnique(
             {
                 where: { id },
@@ -576,9 +569,8 @@ export const adminServices = {
             { data: user },
             { status: 200 }
         )
-    },
-
-    async adminPublishReportCard( schoolId: string, reportCardId: string) {
+  },
+  async adminPublishReportCard( schoolId: string, reportCardId: string) {
     try {
       const reportCard = await prisma.reportCard.findUnique({
         where:  { id: reportCardId },
@@ -620,9 +612,8 @@ export const adminServices = {
       console.error('[adminService.adminPublishReportCard]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-    },
-
-    async adminUnpublishReportCard(schoolId: string, reportCardId: string) {
+  },
+  async adminUnpublishReportCard(schoolId: string, reportCardId: string) {
     try {
       const existing = await prisma.reportCard.findUnique({
         where:  { id: reportCardId },
@@ -653,7 +644,7 @@ export const adminServices = {
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
   },
-    async getClassDetail(schoolId: string, classId: string) {
+  async getClassDetail(schoolId: string, classId: string) {
     try {
       const classRecord = await prisma.class.findFirst({
         where: { id: classId, schoolId },
@@ -725,7 +716,7 @@ export const adminServices = {
       console.error('[adminService.getClassDetail]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
-    },
+  },
 
   async getClassScoreSheet(schoolId: string, classId: string) {
     try {

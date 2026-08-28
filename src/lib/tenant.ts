@@ -88,6 +88,6 @@ export async function requireRoleForTenant(
     success: true,
     userId: auth.userId,
     role: auth.role,
-    schoolId: tenantSchoolId, // ← always the subdomain-verified one
+    schoolId: tenantSchoolId
   };
 }

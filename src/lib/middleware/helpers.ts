@@ -86,23 +86,3 @@ export async function resolveSlugToId(
     return null;
   }
 }
-
-export function enforceRoleAccess(pathname: string, role: string): string | null {
-  const allowed = ROLE_PATHS[role] ?? [];
-  console.log("enforceRoleAccess: Checking access for role:", role, "on path:", pathname, "Allowed paths:", allowed);
-  const isAllowed = allowed.some((p) => pathname.startsWith(p));
-  if (!isAllowed) return getRoleHome(role);
-  return null;
-}
-
-function getRoleHome(role: string): string {
-  const homes: Record<string, string> = {
-    SUPER_ADMIN: "/dashboard/admin",
-    ADMIN:       "/dashboard/admin",
-    TEACHER:       "/dashboard/teacher",
-    STUDENT:     "/dashboard/student",
-    PARENT:      "/dashboard/parent",
-    BURSAR:      "/dashboard/bursar",
-  };
-  return homes[role] ?? "/login";
-}

@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { enforceRoleAccess, extractSlug, resolveSlugToId } from "@/src/lib/middleware/helpers";
+import { extractSlug, resolveSlugToId } from "@/src/lib/middleware/helpers";
 
 
 // ── Paths that skip auth but still need school context ──────────
@@ -55,7 +55,6 @@ export async function middleware(req: NextRequest) {
     return isApiRoute
       ? NextResponse.json({ error: "School not found" }, { status: 404 })
       : NextResponse.rewrite(new URL("/school-not-found", req.url));
-    // return NextResponse.rewrite(new URL("/school-not-found", req.url));
   }
 
   // ── 4. Inject school context headers into every request ─────

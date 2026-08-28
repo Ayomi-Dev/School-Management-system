@@ -19,7 +19,7 @@ export const DELETE = async(req: NextRequest, context: ParamsContext) => {
     }
 
     const { id } = await context.params
-    const result = await superAdminServices.deleteSchoolAndAdmin(id);
+    const result = await superAdminServices.deleteSchoolAndAdmin(id as string);
 
     return result;
 }
@@ -40,6 +40,6 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
     }
 
     const { id } = await context.params
-    const result = await superAdminServices.getSchoolById(id)
+    const result = await superAdminServices.getSchoolById(id as string)
     return result
 }
