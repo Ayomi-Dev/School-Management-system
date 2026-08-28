@@ -17,6 +17,6 @@ export const GET = async(req:NextRequest, context: ParamsContext) => {
     const termId = searchParams.get("termId")?.trim();
     const { id } = await context.params
     const { schoolId } = auth
-    const result = await studentService.getStudentAcademicSummary(id, schoolId as string, termId);
+    const result = await studentService.getStudentAcademicSummary(id as string, schoolId as string, termId);
     return result;
 }

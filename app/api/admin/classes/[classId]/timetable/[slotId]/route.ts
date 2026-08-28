@@ -15,7 +15,7 @@ export const PATCH = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { classId, slotId } = await context.params
     const { userId } = auth
-    const result = await timetableService.updateTimetableSlot(req, userId, classId, slotId);
+    const result = await timetableService.updateTimetableSlot(req, userId, classId as string, slotId as string);
     return result;
 }
 
@@ -30,6 +30,6 @@ export const DELETE = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { classId, slotId } = await context.params
     const { userId } = auth
-    const result = await timetableService.deleteTimetableSlot(userId, classId, slotId);
+    const result = await timetableService.deleteTimetableSlot(userId, classId as string, slotId as string);
     return result;
 }

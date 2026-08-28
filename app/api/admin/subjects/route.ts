@@ -7,8 +7,8 @@ export const GET = async(req: NextRequest) => {
     const auth = await requireRoleForTenant(req, [Role.ADMIN]);
     if(!auth.success){
         return NextResponse.json(
-            { error: "Unauthorized access"},
-            { status: 401 }
+            { error: auth.error},
+            { status: auth.status }
         )
     }
     const { schoolId } = auth

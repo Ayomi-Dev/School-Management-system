@@ -15,6 +15,6 @@ export const GET = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { classId } = await context.params
     const {  schoolId } = auth
-    const result = await adminServices.getClassDetail(schoolId as string, classId);
+    const result = await adminServices.getClassDetail(schoolId as string, classId as string);
     return result;
 }

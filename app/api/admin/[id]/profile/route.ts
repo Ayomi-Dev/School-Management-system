@@ -20,7 +20,7 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
         )
     }
     const { id } = await context.params
-    const result = adminServices.getAdminById(id)
+    const result = adminServices.getAdminById(id as string)
     return result
 }
 

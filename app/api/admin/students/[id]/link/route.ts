@@ -25,6 +25,6 @@ export const POST = async(req: NextRequest, context: ParamsContext) => {
 
     const { schoolId } = auth
     const {id } = await context.params
-    const result = await  adminServices.linkStudentToParent(req, schoolId as string, id, )
+    const result = await  adminServices.linkStudentToParent(req, schoolId as string, id as string )
     return result; 
 }
