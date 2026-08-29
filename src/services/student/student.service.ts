@@ -102,7 +102,7 @@ export const studentService = {
                 take: 1,
                 orderBy: { enrolledAt: "desc" },
                 include: {
-                  class: { select: { id: true, name: true } },
+                  class: { select: { id: true, level: true } },
                   academicYear: { select: { id: true, label: true } },
                 },
               },
@@ -368,11 +368,11 @@ export const studentService = {
         prisma.enrollment.findMany({
           where: { studentId: student.id },
           include: {
-            class: { select: { level: true } },
+            class: { select: { level: true} },
             academicYear: { select: { label: true } },
           },
           orderBy: { enrolledAt: 'desc' },
-        }),
+        }),  
       ]);
     // ── 4. Derive attendance summary from groupBy result ─────────────────
     // groupBy returns one row per distinct status value — pull counts safely

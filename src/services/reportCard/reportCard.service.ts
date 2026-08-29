@@ -659,10 +659,8 @@ export const reportCardServices = {
                   orderBy: { enrolledAt: "desc" },
                   take: 1,
                 },
-                guardians: {
-                  include: { guardian: { select: { firstName: true, lastName: true, phone: true } } },
-                  where: { isPrimary: true },
-                  take: 1,
+                guardian: {
+                  select: { firstName: true, lastName: true, phone: true }
                 },
               },
             },

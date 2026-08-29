@@ -56,7 +56,7 @@ export async function createFeeStructure(input: CreateFeeStructureInput) {
 export async function listFeeStructures(schoolId: string, termId: string) {
   return prisma.feeStructure.findMany({
     where: { schoolId, termId },
-    include: { class: { select: { name: true, level: true } } },
+    include: { class: { select: { level: true } } },
     orderBy: { name: "asc" },
   });
 }

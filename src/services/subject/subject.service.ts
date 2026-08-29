@@ -159,7 +159,7 @@ export const subjectService = {
 
       if (level) {
         const classRecord = await prisma.class.findFirst({
-          where:  { schoolId, name: level },
+          where:  { schoolId, level },
           select: { id: true },
         });
         if (!classRecord) {
@@ -198,7 +198,7 @@ export const subjectService = {
           id:    true,
           name:  true,
           code:  true,
-          class: { select: { name: true, level: true } },
+          class: { select: { level: true } },
         },
       });
 

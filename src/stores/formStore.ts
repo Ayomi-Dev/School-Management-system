@@ -6,7 +6,7 @@ import { FormStore } from '@/src/types/store';
 
 export const useFormStore = create<FormStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       drafts: {},
 
       saveDraft: (formId: string, data) => {
@@ -19,7 +19,7 @@ export const useFormStore = create<FormStore>()(
       },
 
       getDraft: (formId: string) => {
-        const state = useFormStore.getState();
+        const state = get(); // <-- use get(), not useFormStore.getState()
         return state.drafts[formId] || null;
       },
 
