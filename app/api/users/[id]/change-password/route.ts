@@ -5,6 +5,6 @@ import { NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest, context: ParamsContext) => {
     const { id } = await context.params;
-    const result = await passwordServices.changePassowrd(req, id)
+    const result = await passwordServices.changePassowrd(req, id as string)
     return result;
 }

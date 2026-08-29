@@ -23,7 +23,7 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
     const { schoolId } = auth
     const { id } = await context.params
 
-    const result = studentService.getStudentById(id, schoolId)
+    const result = studentService.getStudentById(id as string, schoolId)
     return result
 }
 

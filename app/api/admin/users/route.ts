@@ -7,10 +7,11 @@ export const GET = async (req: NextRequest) => {
     const auth = await requireRoleForTenant(req, [Role.ADMIN]);
     if(!auth.success){
         return NextResponse.json(
-            { error: "Unauthorized. Admin access required"}
+            { error: auth.error},
+            { status: auth.status }
         )
     }
-    const { role, schoolId  } = auth
+    const { schoolId  } = auth
     const { searchParams } = new URL(req.url);
     const roleParam = searchParams.get("role") || undefined;
     const search = searchParams.get("search") || undefined;

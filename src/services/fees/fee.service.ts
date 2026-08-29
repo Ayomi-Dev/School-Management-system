@@ -1,5 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
-import { PaymentMethod } from "@/app/generated/prisma/enums";
+import { PaymentMethod, PaymentStatus } from "@/app/generated/prisma/enums";
 
 // ============================================================
 // TYPES
@@ -29,6 +29,7 @@ export interface RecordPaymentInput {
   paymentMethod: PaymentMethod;
   recordedById?: string;
   note?: string;
+  status?: PaymentStatus
 }
 
 // ============================================================
@@ -39,8 +40,16 @@ export async function createFeeStructure(input: CreateFeeStructureInput) {
   const { schoolId, classId, termId, name, amount, isOptional = false } = input;
 
   return prisma.feeStructure.create({
-    data: { schoolId, classId: classId ?? null, termId, name, amount, isOptional },
-    include: { class: { select: { name: true } }, term: { select: { period: true } } },
+    data: { 
+      schoolId, 
+      classId: classId ?? null, 
+      termId, 
+      name, 
+      amount, 
+      isOptional,
+      status: "NOT_PAID" 
+    },
+    include: { class: { select: { level: true } }, term: { select: { period: true } } },
   });
 }
 
@@ -130,6 +139,7 @@ export async function recordPayment(input: RecordPaymentInput) {
         paymentMethod,
         recordedById: recordedById ?? null,
         note: note ?? null,
+        status: "PAID"
       },
       include: {
         student: { select: { firstName: true, lastName: true, studentNumber: true } },

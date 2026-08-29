@@ -14,7 +14,7 @@ export const schoolService = {
     return response.data;
   },
 
-  create: async (data: CreatSchoolRequest): Promise<School> => {
+  create: async (data: CreateSchoolRequest): Promise<School> => {
     const response = await client.post(API_ENDPOINTS.SCHOOLS_CREATE, data);
     return response.data;
   },

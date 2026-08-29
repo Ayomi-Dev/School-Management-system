@@ -10,12 +10,12 @@ export const PUT = async(req: NextRequest, context: ParamsContext) => {
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },
-            { status: 403 }
+            { status: auth.status }
         )
     }
     
     const { id } = await context.params
-    const result = adminServices.updateUser(req, id)
+    const result = adminServices.updateUser(req, id as string)
     return result
 }
 export const GET = async(req: NextRequest, context: ParamsContext) => {
@@ -23,13 +23,13 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },
-            { status: 403 }
+            { status: auth.status }
         )
     }
     
     const { id } = await context.params
     const { schoolId } = auth
-    const result = adminServices.getUserById(schoolId as string, id)
+    const result = adminServices.getUserById(schoolId as string, id as string)
     return result
 }
 

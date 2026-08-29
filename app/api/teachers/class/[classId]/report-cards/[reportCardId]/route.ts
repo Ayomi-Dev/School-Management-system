@@ -14,7 +14,7 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
     }
     const { classId, reportCardId } = await context.params
     const { userId } = auth;
-    const result = await reportCardServices.getSingleReportCard(userId, classId, reportCardId);
+    const result = await reportCardServices.getSingleReportCard(userId, classId as string, reportCardId as string);
     return result;
 }
 
@@ -30,6 +30,6 @@ export const PATCH = async(req: NextRequest, context: ClassParamsContext)  => {
     }
     const { classId, reportCardId } = await context.params
     const { userId } = auth;
-    const result = await reportCardServices.publishReportCard(req, userId, classId, reportCardId);
+    const result = await reportCardServices.publishReportCard(req, userId, classId as string, reportCardId as string);
     return result;
 }

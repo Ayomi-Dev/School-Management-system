@@ -15,7 +15,7 @@ export const GET = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { classId } = await context.params
     const { userId } = auth
-    const result = await timetableService.getClassTimetable(userId, classId);
+    const result = await timetableService.getClassTimetable(userId, classId as string);
     return result;
 }
 
@@ -30,6 +30,6 @@ export const POST = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { classId } = await context.params
     const { userId } = auth
-    const result = await timetableService.createTimetableSlot(req, userId,  classId);
+    const result = await timetableService.createTimetableSlot(req, userId,  classId as string);
     return result;
 }

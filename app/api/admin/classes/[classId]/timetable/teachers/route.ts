@@ -15,6 +15,6 @@ export const GET = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { classId } = await context.params
     const {userId } = auth
-    const result = await timetableService.getClassTeachers(userId, classId);
+    const result = await timetableService.getClassTeachers(userId, classId as string);
     return result;
 }

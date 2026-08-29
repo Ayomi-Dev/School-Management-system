@@ -14,6 +14,6 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
     }
     
     const { subjectId, classId } = await context.params;
-    const result = await teacherServices.getScoreHistory(req, auth.userId, subjectId, classId);
+    const result = await teacherServices.getScoreHistory(req, auth.userId, subjectId as string, classId as string);
     return result
 }

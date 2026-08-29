@@ -14,6 +14,6 @@ export const GET = async (req: NextRequest, context: ParamsContext) => {
     const { userId } = auth;
     const { studentId } = await context.params;
 
-    const result = await parentService.getStudentSummary(userId, studentId, termId);
+    const result = await parentService.getStudentSummary(userId, studentId as string, termId);
     return result;
 }

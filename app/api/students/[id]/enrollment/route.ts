@@ -32,6 +32,6 @@ export const GET = async(req: NextRequest, context: ParamsContext ) => {
     }
 
     const { id } = await context.params
-    const result = await enrollmentService.extractFromEnrollment(id, academicYearId )
+    const result = await enrollmentService.extractFromEnrollment(id as string, academicYearId )
     return result;
 }

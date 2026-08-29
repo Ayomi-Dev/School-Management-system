@@ -19,6 +19,6 @@ export const POST = async(req: NextRequest, context: ParamsContext) => {
         )
     }
     const { id } = await context.params
-    const result = await superAdminServices.provisionAdmin(req, id);
+    const result = await superAdminServices.provisionAdmin(req, id as string);
     return result;
 }

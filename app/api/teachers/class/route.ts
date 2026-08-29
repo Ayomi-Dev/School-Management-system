@@ -14,6 +14,6 @@ export const GET = async(req: NextRequest ) => {
         )
     }
     const { userId, schoolId } = auth
-    const result = await teacherServices.getAssignments(schoolId, userId, getCurrentTerm())
+    const result = await teacherServices.getAssignments(schoolId as string, userId, getCurrentTerm())
     return result;
 }

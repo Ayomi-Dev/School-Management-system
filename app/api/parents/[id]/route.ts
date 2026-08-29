@@ -22,7 +22,7 @@ export const GET = async(req: NextRequest, context: ParamsContext) => {
     }
     const { id } = await context.params
 
-    const result = parentService.getParentById(id)
+    const result = parentService.getParentById(id as string)
     return result
 }
 

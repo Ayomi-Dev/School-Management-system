@@ -118,7 +118,7 @@ export const attendanceServices = {
                 student: { select: { firstName: true, lastName: true, studentNumber: true } },
               },
             },
-            class: { select: { name: true, level: true } },
+            class: { select: { level: true } },
           },
         });
       });
@@ -215,7 +215,7 @@ export const attendanceServices = {
       return prisma.classSession.findUnique({
         where: { id: sessionId },
         include: {
-          class: { select: { name: true, level: true } },
+          class: { select: { level: true } },
           teacher: { select: { firstName: true, lastName: true } },
           attendances: {
             include: {
@@ -347,7 +347,7 @@ export const attendanceServices = {
               include: {
                 session: {
                   include: {
-                    class: { select: { name: true } },
+                    class: { select: { level: true } },
                   },
                 },
               },
@@ -392,7 +392,7 @@ export const attendanceServices = {
         },
         include: {
           teacher: { select: { firstName: true, lastName: true } },
-          class: { select: { name: true } },
+          class: { select: { level: true } },
         },
       });
     },
@@ -404,7 +404,7 @@ export const attendanceServices = {
         return prisma.classSession.findMany({
             where: { teacherId, termId },
             include: {
-              class: { select: { name: true, level: true } },
+              class: { select: { level: true } },
               _count: { select: { attendances: true } },
             },
             orderBy: { date: "desc" },

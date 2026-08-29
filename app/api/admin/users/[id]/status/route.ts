@@ -15,6 +15,6 @@ export const PATCH = async(req:NextRequest, context: ParamsContext) => {
     }
     const { id } = await context.params;
     const { userId, schoolId } = auth
-    const result = await adminServices.updateUserStatus(req, userId, id, schoolId as string);
+    const result = await adminServices.updateUserStatus(req, userId, id as string, schoolId as string);
     return result;
 }

@@ -15,7 +15,7 @@ export const POST = async(req: NextRequest, context: ClassParamsContext) => { //
     }
     const { classId } = await context.params;
     const { userId } = auth
-    const result = await reportCardServices.compileReportCards(req, userId, classId) ;
+    const result = await reportCardServices.compileReportCards(req, userId, classId as string) ;
     return result;
 }
 
@@ -30,6 +30,6 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => { //G
     }
     const { classId } = await context.params;
     const { userId } = auth
-    const result = await reportCardServices.getReportCards( userId, classId) ;
+    const result = await reportCardServices.getReportCards( userId, classId as string) ;
     return result;
 }

@@ -175,7 +175,7 @@ export const termService = {
     
         // Unique check: one period per academic year
       const existingTerm = await prisma.term.findUnique({
-        where: { academicYearId_period: { academicYearId: year.id, period } },
+        where: { academicYearId_period: { academicYearId, period } },
         select: { id: true },
       }); 
       if (existingTerm) {

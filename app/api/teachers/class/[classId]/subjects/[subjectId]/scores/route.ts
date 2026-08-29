@@ -17,7 +17,7 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
     }
 
     const { classId, subjectId } = await context.params
-    const result = await teacherServices.getScoreRoster(auth.userId, classId, subjectId)
+    const result = await teacherServices.getScoreRoster(auth.userId, classId as string, subjectId as string)
     return result;
 }
 
@@ -32,6 +32,6 @@ export const PATCH = async(req: NextRequest, context: ClassParamsContext)  => {
     }
 
     const { classId, subjectId } = await context.params
-    const result = await teacherServices.updateScoreRoster(req, auth.userId, classId, subjectId);
+    const result = await teacherServices.updateScoreRoster(req, auth.userId, classId as string, subjectId as string);
     return result;
 }
