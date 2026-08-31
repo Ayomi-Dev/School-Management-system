@@ -15,7 +15,6 @@ export type Department = "ART" | "COMMERCIAL" | "SCIENCE";
 export type Gender = "MALE" | "FEMALE";
 export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "UNMARKED";
 export type StudentStatus = "ACTIVE" | "GRADUATED" | "TRANSFERRED" | "SUSPENDED" | "WITHDRAWN";
-export type ReportCardStatus = "DRAFT" | "PUBLISHED";
 export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "POS" | "ONLINE";
 export type Relationship = "MOTHER" | "FATHER" | "GUARDIAN";
 export type EmployeeType = "FULL_TIME" | "PART_TIME";

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,16 +10,25 @@ import { useLoginMutation } from '@/src/hooks/queries/useAuth';
 import { UserLoginInput, userLoginSchema } from '@/src/validators/userLoginSchema';
 import { useAuthStore } from '@/src/stores/authStore';
 
-const roles = ["admin", "student", "teacher", "parent", "bursar"]
+const roles = ["admin", "student", "teacher", "parent", "bursar"];
+
 export default function LoginPage() {
-  const searchParams = useSearchParams().get("role") as string
-  const capsParams = searchParams?.charAt(0).toUpperCase() + searchParams?.slice(1)
-  console.log(capsParams)
-  const isParamsTrue = roles.includes(searchParams)
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams().get("role") as string;
+  const capsParams = searchParams
+    ? searchParams.charAt(0).toUpperCase() + searchParams.slice(1)
+    : '';
+  const isParamsTrue = roles.includes(searchParams);
   const router = useRouter();
   const { user, error: authError, setError: setAuthError } = useAuthStore();
   const { handleLogin, loginMutation } = useLoginMutation();
-
 
   const { control, handleSubmit } = useForm<UserLoginInput>({
     resolver: zodResolver(userLoginSchema),
@@ -28,7 +37,6 @@ export default function LoginPage() {
       password: '',
     },
   });
-
 
   const onSubmit = async (data: UserLoginInput) => {
     setAuthError(null);
@@ -41,15 +49,15 @@ export default function LoginPage() {
     }
   }, [user]);
 
-
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-lg p-8">
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{isParamsTrue ? `Welcome ${capsParams}` : "School Portal"}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {isParamsTrue ? `Welcome ${capsParams}` : "School Portal"}
+            </h1>
             <p className="text-gray-600">Sign in to your account</p>
           </div>
 
@@ -94,6 +102,26 @@ export default function LoginPage() {
             </div>
           )}
 
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-lg p-8 animate-pulse">
+          <div className="text-center mb-8">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+          </div>
+          <div className="space-y-6">
+            <div className="h-10 bg-gray-200 rounded" />
+            <div className="h-10 bg-gray-200 rounded" />
+            <div className="h-10 bg-gray-200 rounded" />
+          </div>
         </div>
       </div>
     </div>

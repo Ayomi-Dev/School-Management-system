@@ -1,5 +1,4 @@
 // API Request/Response Types
-import { z } from 'zod';
 import { ClassLevel, Gender, Role, TermPeriod, UserStatus } from './types';
 
 export interface ApiError {
@@ -25,8 +24,6 @@ export interface RefreshTokenRequest {
 }
 
 // User Types
-
-
 export interface User {
   id: string;
   email: string;
