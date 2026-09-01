@@ -36,58 +36,58 @@ export const adminServices = {
             select: { id: true }
         }
       )
-          if(!idForSchool) {
-                return NextResponse.json(
-                    { error: "School id is missing."},
-                    { status: 400 }
-                )
+      if(!idForSchool) {
+        return NextResponse.json(
+            { error: "School id is missing."},
+            { status: 400 }
+        )
+      }
+
+      //checks for email uniqueness since only non-admin roles uses usercode
+      if((userInput.role === "TEACHER" || userInput.role === "BURSAR") && !userInput.email ){
+        return NextResponse.json(
+            { error: "Email is required for this role"},
+            { status: 422 }
+        )
+      }
+
+      //checks if the user already exists or not
+      if(userInput.email){
+        const existingUser = await prisma.user.findFirst(
+            {
+                where: { email: userInput.email, schoolId },
+                select: { id: true}
             }
+        );
+        if(existingUser){
+            return NextResponse.json(
+                { error: "A user with this email/phone already exists" }, 
+                { status: 409 }
+            )
+        }
+      }
 
-            //checks for email uniqueness since only non-admin roles uses usercode
-            if((userInput.role === "TEACHER" || userInput.role === "BURSAR") && !userInput.email ){
-                return NextResponse.json(
-                    { error: "Email is required for this role"},
-                    { status: 422 }
-                )
-            }
-
-            //checks if the user already exists or not
-            if(userInput.email){
-                const existingUser = await prisma.user.findFirst(
-                    {
-                        where: { email: userInput.email, schoolId },
-                        select: { id: true}
-                    }
-                );
-                if(existingUser){
-                    return NextResponse.json(
-                        { error: "A user with this email/phone already exists" }, 
-                        { status: 409 }
-                    )
-                }
-            }
-
-            // Check phone uniqueness
-            if(userInput.phone){
-                const existingPhone = await prisma.user.findFirst({
-                    where: { phone: userInput.phone, schoolId },
-                    select: { id: true }
-                });
-                if(existingPhone){
-                    return NextResponse.json(
-                        { error: "A user with this phone number already exists" },
-                        { status: 409 }
-                    )
-                }
-            }
+      // Check phone uniqueness
+      if(userInput.phone){
+          const existingPhone = await prisma.user.findFirst({
+              where: { phone: userInput.phone, schoolId },
+              select: { id: true }
+          });
+          if(existingPhone){
+              return NextResponse.json(
+                  { error: "A user with this phone number already exists" },
+                  { status: 409 }
+              )
+          }
+      }
 
 
-            let tempPassword: string | undefined;
-            let rawSetUpToken: string | undefined;
-            tempPassword = generalTempPassword(userInput.lastName)
-            const passwordHash = await passwordServices.hashPassword(tempPassword)
-            const { raw, hash } = generateSetUpToken();
-            rawSetUpToken = raw;
+      let tempPassword: string | undefined;
+      let rawSetUpToken: string | undefined;
+      tempPassword = generalTempPassword(userInput.lastName)
+      const passwordHash = await passwordServices.hashPassword(tempPassword)
+      const { raw, hash } = generateSetUpToken();
+      rawSetUpToken = raw;
             
             const newUser = await prisma.$transaction(
                 async(tx) => {
@@ -477,7 +477,6 @@ export const adminServices = {
         }
   },
   async getStats(schoolId: string) {
-      console.log("[adminService.getStats] Fetching stats for schoolId:", schoolId);
         const [
             totalStudents,
             totalTeachers,

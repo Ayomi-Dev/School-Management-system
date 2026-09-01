@@ -243,7 +243,7 @@ export interface AdminProfile{
   user: User
 }
 
-export type ReportCardStatus = 'DRAFT' | 'PUBLISHED';
+export type ReportCardStatus = 'DRAFT' | 'PUBLISHED'; 
  
 export interface CompiledCardSummary {
   reportCardId: string;

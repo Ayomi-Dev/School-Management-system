@@ -29,7 +29,6 @@ export const useLoginMutation = () => { //this is a mutation because it changes 
     },
     onSuccess: (data) => {
       if (!data) return;
-
       // Backend handles token cookies - frontend only stores user
       setUser(data.user);
       success(SUCCESS_MESSAGES.LOGIN_SUCCESS);
@@ -122,7 +121,7 @@ export const useForgotPasswordMutation = () => {
   return useMutation({
     mutationFn: async (email: string) => {
       try {
-        return await authService.refresh()
+        return await authService.forgotPassword(email)
       } catch (error) {
         const message = getErrorMessage(error);
         setForgotPasswordError(message);
@@ -130,7 +129,8 @@ export const useForgotPasswordMutation = () => {
         return null;
       }
     },
-    onSuccess: () => {
+    onSuccess: (email) => {
+      if(!email) return;
       success('Password reset link sent to your email');
     },
   });
@@ -151,7 +151,8 @@ export const useResetPasswordMutation = () => {
         return null;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if(!data) return;
       success(SUCCESS_MESSAGES.PASSWORD_CHANGED);
     },
   });

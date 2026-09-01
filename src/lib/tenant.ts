@@ -60,7 +60,6 @@ export async function requireRoleForTenant(
   } catch (err) {
     return { success: false, error: "School context missing", status: 400 };
   }
-  console.log("Tenant schoolId from headers:", tenantSchoolId, auth.schoolId, auth.role);
   // If the authenticated user is a SUPER_ADMIN, allow access and map the tenant id
   if (auth.role === Role.SUPER_ADMIN) {
     return {

@@ -12,6 +12,9 @@ import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(p
 import { TeachersListParams, UserStatus } from '@/src/types';
 import { timetableService } from '@/src/services/client/timetable';
 import { CreateTimetableSlotBody, UpdateTimetableSlotBody } from '@/src/types/timetable';
+import { getErrorMessage } from '@/src/utils/error';
+import { useAuthStore } from '@/src/stores/authStore';
+import { queryClient } from '@/src/lib/queryClient';
 
 const queryKeys = {
   admin: ['admin'],
@@ -71,18 +74,27 @@ export const useAdminById = (id: string) => {
 };
 
 export const useCreateUserMutation = () => {
-  const queryClient = useQueryClient();
+  const { setError: setCreateUserError } = useAuthStore()
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: (data: CreateUserFormData) => adminService.createUser(data),
-    onSuccess: () => {
+    mutationFn: async (data: CreateUserFormData) => {
+      try {
+        return await adminService.createUser(data);
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        setCreateUserError(message);
+        showError(message);
+        return null;
+      } 
+    },
+      // adminService.createUser(data)},
+    onSuccess: (data) => {
+      if (!data) return;
       success('User created successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.users() });
-    },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error || 'Failed to create user');
-    },
+    }
   });
 };
 

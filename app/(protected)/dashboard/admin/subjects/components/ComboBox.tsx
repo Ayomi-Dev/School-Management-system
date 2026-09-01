@@ -102,7 +102,7 @@ export function TeacherCombobox({
                         })
                     
                       }
-                      disabled={teacher.classAssignment && teacher.classAssignment.isClassTeacher}
+                      // disabled={teacher.classAssignment && teacher.classAssignment.isClassTeacher}
                       className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors ${
                         isSelected
                           ? 'bg-blue-50 text-blue-700 font-medium'
