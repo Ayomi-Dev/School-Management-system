@@ -47,6 +47,12 @@ export const useAuthStore = create<AuthStore>()(
         window.dispatchEvent(new CustomEvent('auth:logout'));
       },
     }),
-    
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        // Don't persist loading or error state
+      }),
+    }
   )
 );
