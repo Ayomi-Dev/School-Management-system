@@ -1,4 +1,3 @@
-// app/auth/refresh-session/page.tsx
 'use client';
 
 import { Suspense, useEffect } from 'react';

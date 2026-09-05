@@ -206,7 +206,6 @@ export const authService = {
             const refreshToken = req.cookies.get("refresh_token")?.value;
             
             if(!refreshToken){
-                console.log("err 1")
                 return NextResponse.json(
                     { error: "Unauthorized: No refresh token found"}, 
                     {status: 401 }
@@ -214,9 +213,7 @@ export const authService = {
             }
             //checks if the token has been revoked in the database here before proceeding to generate a new access token.
             const revoked = await isTokenRevoked(refreshToken);
-            console.log("is token revoked :", revoked)
             if(revoked){
-                console.log("err 2")
                 return NextResponse.json(
                     { error: "Unauthorized: Refresh token revoked" }, 
                     { status: 401}
@@ -225,13 +222,11 @@ export const authService = {
             // refresh token verification 
             const payload  = await verifyRefreshToken(refreshToken)
             if(!payload){
-                console.log("err 2")
                 return NextResponse.json(
                     { error: "Unauthorized: Invalid refresh token"}, 
                     {status: 401 }
                 );
             }
-    
             const {userId, role, schoolId } = payload //Extracts the user details from the refresh token's payload, which will be used to create a new access token with the same user information.
 
             const user = await prisma.user.findUnique(

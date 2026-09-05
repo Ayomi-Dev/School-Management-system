@@ -1,5 +1,15 @@
 // API Configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_APP_DOMAIN ?? '' ;
+
+export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    // Browser — origin is always correct, zero config needed
+    // "https://faithschool.portalsystem-beige.vercel.app" → use as-is
+    return window.location.origin;
+  }
+
+  // Server-side fallback
+  return process.env.INTERNAL_FETCH_BASE ?? "http://localhost:3000";
+}
 
 export const API_ENDPOINTS = { 
   // Auth
@@ -9,7 +19,7 @@ export const API_ENDPOINTS = {
   AUTH_REFRESH: '/api/auth/refresh',
   AUTH_ACCOUNT_SETUP: '/api/auth/account-setup',
   AUTH_FORGOT_PASSWORD: '/api/auth/forgot-password',
-  AUTH_RESET_PASSWORD: '/api/auth/reset-password',
+  AUTH_RESET_PASSWORD: '/api/auth/reset-password', 
 
   // Super Admin
   SCHOOLS_LIST: '/api/super-admin/schools',

@@ -1,7 +1,7 @@
 'use client';
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { API_BASE_URL, API_CONFIG, ERROR_MESSAGES } from '@/src/config/constants';
+import { API_CONFIG, API_ENDPOINTS, ERROR_MESSAGES, getApiBaseUrl } from '@/src/config/constants';
 import { ApiError, isApiError } from '@/src/types/api';
 
 let apiClient: AxiosInstance | null = null;
@@ -9,22 +9,49 @@ let apiClient: AxiosInstance | null = null;
 // api.ts
 
 const AUTH_ROUTES_SKIP_REFRESH = [
-  '/api/auth/login',
-  '/api/auth/refresh',
-  '/api/auth/logout',
+  API_ENDPOINTS.AUTH_LOGIN,
+  API_ENDPOINTS.AUTH_SUPER_ADMIN_LOGIN,
+  API_ENDPOINTS.AUTH_LOGOUT,
+  API_ENDPOINTS.AUTH_REFRESH,
+  API_ENDPOINTS.AUTH_ACCOUNT_SETUP,
+  API_ENDPOINTS.AUTH_FORGOT_PASSWORD,
+  API_ENDPOINTS.AUTH_RESET_PASSWORD,
 ];
 
 export function createApiClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: getApiBaseUrl(),
     ...API_CONFIG,
     withCredentials: true,
   });
 
+  // ── Request interceptor — re-derive baseURL on every request ──
+  // This is the critical guard: even if the client was created with
+  // a stale baseURL, every outgoing request corrects it at send time.
+  client.interceptors.request.use((config) => {
+    // Re-derive base URL at actual request time (not client creation time)
+    // This handles edge cases where the module was loaded server-side
+    // but the request fires client-side.
+    if (typeof window !== "undefined") {
+      config.baseURL = window.location.origin;
+    }
+
+    console.log(
+      "[apiClient] →",
+      config.method?.toUpperCase(),
+      `${config.baseURL}${config.url}`
+    );
+
+    return config;
+  });
+
+
   client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-      const originalRequest = error.config as any;
+      const originalRequest =  error.config as typeof error.config & {
+        _retry?: boolean;
+      };
 
       const isAuthRoute = AUTH_ROUTES_SKIP_REFRESH.some((route) =>
         originalRequest?.url?.includes(route)
@@ -39,42 +66,38 @@ export function createApiClient(): AxiosInstance {
         originalRequest._retry = true;
 
         try {
+          // Use window.location.origin directly — never a stale constant
           await axios.post(
-            `${API_BASE_URL}/api/auth/refresh`,
+            `${typeof window !== "undefined" ? window.location.origin : ""}/api/auth/refresh`,
             {},
             { withCredentials: true }
           );
+
           return client(originalRequest);
         } catch (refreshError) {
-          window.dispatchEvent(new CustomEvent('auth:logout'));
-          window.location.href = '/auth/login';
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("auth:logout"));
+            window.location.href = "/auth/login";
+          }
           return Promise.reject(refreshError);
         }
       }
 
       // Format error response
+      const status = error.response?.status;
+      const serverData = error.response?.data;
       const apiError: ApiError = {
-        error: ERROR_MESSAGES.UNKNOWN_ERROR,
-        statusCode: error.response?.status,
+        error: isApiError(serverData) ? (serverData as ApiError).error : error.message === "Network Error"
+          ? ERROR_MESSAGES.NETWORK_ERROR
+          : status === 400 ? ERROR_MESSAGES.VALIDATION_ERROR
+          : status === 401 ? ERROR_MESSAGES.UNAUTHORIZED
+          : status === 403 ? ERROR_MESSAGES.FORBIDDEN
+          : status === 404 ? ERROR_MESSAGES.NOT_FOUND
+          : status === 500 ? ERROR_MESSAGES.SERVER_ERROR
+          : ERROR_MESSAGES.UNKNOWN_ERROR,
+        statusCode: status,
+        details: isApiError(serverData) ? (serverData as ApiError).details : undefined,
       };
-
-      if (error.response?.data && isApiError(error.response.data)) {
-        apiError.error = (error.response.data as ApiError).error;
-        apiError.details = (error.response.data as ApiError).details;
-      } else if (error.message === 'Network Error') {
-        apiError.error = ERROR_MESSAGES.NETWORK_ERROR;
-      } else if (error.response?.status === 400) {
-        apiError.error = ERROR_MESSAGES.VALIDATION_ERROR;
-      } else if (error.response?.status === 401) {
-        apiError.error = ERROR_MESSAGES.UNAUTHORIZED;
-      } else if (error.response?.status === 403) {
-        apiError.error = ERROR_MESSAGES.FORBIDDEN;
-      } else if (error.response?.status === 404) {
-        apiError.error = ERROR_MESSAGES.NOT_FOUND;
-      } else if (error.response?.status === 500) {
-        apiError.error = ERROR_MESSAGES.SERVER_ERROR;
-      }
-
       return Promise.reject(apiError);
     }
   );
