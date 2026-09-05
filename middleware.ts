@@ -21,6 +21,7 @@ const BYPASS_PATHS = [
   "/api/internal/resolve-school",        // ← internal resolver must never loop back through middleware
   "/school-not-found",
   "/not-found",
+  "/"
 ];
 
 export async function middleware(req: NextRequest) {
@@ -37,6 +38,16 @@ export async function middleware(req: NextRequest) {
 
   // ── 2. Extract tenant slug from subdomain ───────────────────
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "";
+  const isRootDomain =
+    host === appDomain ||                    // exact match
+    host === `www.${appDomain}` ||           // www prefix
+    host === "localhost:3000" ||             // dev root
+    host === "127.0.0.1:3000";              // dev root alt
+
+  if (isRootDomain) {
+    // Rewrite to a root landing page — URL stays the same in browser
+    return NextResponse.rewrite(new URL("/", req.url));
+  }
   const slug = extractSlug(host, appDomain);
 
   if (!slug) {
