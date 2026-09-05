@@ -43,8 +43,7 @@ export async function middleware(req: NextRequest) {
     return isApiRoute
       ? NextResponse.json({ error: "Unknown tenant" }, { status: 400 })
       : NextResponse.redirect(new URL("/not-found", req.url));
-    // return NextResponse.redirect(new URL("/not-found", req.url));
-  }
+    }
 
   // ── 3. Resolve slug to schoolId via internal API ─────────────
   //    Edge runtime can't use Prisma directly, so we call our

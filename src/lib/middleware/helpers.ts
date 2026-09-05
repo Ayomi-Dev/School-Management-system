@@ -24,16 +24,11 @@ export function extractSlug(host: string, appDomain: string): string | null {
   return null;
 }
 
-function getInternalBase(req: NextRequest): string {
-  // Explicit env var always wins — set this in .env.local
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-
+function stripSubdomain(req: NextRequest): string {
   // Derive from the request: strip the subdomain, keep protocol + port
   // "faithschool.localhost:3000" → "http://localhost:3000"
   const host = req.headers.get("host") ?? "localhost:3000";
-  const protocol = req.nextUrl.protocol ?? "http:";
+  const protocol = req.nextUrl.protocol ? `${req.nextUrl.protocol}//` : "http://";
 
   // Remove subdomain: "faithschool.localhost:3000" → "localhost:3000"
   const parts = host.split(".");
@@ -41,14 +36,27 @@ function getInternalBase(req: NextRequest): string {
   // take only the last two segments: "localhost:3000"
   const rootHost = parts.length > 1 ? parts.slice(1).join(".") : host;
 
-  return `${protocol}//${rootHost}`;
+  return `${protocol}${rootHost}`;
+}
+
+function getInternalBase(req: NextRequest): string {
+  // Explicit env var always wins set only as production value. i.e the root domain with NO subdomain prefix.
+  const explicit = process.env.INTERNAL_FETCH_BASE;
+  if (explicit) {
+    // Strip any accidental trailing slash
+    return explicit.replace(/\/$/, "");
+  }
+
+  const rootUrl = stripSubdomain(req);
+  return rootUrl;
+  
 }
 
 export async function resolveSlugToId(
   slug: string,
   req: NextRequest
 ): Promise<string | null> {
-  const secret = process.env.INTERNAL_API_SECRET;
+  const secret = process.env.INTERNAL_API_SECRET; 
   if (!secret) {
     console.error("[middleware] INTERNAL_API_SECRET is not set");
     return null;
@@ -60,12 +68,14 @@ export async function resolveSlugToId(
   // virtual subdomain. In the edge sandbox, fetching a subdomain URL
   // can fail because the sandbox resolves hosts differently.
   const base = getInternalBase(req);
+  // console.log("[middleware] resolveSlugToId: base URL for internal fetch:", base, "slug:", slug);
 
   console.log("[middleware] resolving slug via:", `${base}/api/internal/resolve-school?slug=${slug}`);
+  const url = `${base}/api/internal/resolve-school?slug=${encodeURIComponent(slug)}`
 
   try {
     const res = await fetch(
-      `${base}/api/internal/resolve-school?slug=${encodeURIComponent(slug)}`,
+      url,
       {
         method: "GET",
         headers: { "x-internal-secret": secret },
