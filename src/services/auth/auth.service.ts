@@ -49,7 +49,6 @@ export const authService = {
         });
         return user?.isActive ?? false; // If user not found, treat as inactive
     },
-
     //login service
     async login( userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
         const user = await prisma.user.findFirst({

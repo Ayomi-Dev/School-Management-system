@@ -1,22 +1,25 @@
 import { NextRequest } from "next/server";
 const ROLE_PATHS: Record<string, string[]> = {
-  ADMIN:       ["/dashboard/admin", "/students", "/teachers", "/classes", "/academics", "/fees", "/announcements"],
+  ADMIN: ["/dashboard/admin", "/students", "/teachers", "/classes", "/academics", "/fees", "/announcements"],
   SUPER_ADMIN: ["/dashboard/admin", "/schools"],
-  TUTOR:       ["/dashboard/teacher", "/classes", "/attendance", "/academics/scores"],
-  STUDENT:     ["/dashboard/student"],
-  PARENT:      ["/dashboard/parent"],
-  BURSAR:      ["/dashboard/bursar", "/fees"],
+  TUTOR:   ["/dashboard/teacher", "/classes", "/attendance", "/academics/scores"],
+  STUDENT: ["/dashboard/student"],
+  PARENT: ["/dashboard/parent"],
+  BURSAR: ["/dashboard/bursar", "/fees"],
 };
 
 
 export function extractSlug(host: string, appDomain: string): string | null {
   // Production: "faithschool.myapp.edu.ng" → "faithschool"
+  console.log("slug utility reached with host:", host, "appDomain:", appDomain);
   if (appDomain && host.endsWith(`.${appDomain}`)) {
+    console.log("slug utility:", host, appDomain, "→", host.slice(0, host.length - appDomain.length - 1));
     return host.slice(0, host.length - appDomain.length - 1) || null;
   }
 
   // Dev: "faithschool.localhost:3000" → "faithschool"
   if (host.includes(".localhost")) {
+        console.log("slug utility:", host, appDomain, "includes .localhost");
     const slug = host.split(".localhost")[0];
     return slug || null;
   }
@@ -35,6 +38,7 @@ function stripSubdomain(req: NextRequest): string {
   // If there's a subdomain (more than one dot segment before the port)
   // take only the last two segments: "localhost:3000"
   const rootHost = parts.length > 1 ? parts.slice(1).join(".") : host;
+  console.log("stripdomain utility:", rootHost, protocol)
 
   return `${protocol}${rootHost}`;
 }
@@ -44,10 +48,12 @@ function getInternalBase(req: NextRequest): string {
   const explicit = process.env.INTERNAL_FETCH_BASE;
   if (explicit) {
     // Strip any accidental trailing slash
+    console.log("getInternalBase: Using explicit INTERNAL_FETCH_BASE:", explicit.replace(/\/$/, ""));
     return explicit.replace(/\/$/, "");
   }
 
   const rootUrl = stripSubdomain(req);
+  console.log("getInternalBase: Derived root URL:", rootUrl);
   return rootUrl;
   
 }
@@ -68,7 +74,7 @@ export async function resolveSlugToId(
   // virtual subdomain. In the edge sandbox, fetching a subdomain URL
   // can fail because the sandbox resolves hosts differently.
   const base = getInternalBase(req);
-  // console.log("[middleware] resolveSlugToId: base URL for internal fetch:", base, "slug:", slug);
+  
 
   console.log("[middleware] resolving slug via:", `${base}/api/internal/resolve-school?slug=${slug}`);
   const url = `${base}/api/internal/resolve-school?slug=${encodeURIComponent(slug)}`
@@ -78,7 +84,10 @@ export async function resolveSlugToId(
       url,
       {
         method: "GET",
-        headers: { "x-internal-secret": secret },
+        headers: { 
+          "x-internal-secret": secret,
+          "x-forwarded-host": req.headers.get("host") ?? "",
+        },
         // Cache at the edge — schools don't rename often
         next: { revalidate: 60 },
       }

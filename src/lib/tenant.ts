@@ -18,11 +18,9 @@ export async function getTenantSchoolId(req?: NextRequest): Promise<string> {
   // Prefer the request headers when a NextRequest is available (route handlers).
   if (req) {
     const fromReq = req.headers.get("x-school-id");
-    console.log("getTenantSchoolId: x-school-id from req.headers:", fromReq);
     if (fromReq) return fromReq;
     // If missing on req.headers, fall back to next/headers() which sometimes
     // exposes middleware-injected headers in other server contexts.
-    console.warn("getTenantSchoolId: x-school-id not found on req.headers, falling back to next/headers()");
   }
 
   const headersList = await headers();
@@ -47,7 +45,6 @@ export async function requireRoleForTenant(
   req: NextRequest,
   requiredRoles: Role[]
 ): Promise<TenantAuthResult> {
-  console.log("requireRoleForTenant: Checking role for tenant-scoped route:", req.url, "Required roles:", requiredRoles);
   // Auth check
   const auth = await requireRole(req, requiredRoles);
   console.log("requireRoleForTenant: Auth result:", auth);
@@ -76,13 +73,13 @@ export async function requireRoleForTenant(
   }
 
   if (auth.schoolId !== tenantSchoolId) {
+    // console.log("requireRoleForTenant: School context mismatch. Token schoolId:", auth.schoolId, "Tenant schoolId:", tenantSchoolId);
     return { 
       success: false, 
       error: "Forbidden: School context mismatch", 
       status: 403 
     };
   }
-
   return {
     success: true,
     userId: auth.userId,

@@ -21,10 +21,11 @@ const BYPASS_PATHS = [
   "/api/internal/resolve-school",        // ← internal resolver must never loop back through middleware
   "/school-not-found",
   "/not-found",
-  "/"
+  "/root"
 ];
 
 export async function middleware(req: NextRequest) {
+  console.log("[middleware] Processing request:", req.url);
   const { pathname } = req.nextUrl;
   const host = req.headers.get("host") ?? "";
   const isApiRoute = pathname.startsWith("/api/");
@@ -43,14 +44,16 @@ export async function middleware(req: NextRequest) {
     host === `www.${appDomain}` ||           // www prefix
     host === "localhost:3000" ||             // dev root
     host === "127.0.0.1:3000";              // dev root alt
+    console.log("[middleware] Host:", host, "App domain:", appDomain, "Is root domain:", isRootDomain);
 
   if (isRootDomain) {
     // Rewrite to a root landing page — URL stays the same in browser
-    return NextResponse.rewrite(new URL("/", req.url));
+    console.log("[middleware] Root domain detected, rewriting to /root", isRootDomain);
+    return NextResponse.rewrite(new URL("/root", req.url));
   }
   const slug = extractSlug(host, appDomain);
-
   if (!slug) {
+    // console.log("[middleware] Extracted slug:", slug, "from host:", host, "appDomain:", appDomain);
     return isApiRoute
       ? NextResponse.json({ error: "Unknown tenant" }, { status: 400 })
       : NextResponse.redirect(new URL("/not-found", req.url));
@@ -64,7 +67,7 @@ export async function middleware(req: NextRequest) {
   if (!schoolId) {
     return isApiRoute
       ? NextResponse.json({ error: "School not found" }, { status: 404 })
-      : NextResponse.rewrite(new URL("/school-not-found", req.url));
+      : NextResponse.rewrite(new URL("/not-found", req.url));
   }
 
   // ── 4. Inject school context headers into every request ─────

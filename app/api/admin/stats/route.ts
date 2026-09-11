@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
     const auth = await requireRoleForTenant(req, [Role.ADMIN]);
+    console.log("GET /api/admin/stats: Auth result:", auth);
 
     if (!auth.success) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

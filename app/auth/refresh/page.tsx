@@ -6,13 +6,14 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { Loader } from '@/src/components/ui/Loader';
 import { useRefreshAuthMutation } from '@/src/hooks/queries/useAuth';
 
+
 const ROLE_DEFAULT_ROUTES: Record<string, string> = {
   SUPER_ADMIN: '/dashboard/super-admin',
-  ADMIN:       '/dashboard/admin',
-  TEACHER:     '/dashboard/teacher',
-  STUDENT:     '/dashboard/student',
-  PARENT:      '/dashboard/parent',
-  BURSAR:      '/dashboard/bursar',
+  ADMIN: '/dashboard/admin',
+  TEACHER: '/dashboard/teacher',
+  STUDENT: '/dashboard/student',
+  PARENT: '/dashboard/parent',
+  BURSAR: '/dashboard/bursar'
 };
 
 export default function RefreshSessionPage() {
@@ -42,7 +43,6 @@ function RefreshSession() {
         // read the resolved value from the mutation, not the stale `user` from closure
         const roleRoute = freshUser?.user?.role ? ROLE_DEFAULT_ROUTES[freshUser?.user?.role] : null;
         const destination = callbackUrl ?? roleRoute ?? '/auth/login';
-        console.log(destination);
         router.replace(destination);
       })
       .catch(() => {
