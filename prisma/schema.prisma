@@ -138,6 +138,8 @@ enum Relationship {
 enum PaymentStatus {
   PAID
   NOT_PAID
+  PARTIAL
+  WAIVED
 }
 enum DayOfWeek {
   MONDAY
@@ -483,7 +485,7 @@ model StudentProfile {
 
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   school      School     @relation(fields: [schoolId], references: [id])
-  guardian    Guardian?  @relation(fields: [guardianId], references: [id]) // ← NEW
+  guardian    Guardian?  @relation(fields: [guardianId], references: [id])
 
   enrollments Enrollment[]
   attendances Attendance[]

@@ -256,7 +256,15 @@ export const termService = {
         console.error("[termService.getByAcademicYear]", error);
         return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
       }   
-    } 
+    },
+    async getTerms(schoolId: string) {
+      const terms = await prisma.term.findMany({
+        where:   { academicYear: { schoolId } },
+        select:  { id: true, period: true, isCurrent: true, academicYear: { select: { label: true } } },
+        orderBy: [{ academicYear: { startDate: 'desc' } }, { period: 'asc' }],
+      });
+      return NextResponse.json({ data: terms });
+    },
 };  
 
 

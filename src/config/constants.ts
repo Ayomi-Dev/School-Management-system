@@ -71,6 +71,8 @@ export const API_ENDPOINTS = {
   ADMIN_UPDATE_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
 
+  GET_TERMS: () => `/api/terms`,
+
   //Timetable
   /** GET  /admin/classes/:classId/timetable */
   GET_TIMETABLE: (classId: string) =>
@@ -136,7 +138,7 @@ export const API_ENDPOINTS = {
   UPDATE_REPORT_CARD : (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
 
 
-  // Parents
+  // Parents --------------------------------------------
   PARENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/parents`,
   PARENTS_GET: (id: string) => `/api/parents/${id}`,
   GET_PARENTS_LIST: () => `/api/admin/parents`,
@@ -145,8 +147,33 @@ export const API_ENDPOINTS = {
   GET_STUDENT_SUMMARY: (studentId: string) => `/api/parents/students/${studentId}/summary`,
   GET_STUDENT_REPORT_CARD: (reportCardId: string) => `/api/parents/students/report-card/${reportCardId}`,
 
-  //Bursar
+  //Bursar -----------------------------------------------
   BURSAR_GET: (id: string) => `/api/bursar/${id}`, 
+  GET_DASHBOARD:       (termId?: string) => `/api/bursar/dashboard?termId=${termId}`,
+  /** GET  /bursar/fee-structures?termId= */
+  LIST_FEE_STRUCTURES: (termId: string) => `/api/bursar/fee-structures?termId=${termId}`,
+ 
+  /** POST /bursar/fee-structures */
+  CREATE_FEE_STRUCTURE: () => `/api/bursar/fee-structures`,
+ 
+  /** POST /bursar/fee-structures/:id/assign */
+  ASSIGN_FEE_TO_CLASS: (feeStructureId: string) =>
+    `/api/bursar/fee-structures/${feeStructureId}/assign`,
+ 
+  /** POST /bursar/payments */
+  RECORD_PAYMENT: () => `/api/bursar/payments`,
+ 
+  /** GET  /bursar/students/:studentId/statement?termId= */
+  GET_STUDENT_STATEMENT: (studentId: string, termId: string) =>
+    `/api/bursar/students/${studentId}/statement?termId=${termId}`,
+ 
+  /** GET  /bursar/students/:studentId/payment-history */
+  GET_PAYMENT_HISTORY: (studentId: string) =>
+    `/api/bursar/students/${studentId}/payment-history`,
+ 
+  /** GET  /bursar/classes/:classId/fee-overview?termId=&academicYearId= */
+  GET_CLASS_FEE_OVERVIEW: (classId: string, termId: string, academicYearId: string) =>
+    `/api/bursar/classes/${classId}/fee-overview?termId=${termId}&academicYearId=${academicYearId}`,
 } as const;
 
 export const API_CONFIG = {

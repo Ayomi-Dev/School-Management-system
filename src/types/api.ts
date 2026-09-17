@@ -147,7 +147,8 @@ export interface Term {
   academicYearId: string;
   schoolId: string;
   isCurrent?: boolean;
-  period: TermPeriod
+  period: TermPeriod;
+  academicYear?: AcademicYear;
 }
 
 export interface CreateTermRequest {

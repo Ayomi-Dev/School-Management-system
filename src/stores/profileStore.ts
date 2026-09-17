@@ -1,4 +1,4 @@
-// stores/profileStore.ts
+
 import { create } from 'zustand';
 import { UserProfile } from '../types/api';
 

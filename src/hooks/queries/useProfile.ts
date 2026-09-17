@@ -5,6 +5,7 @@ import { useProfileStore } from '@/src/stores/profileStore';
 import { profileService } from '@/src/services/client/profile';
 import { queryKeys } from '@/src/lib/queryClient';
 import { useEffect } from 'react';
+import { getErrorMessage } from '@/src/utils/error';
 
 export const useProfileQuery = () => {
   const user = useAuthStore((s) => s.user);
@@ -24,9 +25,10 @@ export const useProfileQuery = () => {
     }, [query.data]);
 
   useEffect(() => {
-    if (query.error) setProfileError((query.error as any)?.message ?? 'Failed to load profile');
+    if (query.error) {
+      const message = getErrorMessage(query.error)
+      setProfileError(message)
+    };
   }, [query.error]);
-
-    return query
-    
+    return query 
 };

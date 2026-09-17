@@ -15,6 +15,7 @@ import { CreateTimetableSlotBody, UpdateTimetableSlotBody } from '@/src/types/ti
 import { getErrorMessage } from '@/src/utils/error';
 import { useAuthStore } from '@/src/stores/authStore';
 import { queryClient } from '@/src/lib/queryClient';
+import { id } from 'zod/v4/locales';
 
 const queryKeys = {
   admin: ['admin'],
@@ -41,34 +42,70 @@ const queryKeys = {
 
 // Stats Queries
 export const useAdminStats = () => {
+  const { error: showError } = useToast()
   return useQuery({
     queryKey: queryKeys.stats(),
-    queryFn: () => adminService.getStats(),
+    queryFn: async() => {
+      try {
+        return await adminService.getStats()
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     staleTime: 5 * 60 * 1000,
-  });
+  }); 
 };
 
 // User Queries
 export const useUsersList = (params?: { role?: string; search?: string; page?: number; limit?: number }) => {
+  const { error: showError } = useToast()
   return useQuery({
     queryKey: [...queryKeys.users(), params],
-    queryFn: () => adminService.getUsers(params),
+    queryFn: async() => {
+      try {
+        return await adminService.getUsers(params)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     staleTime: 2 * 60 * 1000,
   });
 };
 
 export const useUserById = (id: string) => {
+  const { error: showError } = useToast()
   return useQuery({
     queryKey: queryKeys.userById(id),
-    queryFn: () => adminService.getUserProfile(id),
+    queryFn: async() => {
+      try {
+        return await adminService.getUserProfile(id)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled: !!id,
   });
 };
 
 export const useAdminById = (id: string) => {
+  const { error: showError } = useToast()
   return useQuery({
     queryKey: queryKeys.userById(id),
-    queryFn: () => adminService.getAdmin(id),
+    queryFn: async() => {
+      try {
+        return await adminService.getAdmin(id)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled: !!id,
   });
 };
@@ -103,9 +140,18 @@ export const useUpdateUserMutation = () => {
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateUserFormData> }) =>
-      adminService.updateUser(id, data),
+    mutationFn: async({ id, data }: { id: string; data: Partial<CreateUserFormData> }) => {
+      try{
+        return await adminService.updateUser(id, data);
+      }
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     onSuccess: (_, { id }) => {
+      if (!id) return;
       success('User updated successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.userById(id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.users() });
@@ -118,17 +164,25 @@ export const useUpdateUserMutation = () => {
 
 export const useUpdateUserStatusMutation = (userId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (newStatus: UserStatus) =>
-      adminService.updateUserStatus(userId, newStatus),
+    mutationFn: async (newStatus: UserStatus) => {
+      try{
+        return await adminService.updateUserStatus(userId, newStatus);
+      }
+      catch( error ){
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     onSuccess: (_, newStatus) => {
+      if(!newStatus) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.userById(userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.users() });
       success(`User status updated to ${newStatus}`);
     },
-    onError: () => error('Failed to update user status'),
   });
 };
  
@@ -137,22 +191,39 @@ export const useDeleteUserMutation = () => {
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: (id: string) => adminService.deleteUser(id),
-    onSuccess: () => {
+    mutationFn: async (id: string) => {
+      try{
+        return await adminService.deleteUser(id);
+      }
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       success('User deleted successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.users() });
     },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error || 'Failed to delete user');
-    },
+    
   });
 };
 
 // Class Queries
 export const useClassesList = (params?: { academicYearId?: string; page?: number; limit?: number }) => {
+  const {error: showError} = useToast()
   return useQuery({
     queryKey: [...queryKeys.classes(), params],
-    queryFn: () => adminService.getClasses(params),
+   queryFn: async() => {
+      try {
+        return await adminService.getClasses(params)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     staleTime: 2 * 60 * 1000,
   });
 };
@@ -162,117 +233,195 @@ export const useCreateClassMutation = () => {
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: (data: CreateClassRequest) => adminService.createClass(data),
-    onSuccess: () => {
+    mutationFn: async(data: CreateClassRequest) => {
+      try{
+        return await adminService.createClass(data)  
+      }
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       success('Class created successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.classes() });
-    },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error || 'Failed to create class');
     },
   });
 };
 
 export const useAssignClassTeacherMutation = () => {
   const queryClient = useQueryClient();
-  const { success } = useToast()
+  const { success, error: showError } = useToast()
   return useMutation({
-    mutationFn: (payload: AssignClassTeacherPayload) => adminService.assignTeacherToCLass(payload),
-    onSuccess: () => {
+    mutationFn: async (payload: AssignClassTeacherPayload) => {
+      try{
+        return await adminService.assignTeacherToCLass(payload)
+      }
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
+      queryClient.invalidateQueries({ queryKey: queryKeys.classes() });
       success('Teacher assigned to class')
     }
   })
 }
 
-export const useClassDetail = (classId: string) =>
+export const useClassDetail = (classId: string) => {
+  const { error: showError } = useToast();
   useQuery({
     queryKey: queryKeys.classDetail(classId),
-    queryFn:  () => adminService.getClassDetail(classId),
+    queryFn: async() => {
+      try {
+        return await adminService.getClassDetail(classId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled:  !!classId,
-});
+  });
+}
  
 // ─── Class: score sheet ────────────────────────────────────────────────────────
-export const useClassScoreSheet = (classId: string, enabled: boolean) =>
+export const useClassScoreSheet = (classId: string, enabled: boolean) => {
+  const { error: showError } = useToast()
   useQuery({
     queryKey: queryKeys.classScoreSheet(classId),
-    queryFn:  () => adminService.getClassScoreSheet(classId),
+    queryFn: async() => {
+      try {
+        return await adminService.getClassScoreSheet(classId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled:  enabled && !!classId,
   });
+
+}
  
 
   //report cards
 // ───publish all report cards ──────────────────────────────────────────
 export const usePublishClassReportCardsMutation = (classId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: () => adminService.publishClassReportCards(classId),
-    onSuccess: () => {
+    mutationFn: async () => {
+      try {
+        return await adminService.publishClassReportCards(classId)
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.classDetail(classId) });
       success('All report cards published');
     },
-    onError: () => error('Failed to publish report cards'),
   });
 };
 
 //get single report card
-export const useReportCard = (reportCardId: string, enabled: boolean = true) =>
+export const useReportCard = (reportCardId: string, enabled: boolean = true) => {
+  const { error: showError } = useToast()
   useQuery({
     queryKey: queryKeys.reportCard(reportCardId),
-    queryFn:  () => adminService.getReportCard(reportCardId),
+    queryFn:  async () => {
+      try {
+        return await adminService.getReportCard(reportCardId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null; 
+      }
+    },
     enabled:  enabled && !!reportCardId,
   });
+}
 
 
   //update a student's report card
 export const useUpdateReportCardMutation = (reportCardId: string, userId?: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (body: { teacherRemark?: string; principalRemark?: string }) =>
-      adminService.updateReportCard(reportCardId, body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
+    mutationFn: async(body: { teacherRemark?: string; principalRemark?: string }) => {
+      try {
+        return await adminService.updateReportCard(reportCardId, body)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return 
       if (userId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
       }
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card updated');
     },
-    onError: () => error('Failed to update report card'),
   });
 };
 
 //publish student's report's card
 export const useAdminPublishReportCardMutation = (userId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (reportCardId: string) =>
-      adminService.publishReportCard(reportCardId),
+    mutationFn: async(reportCardId: string) => {
+      try {
+        return await adminService.publishReportCard(reportCardId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     onSuccess: (_, reportCardId) => {
+      if(!_  || !reportCardId) return
       queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card published successfully');
     },
-    onError: () => error('Failed to publish report card'),
   });
 };
 export const useAdminUnpublishReportCardMutation = (userId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (reportCardId: string) =>
-      adminService.unpublishReportCard(reportCardId),
+    mutationFn: async(reportCardId: string) => {
+      try {
+        return await adminService.unpublishReportCard(reportCardId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     onSuccess: (_, reportCardId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card unpublished successfully');
     },
-    onError: () => error('Failed to unpublish report card'),
   });
 };
  
@@ -301,25 +450,39 @@ export const useCreateSubjectMutation = () => {
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: (data: CreateSubjectRequest) => adminService.createSubject(data),
-    onSuccess: () => {
+    mutationFn: async(data: CreateSubjectRequest) => {
+      try {
+        return await adminService.createSubject(data)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       success('Subject created successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.subjects() });
-    },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error || 'Failed to create subject');
     },
   });
 };
 
 export const useAssignSubjectTeacherMutation = () => {
   const queryClient = useQueryClient();
-  const { success } = useToast()
+  const { success, error: showError } = useToast()
  
   return useMutation({
-    mutationFn: (payload: AssignSubjectTeacherPayload) =>
-      adminService.assignSubjectToTeacher(payload),
-    onSuccess: () => {
+    mutationFn: async(payload: AssignSubjectTeacherPayload) => {
+      try {
+        return await adminService.assignSubjectToTeacher(payload)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       // Subject list includes subjectTeachers — refetch so the "Teacher"
       // column reflects the new assignment without a manual page refresh.
       success('Teacher assigned successfully');
@@ -327,14 +490,24 @@ export const useAssignSubjectTeacherMutation = () => {
     },
   });
 };
+
 export const useRemoveSubjectTeacherMutation = () => {
   const queryClient = useQueryClient();
-  const { success } = useToast()
+  const { success, error: showError } = useToast()
  
   return useMutation({
-    mutationFn: (payload: AssignSubjectTeacherPayload) =>
-      adminService.removeSubjectAssignment(payload),
-    onSuccess: () => {
+    mutationFn: async (payload: AssignSubjectTeacherPayload) => {
+      try {
+        return await adminService.removeSubjectAssignment(payload)
+
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       // Subject list includes subjectTeachers — refetch so the "Teacher"
       // column reflects the new assignment without a manual page refresh.
       success('Teacher unassigned successfully');
@@ -345,9 +518,18 @@ export const useRemoveSubjectTeacherMutation = () => {
 
 // Academic Year Queries
 export const useAcademicYearsList = (params?: { page?: number; limit?: number }) => {
+  const { error: showError } = useToast();
   return useQuery({
     queryKey: [...queryKeys.academicYears(), params],
-    queryFn: () => adminService.getAcademicYears(params),
+    queryFn: async () => {
+      try {
+        return await adminService.getAcademicYears(params)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -358,75 +540,125 @@ export const useCreateAcademicYearMutation = () => {
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: (data: CreateAcademicYearRequest) => adminService.createAcademicYear(data),
-    onSuccess: () => {
+    mutationFn: async (data: CreateAcademicYearRequest) => {
+      try {
+        return await adminService.createAcademicYear(data)
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+    if(!data) return;
       success('Academic year created successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.academicYears() });
-    },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error || 'Failed to create academic year');
     },
   });
 };
 
 // Timetable Queries
-export const useClassTimetable = (classId: string) =>
+export const useClassTimetable = (classId: string) => {
+  const { error: showError } = useToast()
   useQuery({
     queryKey: queryKeys.timetable(classId),
-    queryFn:  () => timetableService.getTimetable(classId),
+    queryFn:  async() => {
+      try {
+       return await timetableService.getTimetable(classId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled:  !!classId,
   });
+}
  
 // Fetched only when the create/edit modal opens (enabled flag).
-export const useClassTeachers = (classId: string, enabled: boolean) =>
+export const useClassTeachers = (classId: string, enabled: boolean) => {
+  const { error: showError } = useToast()
   useQuery({
     queryKey: queryKeys.classTeachers(classId),
-    queryFn:  () => timetableService.getClassTeachers(classId),
+    queryFn: async() => {
+      try {
+        return await timetableService.getClassTeachers(classId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled:  enabled && !!classId,
     staleTime: 60_000,
   });
+}
  
 export const useCreateSlotMutation = (classId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (body: CreateTimetableSlotBody) =>
-      timetableService.createSlot(classId, body),
-    onSuccess: () => {
+    mutationFn: async(body: CreateTimetableSlotBody) => {
+      try {
+        return await timetableService.createSlot(classId, body)
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       success('Timetable slot added');
       queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
     },
-    onError: (err: Error) => error(err.message ?? 'Failed to add slot'),
   });
 };
  
 export const useUpdateSlotMutation = (classId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: ({ slotId, body }: { slotId: string; body: UpdateTimetableSlotBody }) =>
-      timetableService.updateSlot(classId, slotId, body),
-    onSuccess: () => {
+    mutationFn: async ({ slotId, body }: { slotId: string; body: UpdateTimetableSlotBody }) => {
+      try {
+        return await timetableService.updateSlot(classId, slotId, body)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return
       queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
       success('Slot updated');
     },
-    onError: (err: Error) => error(err.message ?? 'Failed to update slot'),
   });
 };
  
 export const useDeleteSlotMutation = (classId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (slotId: string) => timetableService.deleteSlot(classId, slotId),
-    onSuccess: () => {
+    mutationFn: async (slotId: string) => {
+      try {
+        return await timetableService.deleteSlot(classId, slotId)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.timetable(classId) });
       success('Slot removed');
     },
-    onError: () => error('Failed to delete slot'),
   });
 };
 
@@ -434,9 +666,19 @@ export const useDeleteSlotMutation = (classId: string) => {
 
 // Settings Queries
 export const useSettings = () => {
+  const { error: showError } = useToast()
   return useQuery({
     queryKey: queryKeys.settings(),
-    queryFn: () => adminService.getSettings(),
+    queryFn: async() => {
+      try {
+        return await adminService.getSettings()
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     staleTime: 10 * 60 * 1000,
   });
 };
@@ -446,14 +688,20 @@ export const useUpdateSettingsMutation = () => {
   const { success, error: showError } = useToast();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => adminService.updateSettings(data),
-    onSuccess: () => {
+    mutationFn: async(data: Record<string, unknown>) => {
+      try {
+       return await adminService.updateSettings(data)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return;
       success('Settings updated successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.settings() });
-    },
-    onError: (err: any) => {
-      showError(err?.response?.data?.error || 'Failed to update settings');
-    },
+    }
   });
 };
 
@@ -463,39 +711,69 @@ export const useStudentAcademicSummary = (
   enabled: boolean,
   schoolId: string,
   termId?: string,
-) =>
-  useQuery<StudentAcademicSummaryResponse>({
-    queryKey: queryKeys.academicSummary(userId, termId),
-    queryFn:  () => adminService.getStudentAcademicSummary(userId, schoolId, termId),
-    enabled:  enabled && !!schoolId && !!userId,
-});
+) => {
+    const { error: showError } = useToast();
+    return useQuery({
+      queryKey: queryKeys.academicSummary(userId, termId),
+      queryFn: async() => {
+        try {
+          return await adminService.getStudentAcademicSummary(userId, schoolId, termId)
+        } 
+        catch (error) {
+          const message = getErrorMessage(error);
+          showError(message);
+          return null;
+        }
+      },
+      enabled:  enabled && !!schoolId && !!userId,
+    });
+}
 
 
 //parents
-export const useParentsList = (enabled: boolean) =>
+export const useParentsList = (enabled: boolean) => {
+  const { error: showError } = useToast()
   useQuery({
     queryKey: queryKeys.parentsList(),
-    queryFn:  () => adminService.getParentsList(),
+    queryFn: async() => {
+      try {
+        return await adminService.getParentsList()
+       
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     enabled,
     staleTime: 30_000, // parents list changes rarely — cache for 30s
   });
+}
 
 // Invalidates the student's user profile (which may show a linked guardian)
 // and the parents list (linkedCount on the selected parent just changed).
  
 export const useLinkStudentToParentMutation = (studentUserId: string) => {
   const queryClient = useQueryClient();
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: (parentUserId: string) =>
-      adminService.linkStudentToParent(studentUserId, { parentUserId }),
+    mutationFn: async (parentUserId: string) => {
+      try {
+        return await adminService.linkStudentToParent(studentUserId, { parentUserId })
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
     onSuccess: (res) => {
+      if(!res) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.userById(studentUserId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.parentsList() });
       success(res.message);
     },
-    onError: (err: Error) => error(err.message ?? 'Failed to link parent'),
   });
 }
  

@@ -14,10 +14,12 @@ import {
   CreateTermRequest,
   UseStudentAcademicSummaryParams,
   StudentAcademicSummaryResponse,
+  Term,
 } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
 import { studentService } from '@/src/services/client/student';
+import { getErrorMessage } from '@/src/utils/error';
 
 // Classes
 export const useClassesList = (schoolId: string, page = 1, limit = 20) => {
@@ -82,6 +84,22 @@ export const useTermsList = (academicYearId: string, page = 1, limit = 20) => {
     enabled: !!academicYearId,
   });
 };
+
+export function useTerms() {
+  const { error: showError } = useToast();
+  return useQuery({
+    queryKey: ['bursar-terms'],
+    queryFn: async () => {
+      try {
+        return await termService.terms()
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null;
+      }
+    },
+  });
+}
 
 export const useCreateTermMutation = () => {
   const { success, error: toastError } = useToast();

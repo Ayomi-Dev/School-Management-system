@@ -276,6 +276,7 @@ export const adminServices = {
         )
   },
   async getUserById(schoolId: string, userId: string) {
+    
       try {
       const user = await prisma.user.findFirst({
         where: {
@@ -331,7 +332,7 @@ export const adminServices = {
           }
         },
       });
- 
+      console.log("User fetched from DB:", user, "and userid is", userId);
       if (!user) {
         return NextResponse.json({ error: 'User not found.' }, { status: 404 });
       }

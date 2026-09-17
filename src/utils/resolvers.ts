@@ -12,7 +12,7 @@ import { ClassLevel } from "../types";
 export class ResolverError extends Error {
   constructor(
     public readonly message: string,
-    public readonly statusCode: 400 | 404 | 409 = 404
+    public readonly statusCode: 400 |  403 | 404 | 409 = 404
   ) {
     super(message);
     this.name = "ResolverError";
@@ -22,6 +22,22 @@ export class ResolverError extends Error {
 // ─────────────────────────────────────────────────────────────
 // ACADEMIC YEAR
 // ─────────────────────────────────────────────────────────────
+export const resolveBursarAndAdminAccess = async(userId: string, schoolId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, schoolId: true },
+  });
+  if (!user) {
+    throw new ResolverError("User not found.", 404);
+  }
+  if (user.role !== "BURSAR" && user.role !== "ADMIN") {
+    throw new ResolverError("Unauthorized.", 403);
+  }
+  if (user.schoolId !== schoolId) {
+    throw new ResolverError("Access denied.", 403);
+  }
+  return user;
+};
 
 export async function resolveAcademicYear(
   schoolId: string,

@@ -77,6 +77,10 @@ export const termService = {
     });
     return response.data;
   },
+  terms: async (): Promise<Term[]> => {
+    const response = await client.get(API_ENDPOINTS.GET_TERMS());
+    return response.data.data;
+  },
 
   create: async (data: CreateTermRequest): Promise<Term> => {
     const response = await client.post(API_ENDPOINTS.TERMS_CREATE, data);

@@ -47,9 +47,11 @@ export default function UserProfilePage() {
 
   const { data: userData, isLoading: userLoading, isError: userError } = useUserById(id);
   const user = userData?.data
+  console.log(user?.role, id)
   const isStudent = user?.role === 'STUDENT';
   const isTeacher = user?.role === 'TEACHER';
-  const isParent = user?.role === "PARENT"
+  const isParent = user?.role === "PARENT";
+  const isBursar = user?.role === "BURSAR";
   const summaryQueryEnabled = !userLoading && isStudent && summaryEnabled; //determines when to fire student's summary hook
   
   const {
@@ -214,6 +216,18 @@ export default function UserProfilePage() {
                   </div>
                 ))}
               </div>
+            </Card>
+          )}
+
+          {isBursar && (
+            <Card>
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <User2 size={15} />Parent Info
+              </h2>
+              <InfoRow label="Relationship"  value={user.firstName} />
+              <InfoRow label="Relationship"  value={user.lastName} />
+              <InfoRow label="Relationship"  value={user.role} />clear
+
             </Card>
           )}
 

@@ -46,7 +46,7 @@ export async function createFeeStructure(input: CreateFeeStructureInput) {
       termId, 
       name, 
       amount, 
-      isOptional,
+      isOptional, 
       status: "NOT_PAID" 
     },
     include: { class: { select: { level: true } }, term: { select: { period: true } } },
