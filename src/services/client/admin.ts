@@ -64,8 +64,10 @@ export const adminService = {
 
 
   // Classes Management
-  getClasses: ( params?: { academicYearId?: string; page?: number; limit?: number }) =>
-    getApiClient().get(API_ENDPOINTS.CLASSES_LIST, { params }),
+  getClasses: async ( params?: { academicYearId?: string; page?: number; limit?: number }): Promise<ClassDetail[]> => {
+    const res = await getApiClient().get(API_ENDPOINTS.CLASSES_LIST, { params })
+    return res.data.data
+  },
 
   getClassDetail: async (classId: string): Promise<ClassDetail> => {
     const res = await getApiClient().get(API_ENDPOINTS.CLASSES_GET(classId));

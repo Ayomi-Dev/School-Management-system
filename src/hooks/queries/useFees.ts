@@ -1,4 +1,4 @@
-import { bursarService } from "@/src/services/client/bursar";
+import { feeService } from "@/src/services/client/fees";
 import { AssignFeeToClassBody, BursarDashboardSummary, CreateFeeStructureBody, RecordPaymentBody } from "@/src/types/fees";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../useToast";
@@ -8,7 +8,7 @@ export const bursarKeys = {
   dashboard:       (termId?: string) => ['bursar-dashboard',  termId] as const,
   feeStructures:   (termId: string) => ['fee-structures',    termId] as const,
   studentStatement:(studentId: string, termId: string) => ['student-statement', studentId, termId] as const,
-  paymentHistory:  (studentId: string) => ['payment-history',   studentId]                as const,
+  paymentHistory:  (studentId: string) => ['payment-history',   studentId] as const,
   classFeeOverview:(classId: string, termId: string, ayId: string) => ['class-fee-overview', classId, termId, ayId] as const,
 } as const;
  
@@ -18,7 +18,7 @@ export const useFeeStructures = (termId: string) => {
     queryKey: bursarKeys.feeStructures(termId),
     queryFn: async() => {
       try {
-        return await bursarService.listFeeStructures(termId)
+        return await feeService.listFeeStructures(termId)
       } catch (error) {
         const message = getErrorMessage(error);
         showError(message)
@@ -35,7 +35,7 @@ export const useCreateFeeStructureMutation = (termId: string) => {
   return useMutation({
     mutationFn: async(body: CreateFeeStructureBody) => {
       try {
-        return await bursarService.createFeeStructure(body)
+        return await feeService.createFeeStructure(body)
       } 
       catch (error) {
         const message = getErrorMessage(error);
@@ -57,7 +57,7 @@ export const useAssignFeeToClassMutation = () => {
   return useMutation({
     mutationFn: async({ feeStructureId, body }: { feeStructureId: string; body: AssignFeeToClassBody }) => {
       try {
-        return await bursarService.assignFeeToClass(feeStructureId, body)
+        return await feeService.assignFeeToClass(feeStructureId, body)
       } 
       catch (error) {
         const message = getErrorMessage(error);
@@ -78,7 +78,7 @@ export const useRecordPaymentMutation = (studentId: string, termId: string) => {
   return useMutation({
     mutationFn: async(body: RecordPaymentBody) => {
       try {
-        return await bursarService.recordPayment(body)
+        return await feeService.recordPayment(body)
       } catch (error) {
         const message = getErrorMessage(error);
         showError(message);
@@ -97,11 +97,11 @@ export const useRecordPaymentMutation = (studentId: string, termId: string) => {
  
 export const useStudentStatement = (studentId: string, termId: string, enabled = true) => {
   const { error: showError } = useToast()
-  useQuery({
+  return useQuery({
     queryKey: bursarKeys.studentStatement(studentId, termId),
     queryFn: async() => {
       try {
-        return await bursarService.getStudentStatement(studentId, termId)
+        return await feeService.getStudentStatement(studentId, termId)
       } 
       catch (error) {
         const message = getErrorMessage(error);
@@ -116,11 +116,11 @@ export const useStudentStatement = (studentId: string, termId: string, enabled =
  
 export const usePaymentHistory = (studentId: string, enabled = true) => {
   const { error: showError } = useToast();
-  useQuery({
+  return useQuery({
     queryKey: bursarKeys.paymentHistory(studentId),
     queryFn: async() => {
       try {
-        return await bursarService.getPaymentHistory(studentId)
+        return await feeService.getPaymentHistory(studentId)
       }
        catch (error) {
         const message = getErrorMessage(error);
@@ -139,11 +139,11 @@ export const useClassFeeOverview = (
   enabled = true,
 ) => {
   const { error: showError } = useToast()
-  useQuery({
+  return useQuery({
     queryKey: bursarKeys.classFeeOverview(classId, termId, academicYearId),
     queryFn: async() => {
       try {
-        return await bursarService.getClassFeeOverview(classId, termId, academicYearId)
+        return await feeService.getClassFeeOverview(classId, termId, academicYearId)
       } 
       catch (error) {
         const message = getErrorMessage(error);

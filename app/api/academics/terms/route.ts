@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export const GET = async (req: NextRequest) => {
-    const auth = await requireRoleForTenant(req, [Role.BURSAR, Role.ADMIN]);
+    const auth = await requireRoleForTenant(req, [Role.BURSAR, Role.ADMIN, Role.TEACHER]);
     if (!auth.success) {
         return NextResponse.json({ error: auth.error}, { status: 401 });
     }

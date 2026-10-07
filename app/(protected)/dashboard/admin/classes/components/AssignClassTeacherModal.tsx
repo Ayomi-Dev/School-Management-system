@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
-import { useAssignClassTeacherMutation } from '@/src/hooks/queries/useAdmin';
 import { useActiveAcademicYear } from '@/src/hooks/queries/useAcademic';
 import { useAuthStore } from '@/src/stores/authStore';
 import { TeacherCombobox } from '../../subjects/components/ComboBox';
 import { SelectedTeacher } from '@/app/(protected)/dashboard/teacher/components/teacher';
+import { useAssignClassTeacherMutation } from '@/src/hooks/queries/useClasses';
 
 interface AssignClassTeacherModalProps {
   classLevel: string;

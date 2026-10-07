@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useClassesList } from '@/src/hooks/queries/useAdmin';
 import {
   useClassTimetable,
   useDeleteSlotMutation,
@@ -20,6 +19,7 @@ import {
   BookOpen,
   User,
 } from 'lucide-react';
+import { useClassesList } from '@/src/hooks/queries/useClasses';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -169,7 +169,7 @@ function EmptyCell({
 
 export default function TimetablePage() {
   const { data: classesData, isLoading: classesLoading } = useClassesList();
-  const classes = useMemo(() => classesData?.data?.data ?? [], [classesData]);
+  const classes = useMemo(() => classesData ?? [], [classesData]);
 
   const [selectedClassId, setSelectedClassId] = useState<string>('');
 

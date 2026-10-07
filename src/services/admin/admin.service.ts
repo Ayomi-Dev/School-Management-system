@@ -570,7 +570,7 @@ export const adminServices = {
             { status: 200 }
         )
   },
-  async adminPublishReportCard( schoolId: string, reportCardId: string) {
+  async adminPublishReportCard( schoolId: string, reportCardId: string | undefined) {
     try {
       const reportCard = await prisma.reportCard.findUnique({
         where:  { id: reportCardId },

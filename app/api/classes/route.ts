@@ -15,7 +15,7 @@ export const POST = async( req: NextRequest) => {
 
 
 export const GET = async(req: NextRequest) => {
-    const auth = await requireRoleForTenant(req, [Role.ADMIN])
+    const auth = await requireRoleForTenant(req, [Role.ADMIN, Role.BURSAR])
     if (!auth.success) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

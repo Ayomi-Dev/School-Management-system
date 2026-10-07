@@ -40,14 +40,14 @@ export const API_ENDPOINTS = {
   GET_STUDENT_ACADEMIC_SUMMARY: (id: string) => `/api/admin/students/${id}/academic-summary`,
 
 
-  // Admin - Classes
-  CLASSES_CREATE: '/api/admin/classes/create',
-  CLASSES_LIST:  `/api/admin/classes`,
-  CLASSES_GET: (classId: string) => `/api/admin/classes/${classId}`,
-  CLASSES_UPDATE: (classId: string) => `/api/admin/classes/${classId}`,
-  CLASSES_DELETE: (classId: string) => `/api/admin/classes/${classId}`,
-  CLASS_SCORESHEET: (classId: string) => `/api/admin/classes/${classId}/score-sheet`,
-  PUBLISH_CLASS_REPORT_CARDS: (classId: string) => `/api/admin/classes/${classId}/publish-report-cards`,
+  // Classes
+  CLASSES_CREATE: '/api/classes/create',
+  CLASSES_LIST:  `/api/classes`,
+  CLASSES_GET: (classId: string) => `/api/classes/${classId}`,
+  CLASSES_UPDATE: (classId: string) => `/api/classes/${classId}`,
+  CLASSES_DELETE: (classId: string) => `/api/classes/${classId}`,
+  CLASS_SCORESHEET: (classId: string) => `/api/classes/${classId}/score-sheet`,
+  PUBLISH_CLASS_REPORT_CARDS: (classId: string) => `/api/classes/${classId}/publish-report-cards`,
 
   // Admin - Subjects
   SUBJECTS_CREATE: '/api/admin/subjects/create',
@@ -56,10 +56,6 @@ export const API_ENDPOINTS = {
   SUBJECTS_REMOVE_TEACHER: '/api/admin/teachers/remove-subject',
 
   // Admin - Academic
-  ACADEMIC_YEARS_CREATE: '/api/admin/academics',
-  ACADEMIC_YEARS_LIST: (schoolId: string) => `/api/admin/academics`,
-  TERMS_CREATE: '/api/admin/terms/create',
-  TERMS_LIST: (academicYearId: string) => `/api/admin/academic-years/${academicYearId}/terms`,
   ENROLLMENTS_LIST: (schoolId: string ) => `/api/students/${schoolId}/enrollment`,
   GET_STATS: `/api/admin/stats`,
   ADMIN_PUBLISH_REPORT_CARD: (reportCardId: string) =>
@@ -71,7 +67,7 @@ export const API_ENDPOINTS = {
   ADMIN_UPDATE_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
 
-  GET_TERMS: () => `/api/terms`,
+  GET_TERMS: () => `/api/academics/terms`,
 
   //Timetable
   /** GET  /admin/classes/:classId/timetable */
@@ -104,11 +100,20 @@ export const API_ENDPOINTS = {
   UPDATE_SCHOOL_BRANDING: () => '/admin/school/branding',
   /** POST /admin/school/branding/logo-upload-url */
   GET_LOGO_UPLOAD_URL: () => '/api/admin/school/branding/logo-upload-url',
+
+
+  //ACADEMICS-----------------------
+
+  ACADEMIC_YEARS_CREATE: '/api/academics/create',
+  ACADEMIC_YEARS_LIST: () => `/api/academics/sessions`,
+  TERMS_CREATE: '/api/academics/terms/create',
+  TERMS_LIST: (academicYearId: string) => `/api/academics/academic-years/${academicYearId}/terms`,
   
   
 
+
   // Students
-  STUDENTS_LIST: (schoolId: string) => `/api/admin/schools/${schoolId}/students`,
+  STUDENTS_LIST: () => `/api/students/list`,
   STUDENTS_GET: (id: string) => `/api/students/${id}/profile`,
   STUDENTS_LINK_PARENT: (id: string) => `/api/admin/students/${id}/link`,
   EXTRACT_ENROLLMENT: (id: string, academicYearId: string ) => `/api/students/${id}/enrollment?academicYearId=${academicYearId} `,
@@ -151,7 +156,7 @@ export const API_ENDPOINTS = {
   BURSAR_GET: (id: string) => `/api/bursar/${id}`, 
   GET_DASHBOARD:       (termId?: string) => `/api/bursar/dashboard?termId=${termId}`,
   /** GET  /bursar/fee-structures?termId= */
-  LIST_FEE_STRUCTURES: (termId: string) => `/api/bursar/fee-structures?termId=${termId}`,
+  LIST_FEE_STRUCTURES: (termId: string) => `/api/fee/structure?termId=${termId}`,
  
   /** POST /bursar/fee-structures */
   CREATE_FEE_STRUCTURE: () => `/api/bursar/fee-structures`,
@@ -161,7 +166,7 @@ export const API_ENDPOINTS = {
     `/api/bursar/fee-structures/${feeStructureId}/assign`,
  
   /** POST /bursar/payments */
-  RECORD_PAYMENT: () => `/api/bursar/payments`,
+  RECORD_PAYMENT: () => `/api/fee/payments`,
  
   /** GET  /bursar/students/:studentId/statement?termId= */
   GET_STUDENT_STATEMENT: (studentId: string, termId: string) =>

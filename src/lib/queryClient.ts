@@ -50,8 +50,8 @@ export const queryKeys = {
   academicYears: {
     all: ['academicYears'] as const,
     lists: () => [...queryKeys.academicYears.all, 'list'] as const,
-    list: (schoolId: string, filters?: unknown) =>
-      [...queryKeys.academicYears.lists(), schoolId, { filters }] as const,
+    list: ( filters?: unknown) =>
+      [...queryKeys.academicYears.lists(), { filters }] as const,
     details: () => [...queryKeys.academicYears.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.academicYears.details(), id] as const,
   },

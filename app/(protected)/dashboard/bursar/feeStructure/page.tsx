@@ -5,43 +5,51 @@ import { Card } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';
 import type { FeeStructure } from '@/src/types/fees';
-import { AlertCircle, Plus, Tag } from 'lucide-react';
+import {  Plus, Tag } from 'lucide-react';
 import { CreateFeeStructureModal } from '../components/modals/CreateFeeStructure';
 import { AssignFeeModal } from '../components/modals/AssignFeeStructure';
 import { useFeeStructures } from '@/src/hooks/queries/useFees';
 import { FeeCard } from '../components/feeCard';
+import { useClassesList } from '@/src/hooks/queries/useClasses';
+import { useAcademicYearsList } from '@/src/hooks/queries/useAcademic';
+import { useCurrentTerm } from '@/src/hooks/queries/useAcademic';
+import { ClassDetail } from '@/src/types/admin';
+import { AcademicYear } from '@/src/types';
 
 
-interface Props {
-  termId:       string;
-  termLabel:    string;
-  classes:      Array<{ id: string; level: string }>;
-  academicYears: Array<{ id: string; label: string }>;
-}
 
-export default function FeeStructuresPage({ termId, termLabel, classes, academicYears }: Props) {
-  const { data: structures = [], isLoading } = useFeeStructures(termId);
-  if(!structures){
-    return (
-      <div className="flex flex-col items-center justify-center h-80 gap-3">
-        <AlertCircle size={32} className="text-amber-400" />
-        <p className="text-sm text-gray-500">No structures found. Create a structure first.</p>
-      </div>
-    );  
-  }
+export default function FeeStructuresPage() {
+  const {
+    isLoading: termsLoading,
+    isError: termsError,
+    data: currentTermData,
+  } = useCurrentTerm();
 
-  const [createOpen, setCreateOpen]           = useState(false);
-  const [assignTarget, setAssignTarget]       = useState<FeeStructure | null>(null);
-  const schoolWide   = structures.filter((s) => !s.classId);
-  const classSpecific = structures.filter((s) =>  s.classId);
-
+  const currentTerm = currentTermData?.isCurrent ?? null;
+  const termId = currentTermData?.id ?? '';
+  const termPeriod = currentTermData?.period ?? '';
+  const termLabel = currentTerm
+    ? `${currentTermData?.period} — ${currentTermData?.academicYear?.label}`
+    : '';
+  const { data: structures = [], isLoading: feeStructureLoading } = useFeeStructures(termId);
+  const { data: classes, isLoading: classesLoading } = useClassesList();
+  const { data: academicYears, isLoading: academicYearsLoading } = useAcademicYearsList();
+  
+  const [createOpen, setCreateOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<FeeStructure | null>(null);
+  
+  const schoolWide = structures?.filter((s) => !s.data.classId);
+  const classSpecific = structures?.filter((s) => s.data.classId);
+  const isLoading = termsLoading || feeStructureLoading || classesLoading || academicYearsLoading;
+  
+  console.log(" lists", classes, academicYears, currentTermData )
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Fee Structures</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{termLabel}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{termPeriod}</p>
         </div>
         <Button
           variant="primary"
@@ -55,7 +63,7 @@ export default function FeeStructuresPage({ termId, termLabel, classes, academic
 
       {isLoading ? (
         <div className="flex items-center justify-center h-60"><Loader /></div>
-      ) : structures.length === 0 ? (
+      ) : structures?.length === 0 ? (
         <Card>
           <div className="text-center py-16 space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto">
@@ -71,15 +79,15 @@ export default function FeeStructuresPage({ termId, termLabel, classes, academic
       ) : (
         <div className="space-y-6">
           {/* School-wide fees */}
-          {schoolWide.length > 0 && (
+          {schoolWide && schoolWide.length > 0 && (
             <div>
               <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                 School-wide
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {schoolWide.map((s) => (
+                {schoolWide?.map((s) => (
                   <FeeCard
-                    key={s.id}
+                    key={s.data.id}
                     structure={s}
                     onAssign={() => setAssignTarget(s)}
                   />
@@ -89,7 +97,7 @@ export default function FeeStructuresPage({ termId, termLabel, classes, academic
           )}
 
           {/* Class-specific fees */}
-          {classSpecific.length > 0 && (
+          {classSpecific && classSpecific.length > 0 && (
             <div>
               <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                 Class-specific
@@ -97,7 +105,7 @@ export default function FeeStructuresPage({ termId, termLabel, classes, academic
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {classSpecific.map((s) => (
                   <FeeCard
-                    key={s.id}
+                    key={s.data.id}
                     structure={s}
                     onAssign={() => setAssignTarget(s)}
                   />
@@ -112,8 +120,8 @@ export default function FeeStructuresPage({ termId, termLabel, classes, academic
       {createOpen && (
         <CreateFeeStructureModal
           termId={termId}
-          termLabel={termLabel}
-          classes={classes}
+          termPeriod={termPeriod}
+          classes={classes as ClassDetail[]}
           onClose={() => setCreateOpen(false)}
           onSuccess={() => setCreateOpen(false)}
         />
@@ -121,8 +129,8 @@ export default function FeeStructuresPage({ termId, termLabel, classes, academic
       {assignTarget && (
         <AssignFeeModal
           feeStructure={assignTarget}
-          classes={classes}
-          academicYears={academicYears}
+          classes={classes as ClassDetail[]}
+          academicYears={academicYears as AcademicYear[]}
           onClose={() => setAssignTarget(null)}
           onSuccess={() => setAssignTarget(null)}
         />

@@ -29,7 +29,7 @@ export const recordFeePaymentSchema = z.object({
 
 export const assignFeeSchema = z.object({
   classId:        z.string().min(1, 'Class is required'),
-  academicYearId: z.string().min(1, 'Academic year is required'),
+  academicYearId: z.string().min(1, 'Academic year is required')
 });
 export type AssignFormData = z.infer<typeof assignFeeSchema>;
 
@@ -42,5 +42,7 @@ export const recordPaymentSchema = z.object({
   paymentDate:     z.string().datetime({ offset: true }).or(z.string().date()),
   paymentMethod:   z.enum(PAYMENT_METHODS),
   note:            z.string().trim().max(500).optional(),
+  recordedById: z.string().trim().max(500).min(1)
 });
  
+export type RecordPaymentFormData = z.infer<typeof recordPaymentSchema>;

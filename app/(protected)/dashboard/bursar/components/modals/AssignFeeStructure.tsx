@@ -9,12 +9,13 @@ import {useAssignFeeToClassMutation} from '@/src/hooks/queries/useFees';
 import type { FeeStructure } from '@/src/types/fees';
 import { assignFeeSchema, AssignFormData } from '@/src/validators/feePaymentSchema';
 import { selectClass } from '../methodbadge';
+import { AcademicYear } from '@/src/types';
 
 
 interface AssignFeeModalProps {
   feeStructure:   FeeStructure;
   classes:        Array<{ id: string; level: string }>;
-  academicYears:  Array<{ id: string; label: string }>;
+  academicYears:  AcademicYear[];
   onClose:        () => void;
   onSuccess:      () => void;
 }

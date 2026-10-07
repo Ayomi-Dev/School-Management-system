@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import {
   useSubjectsList,
-  useClassesList,
 } from '@/src/hooks/queries/useAdmin';
 import { Card } from '@/src/components/ui/Card';
 import { DataTable } from '@/src/components/ui/DataTable';
@@ -15,6 +14,7 @@ import { useDebounce } from '@/src/hooks/useUtils';
 import CreateSubjectModal from './components/CreateSubjectModal';
 import AssignSubjectTeacherModal from './components/AssignSubjectTeacherModal';
 import { Subject } from '@/src/types';
+import { useClassesList } from '@/src/hooks/queries/useClasses';
 
 export default function SubjectsPage() {
   const [search, setSearch] = useState('');

@@ -43,11 +43,10 @@ export const classService = {
 
 export const academicYearService = {
   list: async (
-    schoolId: string,
     page = 1,
     limit = 20
-  ): Promise<PaginatedResponse<AcademicYear>> => {
-    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST(schoolId), {
+  ): Promise<AcademicYear[]> => {
+    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST(), {
       params: { page, limit },
     });
     return response.data;
@@ -59,7 +58,7 @@ export const academicYearService = {
   },
 
   getActive: async (schoolId: string): Promise<AcademicYear> => {
-    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST(schoolId), {
+    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST(), {
       params: { isActive: true, limit: 1 },
     });
     return response.data.data[0];

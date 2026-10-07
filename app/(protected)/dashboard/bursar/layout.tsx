@@ -1,10 +1,10 @@
-import { BursarDashboardLayout } from "@/src/components/layouts";
+import BursarLayoutClient from "./components/BursarLayout";
 
 const BursarLayout = ( { children } : { children: React.ReactNode }) => {
     return (
-        <BursarDashboardLayout>
+        <BursarLayoutClient>
             { children }
-        </BursarDashboardLayout>
+        </BursarLayoutClient>
     )
 }
 

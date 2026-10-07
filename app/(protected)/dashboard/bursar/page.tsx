@@ -14,17 +14,13 @@ import { DashboardContent } from './components/dashboardcontent';
 
 
 export default function BursarDashboardPage() {
-    const router = useRouter();
+  const router = useRouter();
 
-  //Load available terms 
-    const { data: terms = [], isLoading: termsLoading } = useTerms();
-    if (!terms || terms.length === 0) {
-        return (
-          <div className="flex flex-col items-center justify-center h-80 gap-3">
-            <AlertCircle size={32} className="text-amber-400" />
-            <p className="text-sm text-gray-500">No terms found. Create a term first.</p>
-          </div>
-        );
+  // ── 1. Load available terms ────────────────────────────────────────────────
+  const { data: terms = [], isLoading: termsLoading } = useTerms();
+    if(!terms){
+        console.log("No terms found");
+        return 
     }
   // Default to the current term once terms are loaded.
   // Stored as local state so the bursar can switch terms via the selector.
@@ -38,14 +34,14 @@ export default function BursarDashboardPage() {
     ? `${activeTerm.period} — ${activeTerm.academicYear?.label}`
     : '';
 
-  //Load dashboard data once we have a termId 
+  // ── 2. Load dashboard data once we have a termId ──────────────────────────
   const {
     data: dashboardData,
     isLoading: dashboardLoading,
     isError,
   } = useBursarDashboard(activeTermId);
 
-  // Loading states 
+  // ── Loading states ────────────────────────────────────────────────────────
   if (termsLoading) {
     return (
       <div className="flex items-center justify-center h-80">
@@ -54,7 +50,14 @@ export default function BursarDashboardPage() {
     );
   }
 
-  
+  if (terms.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-80 gap-3">
+        <AlertCircle size={32} className="text-amber-400" />
+        <p className="text-sm text-gray-500">No terms found. Create a term first.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

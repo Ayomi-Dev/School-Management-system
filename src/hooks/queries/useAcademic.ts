@@ -49,20 +49,20 @@ export const useClassDetail = (id: string) => {
 
 
 // Academic Years
-export const useAcademicYearsList = (schoolId: string, page = 1, limit = 20) => {
+export const useAcademicYearsList = (page = 1, limit = 20) => {
   const { error: toastError } = useToast();
 
   return useQuery({
-    queryKey: queryKeys.academicYears.list(schoolId, { page, limit }),
+    queryKey: queryKeys.academicYears.list({page, limit}),
     queryFn: async () => {
       try {
-        return await academicYearService.list(schoolId, page, limit);
-      } catch (error: any) {
-        toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
-        throw error;
+        return await academicYearService.list( page, limit);
+      } catch (error) {
+        const message = getErrorMessage(error)
+        toastError(message);
+        return null;
       }
     },
-    enabled: !!schoolId,
   });
 };
 
@@ -73,7 +73,6 @@ export const useActiveAcademicYear = (schoolId: string) => {
     enabled: !!schoolId,
   });
 };
-
 
 
 // Terms
@@ -100,6 +99,29 @@ export function useTerms() {
     },
   });
 }
+ 
+export const useCurrentTerm = () => {
+  const query = useTerms();
+  const terms        = query.data ?? [];
+  const currentTerm  = terms.find((t) => t.isCurrent) ?? terms[0] ?? null;
+  const termId       = currentTerm?.id    ?? '';
+  const termLabel    = currentTerm
+    ? `${currentTerm.period} — ${currentTerm.academicYear?.label}`
+    : '';
+  const academicYearId = currentTerm?.academicYear?.id ?? '';
+ 
+  return {
+    ...query,           // isLoading, isError, etc.
+    terms,
+    currentTerm,
+    termId,
+    termLabel,
+    academicYearId,
+  };
+};
+ 
+
+
 
 export const useCreateTermMutation = () => {
   const { success, error: toastError } = useToast();

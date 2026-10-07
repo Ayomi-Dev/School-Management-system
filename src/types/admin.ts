@@ -41,6 +41,7 @@ export interface UpdateUserStatusResponse {
  
 
 export interface ClassDetail {
+  data: {}
   id: string;
   level: string;
   order: number;

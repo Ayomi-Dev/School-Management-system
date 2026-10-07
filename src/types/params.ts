@@ -2,11 +2,12 @@ export type ParamsContext = {
     params: Promise<{id?: string, studentId?: string}>
 }
 
-export type ClassParamsContext = {
+export interface ClassParamsContext {
     params: Promise<{ 
         classId?: string, 
         subjectId?: string, 
         reportCardId?: string,
-        slotId?: string
+        slotId?: string,
+        feeStructureId?: string
     }>
 } 

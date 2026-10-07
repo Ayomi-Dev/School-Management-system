@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useClassesList } from '@/src/hooks/queries/useAdmin';
+import { useClassesList } from '@/src/hooks/queries/useClasses';
 import { Card } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';

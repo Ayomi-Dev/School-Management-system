@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export const GET = async(req:NextRequest, context: ClassParamsContext) => {
-    const auth = await requireRoleForTenant(req, [Role.ADMIN]);
+    const auth = await requireRoleForTenant(req, [Role.ADMIN, Role.TEACHER]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error},

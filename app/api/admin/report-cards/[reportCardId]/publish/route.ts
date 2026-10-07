@@ -15,6 +15,7 @@ export const POST = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { schoolId } = auth
     const { reportCardId } = await context.params
-    const result = await adminServices.adminPublishReportCard(schoolId as string, reportCardId as string);
+    const result = await adminServices.adminPublishReportCard(schoolId as string, reportCardId );
     return result;
 }
+ 

@@ -6,20 +6,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DollarSign, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { selectClass } from "../methodbadge";
+import { Class } from "@/src/types";
+import { ClassDetail } from "@/src/types/admin";
 
 
 
 interface CreateFeeStructureModalProps {
   termId:    string;
-  termLabel: string;
-  classes:   Array<{ id: string; level: string }>;
+  termPeriod: string;
+  classes:   ClassDetail[]
   onClose:   () => void;
   onSuccess: () => void;
 }
 
 export function CreateFeeStructureModal({
   termId,
-  termLabel,
+  termPeriod,
   classes,
   onClose,
   onSuccess,
@@ -56,7 +58,7 @@ export function CreateFeeStructureModal({
             </div>
             <div>
               <h2 className="text-sm font-bold text-gray-900">Create Fee Structure</h2>
-              <p className="text-xs text-gray-400 mt-0.5">{termLabel}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{termPeriod}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">

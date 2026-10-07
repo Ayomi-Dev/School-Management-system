@@ -6,16 +6,18 @@ export type PaymentStatus = 'PAID' | 'PARTIAL' | 'NOT_PAID' | 'WAIVED';
 // ─── Fee structure ──────────────────────────────────────────────────────────
 
 export interface FeeStructure {
-  id:         string;
-  schoolId:   string;
-  classId:    string | null;
-  termId:     string;
-  name:       string;
-  amount:     number;
-  isOptional: boolean;
-  status:     PaymentStatus;
-  class:      { level: string } | null;
-  term:       { period: string };
+  data:{
+    id:         string;
+    schoolId:   string;
+    classId:    string | null;
+    termId:     string;
+    name:       string;
+    amount:     number;
+    isOptional: boolean;
+    status:     PaymentStatus;
+    class:      { level: string } | null;
+    term:       { period: string };
+  }
 }
 
 export interface CreateFeeStructureBody {

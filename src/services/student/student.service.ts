@@ -103,7 +103,7 @@ export const studentService = {
                 orderBy: { enrolledAt: "desc" },
                 include: {
                   class: { select: { id: true, level: true } },
-                  academicYear: { select: { id: true, label: true } },
+                  academicYear: { select: { id: true, label: true } }, 
                 },
               },
             },

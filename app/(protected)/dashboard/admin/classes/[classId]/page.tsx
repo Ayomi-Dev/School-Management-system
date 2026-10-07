@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  useClassDetail,
-  useClassScoreSheet,
   usePublishClassReportCardsMutation,
 } from '@/src/hooks/queries/useAdmin';
 import { Card } from '@/src/components/ui/Card';
@@ -24,6 +22,7 @@ import {
   Download,
 } from 'lucide-react';
 import type { ClassDetail, ScoreSheet } from '@/src/types/admin';
+import { useClassDetail, useClassScoreSheet } from '@/src/hooks/queries/useClasses';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 
@@ -318,7 +317,7 @@ function ScoreSheetTab({
   isLoading,
   onRefetch,
 }: {
-  scoreSheet?: ScoreSheet;
+  scoreSheet?: ScoreSheet | null;
   isLoading: boolean;
   onRefetch: () => void;
 }) {

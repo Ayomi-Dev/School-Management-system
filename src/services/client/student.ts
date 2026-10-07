@@ -6,16 +6,15 @@ import { StudentProfile, ParentProfile, StudentAcademicSummaryResponse } from '@
 const client = getApiClient();
 
 export const studentService = {
-  list: async (
-    schoolId: string,
+  list: async(
     page = 1,
     limit = 20,
     filters?: { classId?: string; level?: string; search?: string }
   ): Promise<PaginatedResponse<StudentProfile>> => {
-    const response = await client.get(API_ENDPOINTS.STUDENTS_LIST(schoolId), {
+    const response = await client.get(API_ENDPOINTS.STUDENTS_LIST(), {
       params: { page, limit, ...filters },
     });
-    return response.data;
+    return response.data.data;
   },
 
   get: async (id: string): Promise<StudentProfile> => {
