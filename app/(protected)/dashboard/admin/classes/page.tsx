@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 
 export default function ClassesPage() {
   const { data: classesData, isLoading } = useClassesList();
-  const classes = useMemo(() => classesData?.data.data || [], [classesData]);
+  const classes = useMemo(() => classesData || [], [classesData]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
 

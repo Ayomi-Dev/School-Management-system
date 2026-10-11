@@ -55,7 +55,6 @@ export const superAdminServices = {
             ) : null
 
 
-
             let temporaryPassword: string | undefined;
             let rawSetUpToken: string | undefined;
             let hashedTempPassword: string | undefined
@@ -122,6 +121,7 @@ export const superAdminServices = {
                         select: { id: true, label: true, isCurrent: true}
                     })
                     if(!existingYear){
+                        console.log("Academic year not found after creation.")
                         throw new Error("Academic year not found after creation.")
                     }
 

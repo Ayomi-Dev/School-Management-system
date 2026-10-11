@@ -239,7 +239,7 @@ export const usePublishClassReportCardsMutation = (classId: string) => {
 //get single report card
 export const useReportCard = (reportCardId: string, enabled: boolean = true) => {
   const { error: showError } = useToast()
-  useQuery({
+  return useQuery({
     queryKey: queryKeys.reportCard(reportCardId),
     queryFn:  async () => {
       try {
@@ -480,7 +480,7 @@ export const useClassTimetable = (classId: string) => {
 // Fetched only when the create/edit modal opens (enabled flag).
 export const useClassTeachers = (classId: string, enabled: boolean) => {
   const { error: showError } = useToast()
-  useQuery({
+  return useQuery({
     queryKey: queryKeys.classTeachers(classId),
     queryFn: async() => {
       try {
@@ -634,7 +634,7 @@ export const useStudentAcademicSummary = (
 //parents
 export const useParentsList = (enabled: boolean) => {
   const { error: showError } = useToast()
-  useQuery({
+  return useQuery({
     queryKey: queryKeys.parentsList(),
     queryFn: async() => {
       try {

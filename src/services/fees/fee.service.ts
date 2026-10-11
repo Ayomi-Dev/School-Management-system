@@ -183,8 +183,7 @@ export const feeServices = {
      // 1. Create payment record
      const payment = await tx.feePayment.create({
        data: {
-        schoolId,
-         studentId,
+         studentId, 
          termId,
          feeStructureId: feeStructureId ?? null,
          receiptNumber: generateReceiptNumber(),

@@ -10,13 +10,13 @@ export const reportCardService = {
     return response.data
   },
  
-  getReportCard: (
+  getSingleReportCard: async (
     classId: string,
     reportCardId: string,
-  ): Promise<{ data: ReportCardDetail }> =>
-    client
-      .get(API_ENDPOINTS.GET_SINGLE_REPORT_CARD(classId, reportCardId))
-      .then((r) => r.data),
+  ): Promise<ReportCardDetail> => {
+    const response = await client.get(API_ENDPOINTS.GET_SINGLE_REPORT_CARD(classId, reportCardId))
+    return response.data
+  },
  
   compileReportCard: (
     classId: string,

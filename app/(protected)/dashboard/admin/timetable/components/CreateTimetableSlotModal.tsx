@@ -97,7 +97,7 @@ export default function TimetableSlotModal({
 
   // When a teacher is selected, derive available subjects from their assignment list
   const selectedTeacherId = watch('teacherId');
-  const selectedTeacher   = teachers.find((t) => t.teacherProfileId === selectedTeacherId);
+  const selectedTeacher   = teachers?.find((t) => t.teacherProfileId === selectedTeacherId);
 
   // Reset form if editSlot changes (e.g. admin switches which slot to edit)
   useEffect(() => {
@@ -182,7 +182,7 @@ export default function TimetableSlotModal({
               <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
                 <Loader /> Loading teachers…
               </div>
-            ) : teachers.length === 0 ? (
+            ) : teachers?.length === 0 ? (
               <div className="flex items-center gap-2 py-2 text-sm text-amber-600 bg-amber-50 rounded-xl px-3">
                 <AlertCircle size={14} />
                 No subject teachers assigned to this class yet.
@@ -190,11 +190,11 @@ export default function TimetableSlotModal({
             ) : (
               <select {...register('teacherId')} className={selectClass}>
                 <option value="">Select teacher</option>
-                {teachers.map((t) => (
+                {teachers?.map((t) => (
                   <option key={t.teacherProfileId} value={t.teacherProfileId}>
                     {t.firstName} {t.lastName}
                     {t.subjects.length > 0 && ` — ${t.subjects.map((s) => s.name).join(', ')}`}
-                  </option>
+                  </option> 
                 ))}
               </select>
             )}

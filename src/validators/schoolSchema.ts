@@ -37,18 +37,7 @@ export type CreatSchoolRequest = z.infer<typeof createSchoolAndAdminSchema>
 // ACADEMIC YEAR & TERM
 // ============================================================
 
-// export const createAcademicYearSchema = z.object({
-//   label: z
-//     .string()
-//     .min(1)
-//     .regex(/^\d{4}\/\d{4}$/, 'Label must be in the format "2024/2025"'),
-//   startDate: z.coerce.date(),
-//   endDate: z.coerce.date(),
-//   isCurrent: z.boolean().optional().default(false),
-// }).refine((d) => d.endDate > d.startDate, {
-//   message: "endDate must be after startDate",
-//   path: ["endDate"],
-// });
+
 
 export const createAcademicYearSchema = z.object({
   label: z.string().min(4, 'Academic year name is required (e.g., 2024-2025)'),

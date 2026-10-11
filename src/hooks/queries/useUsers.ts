@@ -8,6 +8,7 @@ import { CreateUserRequest } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
 import { teacherService } from '@/src/services/client/teacher';
+import { getErrorMessage } from '@/src/utils/error';
 
 // Users
 export const useUsersList = (
@@ -76,10 +77,11 @@ export const useStudentsList = (
     queryKey: queryKeys.students.list(schoolId, { page, limit, ...filters }),
     queryFn: async () => {
       try {
-        return await studentService.list(schoolId, page, limit, filters);
-      } catch (error: any) {
-        toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
-        throw error;
+        return await studentService.list(page, limit);
+      } catch (error) {
+        const message = getErrorMessage(error);
+        toastError(message);
+        return null
       }
     },
     enabled: !!schoolId,

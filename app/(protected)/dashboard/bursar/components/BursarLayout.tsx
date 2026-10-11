@@ -18,11 +18,8 @@ export default function BursarLayoutClient({
   const [drawerOpen, setDrawerOpen] = useState(false);
  
   // Resolve current term once — passed down to SidebarStats and the search bar
-  const { data: currentTerm } = useCurrentTerm();
-  const termId    = currentTerm?.id    ?? '';
-  const termLabel = currentTerm
-    ? `${currentTerm.period} — ${currentTerm?.academicYear?.label}`
-    : '';
+  const { termId, termPeriod } = useCurrentTerm();
+  
  
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -70,8 +67,8 @@ export default function BursarLayoutClient({
             <h1 className="text-base font-bold text-gray-900">
               {pageTitle(pathname)}
             </h1>
-            {termLabel && (
-              <p className="text-xs text-gray-400 mt-0.5">{termLabel}</p>
+            {termPeriod && (
+              <p className="text-xs text-gray-400 mt-0.5">{termPeriod}</p>
             )}
           </div>
  

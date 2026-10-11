@@ -1,5 +1,7 @@
 import { reportCardService } from '@/src/services/client/reportCard';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../useToast';
+import { getErrorMessage } from '@/src/utils/error';
  
 export const reportCardKeys = {
   all: ['reportCards'] as const,
@@ -8,21 +10,34 @@ export const reportCardKeys = {
     [...reportCardKeys.all, 'detail', classId, reportCardId] as const,
 };
  
-export const useReportCardList = (classId: string) =>
-  useQuery({
+
+export const useReportCardList = (classId: string) => {
+  return useQuery({
     queryKey: reportCardKeys.list(classId),
     queryFn: () => reportCardService.getReportCardList(classId),
-    enabled: !!classId,
+    enabled: !!classId, 
     staleTime: 30 * 1000,
   });
+}
  
-export const useReportCard = (classId: string, reportCardId: string) =>
-  useQuery({
+export const useSingleReportCard =  (classId: string, reportCardId: string) => {
+  const { error: showError } = useToast()
+  return useQuery({
     queryKey: reportCardKeys.detail(classId, reportCardId),
-    queryFn: () => reportCardService.getReportCard(classId, reportCardId),
+    queryFn: async() => {
+      try {
+        return await reportCardService.getSingleReportCard(classId, reportCardId);
+      } catch (error) {
+        const message = getErrorMessage(error);
+        showError(message);
+        return null
+      }
+    },
     enabled: !!classId && !!reportCardId,
     staleTime: 30 * 1000,
   });
+
+}
  
 export const useCompileReportCard = (classId: string) => {
   const queryClient = useQueryClient();

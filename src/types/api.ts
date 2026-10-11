@@ -300,22 +300,24 @@ export interface AttendanceSummary {
 }
  
 export interface ReportCardDetail {
-  reportCard: {
-    id: string;
-    status: ReportCardStatus;
-    totalScore: number | null;
-    average: number | null;
-    position: number | null;
-    classSnapshot: string | null;
-    teacherRemark: string | null;
-    principalRemark: string | null;
-    publishedAt: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-  student: StudentInfo
-  scores: ScoreEntry[];
-  attendanceSummary: AttendanceSummary;
+  data: {
+    reportCard: {
+      id: string;
+      status: ReportCardStatus;
+      totalScore: number | null;
+      average: number | null;
+      position: number | null;
+      classSnapshot: string | null;
+      teacherRemark: string | null;
+      principalRemark: string | null;
+      publishedAt: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    student: StudentInfo
+    scores: ScoreEntry[];
+    attendanceSummary: AttendanceSummary;
+  }
 }
 
 export interface StudentInfo {

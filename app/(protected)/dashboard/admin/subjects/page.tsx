@@ -31,7 +31,7 @@ export default function SubjectsPage() {
   // Reuse the classes list (already fetched on the Classes page) to
   // populate the filter dropdown with real class levels + ids.
   const { data: classesData } = useClassesList();
-  const classes = useMemo(() => classesData?.data.data || [], [classesData]);
+  const classes = useMemo(() => classesData || [], [classesData]);
 
   const subjects = useMemo(() => {
     return allSubjects.filter((subject: Subject) => {

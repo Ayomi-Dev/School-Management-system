@@ -105,7 +105,7 @@ export const useCurrentTerm = () => {
   const terms        = query.data ?? [];
   const currentTerm  = terms.find((t) => t.isCurrent) ?? terms[0] ?? null;
   const termId       = currentTerm?.id    ?? '';
-  const termLabel    = currentTerm
+  const termPeriod    = currentTerm
     ? `${currentTerm.period} — ${currentTerm.academicYear?.label}`
     : '';
   const academicYearId = currentTerm?.academicYear?.id ?? '';
@@ -115,7 +115,7 @@ export const useCurrentTerm = () => {
     terms,
     currentTerm,
     termId,
-    termLabel,
+    termPeriod,
     academicYearId,
   };
 };

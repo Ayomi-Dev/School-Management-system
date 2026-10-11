@@ -22,15 +22,13 @@ export default function FeeStructuresPage() {
   const {
     isLoading: termsLoading,
     isError: termsError,
-    data: currentTermData,
+    termId,
+    termPeriod,
+    currentTerm
+
   } = useCurrentTerm();
 
-  const currentTerm = currentTermData?.isCurrent ?? null;
-  const termId = currentTermData?.id ?? '';
-  const termPeriod = currentTermData?.period ?? '';
-  const termLabel = currentTerm
-    ? `${currentTermData?.period} — ${currentTermData?.academicYear?.label}`
-    : '';
+  
   const { data: structures = [], isLoading: feeStructureLoading } = useFeeStructures(termId);
   const { data: classes, isLoading: classesLoading } = useClassesList();
   const { data: academicYears, isLoading: academicYearsLoading } = useAcademicYearsList();
@@ -38,11 +36,11 @@ export default function FeeStructuresPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<FeeStructure | null>(null);
   
-  const schoolWide = structures?.filter((s) => !s.data.classId);
-  const classSpecific = structures?.filter((s) => s.data.classId);
+  const schoolWide = structures?.filter((s) => !s.classId);
+  const classSpecific = structures?.filter((s) => s.classId);
   const isLoading = termsLoading || feeStructureLoading || classesLoading || academicYearsLoading;
   
-  console.log(" lists", classes, academicYears, currentTermData )
+  console.log(" lists", classes, academicYears, currentTerm )
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -70,7 +68,7 @@ export default function FeeStructuresPage() {
               <Tag size={22} className="text-gray-400" />
             </div>
             <p className="font-semibold text-gray-700">No fee structures yet</p>
-            <p className="text-sm text-gray-400">Create your first fee structure for {termLabel}</p>
+            <p className="text-sm text-gray-400">Create your first fee structure for {termPeriod}</p>
             <Button variant="primary" className="mt-2" onClick={() => setCreateOpen(true)}>
               Create Fee Structure
             </Button>
@@ -87,7 +85,7 @@ export default function FeeStructuresPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {schoolWide?.map((s) => (
                   <FeeCard
-                    key={s.data.id}
+                    key={s.id}
                     structure={s}
                     onAssign={() => setAssignTarget(s)}
                   />
@@ -105,7 +103,7 @@ export default function FeeStructuresPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {classSpecific.map((s) => (
                   <FeeCard
-                    key={s.data.id}
+                    key={s.id}
                     structure={s}
                     onAssign={() => setAssignTarget(s)}
                   />

@@ -23,8 +23,8 @@ const StudentDashboardPage = ( ) => {
       const [yearId, setYearId] = useState<string>('');
     
       const { data: yearsData, isLoading: isYearsLoading } =
-        useAcademicYearsList(schoolId);
-      const years = yearsData?.data ?? [];
+        useAcademicYearsList();
+      const years = yearsData ?? [];
 
     
     

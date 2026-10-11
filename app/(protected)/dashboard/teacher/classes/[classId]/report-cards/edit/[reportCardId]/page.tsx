@@ -11,10 +11,9 @@ import {
   Trophy,
   ArrowLeft,
   Save,
-  Send,
 } from 'lucide-react';
 import {
-  useReportCard,
+  useSingleReportCard,
   useUpdateReportCardRemark,
 } from '@/src/hooks/queries/useReportCard';
 import { AttendanceSummary, ScoreEntry } from '@/src/types';
@@ -131,8 +130,8 @@ export default function EditReportCardPage() {
   }>();
   const router = useRouter();
 
-  const { data, isLoading } = useReportCard(classId, reportCardId);
-  const { mutate: saveRemark, isPending: isSavingRemark } =
+  const { data: reportCardDetail , isLoading } = useSingleReportCard(classId, reportCardId);
+  const { mutate: saveRemark, isPending: isSavingRemark } = 
     useUpdateReportCardRemark(classId, reportCardId);
 
   const [remark, setRemark] = useState('');
@@ -140,15 +139,15 @@ export default function EditReportCardPage() {
 
   // Seed remark textarea from fetched data
   useEffect(() => {
-    if (data?.data.reportCard.teacherRemark) {
-      setRemark(data.data.reportCard.teacherRemark);
+    if (reportCardDetail?.data.reportCard.teacherRemark) {
+      setRemark(reportCardDetail.data.reportCard.teacherRemark);
     }
-  }, [data]);
+  }, [reportCardDetail]);
 
-  const card = data?.data.reportCard;
-  const student = data?.data.student;
-  const scores = data?.data.scores ?? [];
-  const attendance = data?.data.attendanceSummary;
+  const card = reportCardDetail?.data.reportCard;
+  const student = reportCardDetail?.data.student;
+  const scores = reportCardDetail?.data.scores ?? [];
+  const attendance = reportCardDetail?.data.attendanceSummary;
   const isPublished = card?.status === 'PUBLISHED';
 
   const handleSaveRemark = () => {

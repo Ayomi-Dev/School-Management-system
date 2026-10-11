@@ -17,8 +17,8 @@ export default function SubjectsPage() {
   const [yearId, setYearId] = useState<string>('');
 
   const { data: yearsData, isLoading: isYearsLoading } =
-    useAcademicYearsList(schoolId);
-  const years = yearsData?.data ?? [];
+    useAcademicYearsList();
+  const years = yearsData ?? [];
 
   // Auto-selects the current academic year once years load
   useEffect(() => {

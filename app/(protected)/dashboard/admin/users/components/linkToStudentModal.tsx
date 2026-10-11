@@ -25,7 +25,7 @@ export default function LinkParentModal({ studentUserId, studentName, onClose }:
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return parents.filter(
+    return parents?.filter(
       (p) =>
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
         p.email.toLowerCase().includes(q) ||
@@ -33,7 +33,7 @@ export default function LinkParentModal({ studentUserId, studentName, onClose }:
     );
   }, [parents, search]);
 
-  const selectedParent = parents.find((p) => p.id === selectedId) ?? null;
+  const selectedParent = parents?.find((p) => p.id === selectedId) ?? null;
 
   const handleConfirm = () => {
     if (!selectedId) return;
@@ -91,13 +91,13 @@ export default function LinkParentModal({ studentUserId, studentName, onClose }:
               <AlertCircle size={24} />
               <p className="text-sm">Failed to load parents list.</p>
             </div>
-          ) : filtered.length === 0 ? (
+          ) : filtered?.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-10">
               {search ? 'No parents match your search.' : 'No parents found in this school.'}
             </p>
           ) : (
             <div className="space-y-1">
-              {filtered.map((parent) => (
+              {filtered?.map((parent) => (
                 <ParentRow
                   key={parent.id}
                   parent={parent}
