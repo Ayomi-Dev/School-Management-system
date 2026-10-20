@@ -1,5 +1,6 @@
 // API Request/Response Types
-import { ClassLevel, Gender, Role, TermPeriod, UserStatus } from './types';
+import { Gender, Role, TermPeriod, UserStatus } from './types';
+import { ClassLevel } from './enums';
 
 export interface ApiError {
   error: string;
@@ -91,7 +92,7 @@ export interface Class {
 }
 
 export interface CreateClassRequest {
-  level: string;
+  level: ClassLevel;
   department?: string
 }
 
