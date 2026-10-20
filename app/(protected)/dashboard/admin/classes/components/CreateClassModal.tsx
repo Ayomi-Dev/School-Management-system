@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/src/components/ui/Button';
 import { X } from 'lucide-react';
 import { CreateClassInput, createClassSchema } from '@/src/validators/classSchema';
-import { useAuthStore } from '@/src/stores/authStore';
 import { useCreateClassMutation } from '@/src/hooks/queries/useClasses';
 
  
