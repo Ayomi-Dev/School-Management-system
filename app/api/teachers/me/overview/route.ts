@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { teacherServices } from "@/src/services/teacher/teacher.service";
-import { requireRole } from "@/src/lib/middleware/requireRole";
 import { ParamsContext } from "@/src/types";
+import { requireRoleForTenant } from "@/src/lib/tenant";
+import { Role } from "@/src/types/enums";
 
 
 export const GET = async(req: NextRequest, context: ParamsContext) => {
-    const auth = await requireRole(req, ["TEACHER"]);
+    const auth = await requireRoleForTenant(req, [Role.TEACHER]);
     if (!auth.success) {
         return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

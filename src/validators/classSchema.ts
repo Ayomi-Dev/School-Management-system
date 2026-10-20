@@ -1,5 +1,5 @@
-import { ClassLevel } from "@/app/generated/prisma/enums";
 import z from "zod";
+import { ClassLevel } from "../types/enums";
 
 
 export const classLevelEnum = z.enum(ClassLevel);

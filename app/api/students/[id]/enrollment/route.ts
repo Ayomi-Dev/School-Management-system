@@ -1,7 +1,7 @@
-import { Role } from "@/app/generated/prisma/enums";
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { enrollmentService } from "@/src/services/academics/academic.service";
 import { ParamsContext } from "@/src/types";
+import { Role } from "@/src/types/enums";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async(req: NextRequest, context: ParamsContext ) => {

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { prisma } from "./prisma/client";
 import { NextRequest } from "next/server";
 import { AuthFailure, AuthSuccess, requireRole } from "./middleware/requireRole";
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "../types/enums";
 
 /**
  * Returns the current tenant's schoolId from middleware-injected headers.

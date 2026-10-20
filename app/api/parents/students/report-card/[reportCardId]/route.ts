@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parentService } from "@/src/services/parent/parent";
-import { requireRole } from "@/src/lib/middleware/requireRole";
 import { ClassParamsContext } from "@/src/types";
+import { Role } from "@/src/types/enums";
+import { requireRoleForTenant } from "@/src/lib/tenant";
 
 export const GET = async (req: NextRequest, context: ClassParamsContext) => {
-    const auth = await requireRole(req, ["PARENT"]);
+    const auth = await requireRoleForTenant(req, [Role.PARENT]);
     if (!auth.success) {
         return NextResponse.json({ error: auth.error }, { status: auth.status });
     }

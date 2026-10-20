@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Role } from "@/app/generated/prisma/enums";
 import { brandingService } from "@/src/services/branding/branding.service";
 import { requireRoleForTenant } from "@/src/lib/tenant";
+import { Role } from "@/src/types/enums";
 
 export const GET = async(req: NextRequest) => {
     const auth = await requireRoleForTenant(req, [Role.ADMIN]);

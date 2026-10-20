@@ -1,5 +1,8 @@
-import { ClassLevel } from "@/app/generated/prisma/enums";
 import { z } from "zod";
+import { ClassLevel } from "../types/enums";
+
+
+
 const ClassLevelEnum = z.enum(ClassLevel)
 export const createSubjectSchema = z.object({
   name: z.string().min(1, "Subject name is required"),

@@ -1,10 +1,7 @@
-import { Role } from "@/app/generated/prisma/enums";
 import { requireRoleForTenant } from "@/src/lib/tenant";
-import { prisma } from "@/src/lib/prisma/client";
 import { adminServices } from "@/src/services/admin/admin.service";
+import { Role } from "@/src/types/enums";
 import { ParamsContext } from "@/src/types/params";
-import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
-import { linkStudentToParentSchema } from "@/src/validators/studentSchema";
 import { NextRequest, NextResponse } from "next/server";
 
 

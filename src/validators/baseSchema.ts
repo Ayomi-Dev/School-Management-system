@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Gender } from "@/app/generated/prisma/enums";
+import { Gender } from "../types/enums";
 
 
 export const GenderEnum = z.nativeEnum(Gender);

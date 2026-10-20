@@ -1,10 +1,10 @@
 import { jwtVerify, SignJWT } from "jose";
-import { Role } from "@/app/generated/prisma/enums";
 import { prisma } from "../prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto"
 import { AuthFailure } from "../middleware/requireRole";
 import { hashToken } from "./hash";
+import { Role } from "@/src/types";
 
 export interface sessionPayload {
     userId: string;
@@ -98,7 +98,7 @@ export const verifyRefreshToken = async(token: string): Promise<sessionPayload |
 
     return {
         userId: storedHashedToken.user.id,
-        role: storedHashedToken.user.role,
+        role: storedHashedToken.user.role, 
         schoolId: storedHashedToken.user.schoolId
     }
 }
