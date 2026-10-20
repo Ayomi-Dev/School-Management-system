@@ -11,6 +11,8 @@ const PUBLIC_PATHS = [
   "/api/auth/login",
   "/api/auth/refresh",
   "/api/auth/logout",
+  "/api/super-admin/login"
+
 ];
 
 // ── Paths that skip everything (no slug resolution, no auth) ────
@@ -21,12 +23,13 @@ const BYPASS_PATHS = [
   "/api/internal/resolve-school",        // ← internal resolver must never loop back through middleware
   "/school-not-found",
   "/not-found",
-  "/root"
+  "/root",
 ];
 
 export async function middleware(req: NextRequest) {
   console.log("[middleware] Processing request:", req.url);
   const { pathname } = req.nextUrl;
+  console.log("[middleware] Pathname:", pathname);
   const host = req.headers.get("host") ?? "";
   const isApiRoute = pathname.startsWith("/api/");
   const isBypass = BYPASS_PATHS.some((p) => pathname.startsWith(p));

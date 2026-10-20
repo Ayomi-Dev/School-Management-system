@@ -7,6 +7,7 @@ import { buildTokenCookies, persistRefreshToken, sessionPayload, signAccessToken
 
 
 export const POST = async(req: NextRequest) => {
+  console.log("route hit for super login")
   try {
     const body = await req.json().catch(() => ({}));
     const parsed = superAdminLoginSchema.safeParse(body);
