@@ -2,13 +2,12 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { adminService } from '@/src/services/client/admin';
 import { useToast } from '@/src/hooks/useToast';
 import {
-  CreateClassRequest,
   CreateSubjectRequest,
   CreateAcademicYearRequest,
 } from '@/src/types/api';
 import { CreateUserFormData } from '@/src/validators/adminSchema';
-import { AssignClassTeacherPayload, AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
-import { TeachersListParams, UserStatusType } from '@/src/types';
+import { AssignSubjectTeacherPayload } from '@/app/(protected)/dashboard/teacher/components/teacher';
+import { TeachersListParams, UserStatus } from '@/src/types';
 import { timetableService } from '@/src/services/client/timetable';
 import { CreateTimetableSlotBody, UpdateTimetableSlotBody } from '@/src/types/timetable';
 import { getErrorMessage } from '@/src/utils/error';
@@ -165,7 +164,7 @@ export const useUpdateUserStatusMutation = (userId: string) => {
   const { success, error: showError } = useToast();
  
   return useMutation({
-    mutationFn: async (newStatus: UserStatusType) => {
+    mutationFn: async (newStatus: UserStatus) => {
       try{
         return await adminService.updateUserStatus(userId, newStatus);
       }
