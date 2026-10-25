@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { baseSchemaForUserCreation } from "./baseSchema"
-import { Role } from "../types/enums"
+import { Role } from "@/app/generated/prisma/enums"
 
 
 

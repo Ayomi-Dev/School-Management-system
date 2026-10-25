@@ -8,13 +8,13 @@ import * as Select from '@radix-ui/react-select';
 import { useCreateUserMutation } from '@/src/hooks/queries/useAdmin';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
-import { X, ChevronDown, ChevronLeft, Check } from 'lucide-react';
+import { X, ChevronDown, ChevronLeft } from 'lucide-react';
 import {
   adminCreateUserSchema,
   CreateUserFormData,
 } from '@/src/validators/adminSchema';
-import { Gender, ClassLevel } from '@/app/generated/prisma/enums';
-
+import { ClassLevel, Gender } from '@/app/generated/prisma/enums';
+ 
 /* ─────────────────────────────────────────────────────────
    Enum-derived options
 ───────────────────────────────────────────────────────── */
@@ -23,11 +23,12 @@ const GENDER_OPTIONS = Object.values(Gender).map((v) => ({
   value: v,
   label: v.charAt(0) + v.slice(1).toLowerCase(),
 }));
-
+ 
 const CLASS_LEVEL_OPTIONS = Object.values(ClassLevel).map((v) => ({
   value: v,
   label: v,
 }));
+ 
 
 /* ─────────────────────────────────────────────────────────
    Types

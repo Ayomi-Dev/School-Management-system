@@ -1,6 +1,6 @@
 // API Request/Response Types
-import { Gender, Role, TermPeriod, UserStatus } from './types';
-import { ClassLevel } from './enums';
+import { Gender, Role, TermPeriod, UserStatus, ClassLevel } from './types';
+
 
 export interface ApiError {
   error: string;

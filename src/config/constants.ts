@@ -104,7 +104,7 @@ export const API_ENDPOINTS = {
 
   //ACADEMICS-----------------------
 
-  ACADEMIC_YEARS_CREATE: '/api/academics/create',
+  ACADEMIC_YEARS_CREATE: '/api/academics',
   ACADEMIC_YEARS_LIST: () => `/api/academics/sessions`,
   TERMS_CREATE: '/api/academics/terms/create',
   TERMS_LIST: (academicYearId: string) => `/api/academics/academic-years/${academicYearId}/terms`,

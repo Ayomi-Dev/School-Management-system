@@ -1,5 +1,7 @@
+import { Role } from "@/app/generated/prisma/enums";
 import { prisma } from "../lib/prisma/client";
-import { Role, TermPeriod } from "@/app/generated/prisma/enums";
+import { TermPeriodType } from "../types";
+import { TermPeriod } from "../types/enums";
 
 
 
@@ -19,12 +21,12 @@ export const currentSession = () => {
   return `${yearBefore}/${yearBeginning}`; //formats the session as "24/25"
 };
 
-export const getCurrentTerm = ():TermPeriod => {
+export const getCurrentTerm = ():TermPeriodType => {
   const month = new Date().getMonth() + 1;
 
-  if (month <= 4) return TermPeriod.SECOND; //Jan-april is second term
-  if (month <= 7) return TermPeriod.THIRD; // may to august is third term
-  return TermPeriod.FIRST; // september to december is first term of the next session
+  if (month <= 4) return "SECOND"; //Jan-april is second term
+  if (month <= 7) return "THIRD"; // may to august is third term
+  return "FIRST"; // september to december is first term of the next session
 };
 
 export const getCurrentTermSpan = () => {
@@ -70,7 +72,7 @@ async function nextSequence( tx: Omit<typeof prisma, "$connect" | "$disconnect" 
   schoolId: string;
   type: string;
   year: number;
-  term: TermPeriod;
+  term: TermPeriodType;
 }): Promise<number> {
       const counter = await tx.codeCounter.upsert({
         where: {
@@ -109,10 +111,10 @@ export const generateUserCode = async (
 
   const sequence = await nextSequence(tx, {schoolId, type: role, year, term,});
 
-  const termMap: Record<typeof term, string> = {
-   [TermPeriod.FIRST]: "T1",
-    [TermPeriod.SECOND]: "T2",
-    [TermPeriod.THIRD]: "T3",
+  const termMap: Record<TermPeriodType, string> = {
+    FIRST: "T1",
+    SECOND: "T2",
+    THIRD: "T3",
   }
 
   const codePrefixes = {

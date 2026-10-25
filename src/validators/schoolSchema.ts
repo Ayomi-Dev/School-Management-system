@@ -1,5 +1,5 @@
+import { Role } from "@/app/generated/prisma/enums";
 import { z } from "zod"
-import { Role } from "../types/enums"
 
 const RoleEnum = z.enum(Role)
 export const createSchoolAndAdminSchema = z.object({

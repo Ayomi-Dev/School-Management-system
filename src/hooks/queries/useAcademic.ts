@@ -9,12 +9,9 @@ import {
 } from '@/src/services/client/academic';
 import { queryKeys, queryClient } from '@/src/lib/queryClient';
 import {
-  CreateClassRequest,
-  CreateAcademicYearRequest,
   CreateTermRequest,
   UseStudentAcademicSummaryParams,
   StudentAcademicSummaryResponse,
-  Term,
 } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
@@ -49,6 +46,8 @@ export const useClassDetail = (id: string) => {
 
 
 // Academic Years
+
+
 export const useAcademicYearsList = (page = 1, limit = 20) => {
   const { error: toastError } = useToast();
 

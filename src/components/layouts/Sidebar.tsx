@@ -199,7 +199,7 @@ const isActive = (href: string) => {
         <NavLinks items={adminNavItems} />
 
         {/* Help Section */}
-        <div className="absolute bottom-6 left-6 right-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        {/* <div className="absolute bottom-6 left-6 right-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm font-medium text-gray-900 mb-2">Need Help?</p>
           <p className="text-xs text-gray-600 mb-3">
             Check our documentation or contact support
@@ -207,7 +207,7 @@ const isActive = (href: string) => {
           <button className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
             Get Support
           </button>
-        </div>
+        </div> */}
       </aside>
     </>
   );
