@@ -3,7 +3,7 @@ import { studentSchema } from "./studentSchema";
 import { teacherSchema } from "./teacherSchema";
 import { parentSchema } from "./parentSchema";
 import { bursarSchema } from "./bursarSchema";
-import { UserStatus } from "../types/enums";
+import { UserStatus } from "@/app/generated/prisma/enums";
 
 
 // ── Discriminated union — the single export used by the route ──────────────────
