@@ -1,17 +1,4 @@
 {
-  "name": "school-management-system",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "node api.js && next dev",
-    "build": "node api.js && next build",
-    "start": "node api.js && next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@prisma/client": "6.19",
@@ -50,5 +37,18 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
-  }
+  },
+  "name": "school-management-system",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "start": "next start"
+  },
+  "version": "0.1.0"
 }
