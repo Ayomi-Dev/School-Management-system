@@ -1,6 +1,6 @@
 import { requireRole } from "@/src/lib/middleware/requireRole";
 import { studentService } from "@/src/services/student/student.service";
-import { Role } from "@/src/types/enums";
+import { Role } from "@/app/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
 
 

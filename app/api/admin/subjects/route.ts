@@ -1,6 +1,6 @@
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { subjectService } from "@/src/services/subject/subject.service";
-import { Role } from "@/src/types/enums";
+import { Role } from "@/app/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async(req: NextRequest) => {

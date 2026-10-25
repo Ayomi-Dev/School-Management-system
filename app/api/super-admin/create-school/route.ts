@@ -5,7 +5,6 @@ import { superAdminServices } from "@/src/services/super-admin/super-admin.servi
 
 
 export const POST = async(req: NextRequest) => {
-    console.log("POST /api/super-admin/create-school called")
     const auth = await requireSuperAdmin(req); //vlaidates the role of the user is SUPER_ADMIN
     if(!auth.success && auth.shouldRefresh) {
         return NextResponse.json(

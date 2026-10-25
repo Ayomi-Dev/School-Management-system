@@ -3,7 +3,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { teacherServices } from "@/src/services/teacher/teacher.service";
 import { getCurrentTerm } from "@/src/utils/userCode";
 import { NextRequest, NextResponse } from "next/server";
-import { Role } from "@/src/types/enums";
+import { Role } from "@/app/generated/prisma/enums";
 
 export const GET = async(req: NextRequest ) => {
     const auth = await requireRoleForTenant(req, [Role.TEACHER, Role.ADMIN])

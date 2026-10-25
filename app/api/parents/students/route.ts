@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parentService } from "@/src/services/parent/parent";
-import { Role } from "@/src/types/enums";
+import { Role } from "@/app/generated/prisma/enums";
 import { requireRoleForTenant } from "@/src/lib/tenant";
 
 export const GET = async (req: NextRequest) => {
