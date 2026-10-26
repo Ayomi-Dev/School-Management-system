@@ -11,8 +11,8 @@ const ROLE_PATHS: Record<string, string[]> = {
 
 export function extractSlug(host: string, appDomain: string): string | null {
   // Production: "faithschool.myapp.edu.ng" → "faithschool"
-  console.log("slug utility reached with host:", host, "appDomain:", appDomain);
   if (appDomain && host.endsWith(`.${appDomain}`)) {
+    console.log("slug utility reached with host:", host, "appDomain:", appDomain);
     console.log("slug utility:", host, appDomain, "→", host.slice(0, host.length - appDomain.length - 1));
     return host.slice(0, host.length - appDomain.length - 1) || null;
   }

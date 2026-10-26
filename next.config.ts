@@ -2,6 +2,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    "/**": ["./app/generated/prisma/**/*"],
+  }, 
   async headers() {
     return [
       {

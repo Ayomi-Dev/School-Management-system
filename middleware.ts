@@ -54,7 +54,7 @@ export async function middleware(req: NextRequest) {
     console.log("[middleware] Root domain detected, rewriting to /root", isRootDomain);
     return NextResponse.rewrite(new URL("/root", req.url));
   }
-  const slug = extractSlug(host, appDomain);
+  const slug = extractSlug(host, appDomain); 
   if (!slug) {
     // console.log("[middleware] Extracted slug:", slug, "from host:", host, "appDomain:", appDomain);
     return isApiRoute
@@ -67,7 +67,7 @@ export async function middleware(req: NextRequest) {
   //    internal API route — but we must use an absolute URL with
   //    the correct protocol and the non-subdomained base URL.
   const schoolId = await resolveSlugToId(slug, req);
-  if (!schoolId) {
+  if (!schoolId) { 
     return isApiRoute
       ? NextResponse.json({ error: "School not found" }, { status: 404 })
       : NextResponse.rewrite(new URL("/not-found", req.url));
