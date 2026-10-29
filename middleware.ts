@@ -44,7 +44,8 @@ export async function middleware(req: NextRequest) {
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "";
   const isRootDomain =
     host === appDomain ||                    // exact match
-    host === `www.${appDomain}` ||           // www prefix
+    host === `www.${appDomain}` ||  
+    host.endsWith(".vercel.app") ||          // www prefix
     host === "localhost:3000" ||             // dev root
     host === "127.0.0.1:3000";              // dev root alt
     console.log("[middleware] Host:", host, "App domain:", appDomain, "Is root domain:", isRootDomain);
@@ -52,14 +53,17 @@ export async function middleware(req: NextRequest) {
   if (isRootDomain) {
     // Rewrite to a root landing page — URL stays the same in browser
     console.log("[middleware] Root domain detected, rewriting to /root", isRootDomain);
-    return NextResponse.rewrite(new URL("/root", req.url));
+
+    return pathname === "/root"
+      ? NextResponse.next()
+      : NextResponse.rewrite(new URL("/root", req.url));
   }
   const slug = extractSlug(host, appDomain); 
   if (!slug) {
     // console.log("[middleware] Extracted slug:", slug, "from host:", host, "appDomain:", appDomain);
     return isApiRoute
       ? NextResponse.json({ error: "Unknown tenant" }, { status: 400 })
-      : NextResponse.redirect(new URL("/not-found", req.url));
+      : NextResponse.redirect(new URL("/root", req.url));
     }
 
   // ── 3. Resolve slug to schoolId via internal API ─────────────
