@@ -3,7 +3,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
-    "/**": ["./app/generated/prisma/**/*"],
+    // Include the generated Prisma client and native query engine in every
+    // server function bundle. Route keys use Next's route glob syntax.
+    "/*": ["./app/generated/prisma/**/*"],
   }, 
   async headers() {
     return [
