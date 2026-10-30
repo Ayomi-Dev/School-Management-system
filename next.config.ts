@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     // Include the generated Prisma client and native query engine in every
     // server function bundle. Route keys use Next's route glob syntax.
-    "/*": ["./app/generated/prisma/**/*"],
+    "/**/*": [
+      "./app/generated/prisma/**/*",
+      "./prisma/schema.prisma",
+    ],
   }, 
   async headers() {
     return [
