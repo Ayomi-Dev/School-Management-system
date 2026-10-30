@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma/client";
-import { Role, TermPeriod } from "@/app/generated/prisma/enums";
+import { Role, TermPeriod } from "@prisma/client";
 
 
 

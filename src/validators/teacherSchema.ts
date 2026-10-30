@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
-import { ClassLevel, Department, EmployeeType, Role } from "@/app/generated/prisma/enums";
+import { ClassLevel, Department, EmployeeType, Role } from "@prisma/client";
 
 
 export const EmploymentType = z.enum(EmployeeType)  // Create a Zod enum from the Prisma EmployeeType enum values

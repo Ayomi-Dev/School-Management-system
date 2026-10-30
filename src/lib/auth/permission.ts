@@ -1,4 +1,4 @@
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@prisma/client";
 import { PERMISSIONS, Resource, Action } from "@/src/types/permissionType";
 
 export const doesUserHavePermission = (role: Role, resource: Resource, action: Action): boolean => {

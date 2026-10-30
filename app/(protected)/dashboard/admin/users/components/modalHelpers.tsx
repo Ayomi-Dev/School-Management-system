@@ -4,7 +4,7 @@ import { useFieldArray, Controller } from 'react-hook-form';
 import * as Select from '@radix-ui/react-select';
 import { Input } from '@/src/components/ui/Input';
 import { X, ChevronDown, Plus, Trash2 } from 'lucide-react';
-import { Gender, ClassLevel } from '@/app/generated/prisma/enums';
+import { Gender, ClassLevel } from '@prisma/client';
 
 /* ─────────────────────────────────────────────────────────
    Transform Enum into usable-derived options

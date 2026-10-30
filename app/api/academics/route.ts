@@ -1,4 +1,4 @@
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@prisma/client";
 import { prisma } from "@/src/lib/prisma/client";
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { academicYearService } from "@/src/services/academics/academic.service";

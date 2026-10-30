@@ -1,7 +1,7 @@
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { studentService } from "@/src/services/student/student.service";
 import { ParamsContext } from "@/src/types";
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 

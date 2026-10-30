@@ -1,5 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
-import { AttendanceStatus } from "@/app/generated/prisma/enums";
+import { AttendanceStatus } from "@prisma/client";
 
 // ============================================================
 // TYPES

@@ -1,5 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
-import { PaymentMethod, PaymentStatus } from "@/app/generated/prisma/enums";
+import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { assignFeeSchema, createFeeStructureSchema, recordPaymentSchema } from "@/src/validators/feePaymentSchema";
 import { error } from "console";

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parentService } from "@/src/services/parent/parent";
 import { requireRole } from "@/src/lib/middleware/requireRole";
 import { ParamsContext } from "@/src/types";
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@prisma/client";
 
 export const GET = async (req: NextRequest, context: ParamsContext) => {
     const auth = await requireRole(req, [Role.PARENT]);

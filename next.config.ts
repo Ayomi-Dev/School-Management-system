@@ -2,14 +2,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  outputFileTracingIncludes: {
-    // Include the generated Prisma client and native query engine in every
-    // server function bundle. Route keys use Next's route glob syntax.
-    "/**/*": [
-      "./app/generated/prisma/**/*",
-      "./prisma/schema.prisma",
-    ],
-  }, 
+  // outputFileTracingIncludes: {
+  //   // Include the generated Prisma client and native query engine in every
+  //   // server function bundle. Route keys use Next's route glob syntax.
+  //   "/**/*": [
+  //     "@prisma/client",
+  //     "./prisma/schema.prisma",
+  //   ],
+  serverExternalPackages: ["@prisma/client", ".prisma/client"],
   async headers() {
     return [
       {

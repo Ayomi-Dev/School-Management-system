@@ -4,7 +4,7 @@
 // teacher service assignSubject endpoint.
 // ============================================================
 
-import { ClassLevel } from "@/app/generated/prisma/enums";
+import { ClassLevel } from "@prisma/client";
 import { prisma } from "@/src/lib/prisma/client";
 import { assignSubjectsToEnrolledStudents } from "@/src/utils/assignSubjectToEnrollmet";
 import { resolveClassByName } from "@/src/utils/resolvers";

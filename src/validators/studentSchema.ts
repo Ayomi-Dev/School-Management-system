@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
-import { ClassLevel, Gender, Role } from "@/app/generated/prisma/enums";
+import { ClassLevel, Gender, Role } from "@prisma/client";
 
 
 export const classLevelEnum = z.enum(ClassLevel);

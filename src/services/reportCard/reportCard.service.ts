@@ -1,5 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
-import { ReportCardStatus } from "@/app/generated/prisma/enums";
+import { ReportCardStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { compileSchema, updateReportCardSchema } from "@/src/validators/reportCardSchema";
 

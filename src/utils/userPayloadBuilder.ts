@@ -1,6 +1,6 @@
-import { Prisma, UserStatus } from "@/app/generated/prisma/browser";
 import { AdminCreateUserInput } from "@/src/validators/adminSchema";
 import { currentSession, getCurrentTerm } from "./userCode";
+import { Prisma } from "@prisma/client";
 
 /**
  * Context injected by the service layer — never from the client.
