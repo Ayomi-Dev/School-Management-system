@@ -1,4 +1,4 @@
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@prisma/client";
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { timetableService } from "@/src/services/timetable/timetable.service";
 import { ClassParamsContext,  } from "@/src/types";

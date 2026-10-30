@@ -1,5 +1,5 @@
 import { prisma } from "@/src/lib/prisma/client";
-import { TermPeriod } from "@/app/generated/prisma/enums";
+import { TermPeriod } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { resolveAcademicYear, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { createAcademicYearSchema } from "@/src/validators/schoolSchema";

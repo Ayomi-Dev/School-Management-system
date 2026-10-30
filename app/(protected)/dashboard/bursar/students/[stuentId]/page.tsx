@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { usePaymentHistory, useStudentStatement } from '@/src/hooks/queries/useFees';
 import RecordPaymentModal from '../../components/modals/RecordPayment';
+import { useCurrentTerm } from '@/src/hooks/queries/useAcademic';
 
 function naira(n: number) {
   return `₦${n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -31,16 +32,14 @@ const METHOD_COLORS: Record<string, string> = {
 
 type Tab = 'statement' | 'history';
 
-interface Props {
-  termId:    string;
-  termLabel: string;
-}
 
-export default function StudentStatementPage({ termId, termLabel }: Props) {
+
+export default function StudentStatementPage() {
   const { studentId } = useParams<{ studentId: string }>();
   const router        = useRouter();
+  const { termId, termPeriod } = useCurrentTerm()
 
-  const [tab, setTab]               = useState<Tab>('statement');
+  const [tab, setTab]  = useState<Tab>('statement');
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   
@@ -97,7 +96,7 @@ export default function StudentStatementPage({ termId, termLabel }: Props) {
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-gray-500 mt-0.5">
                 <span>{student.studentNumber}</span>
                 {student.currentClass && <span>· {student.currentClass.level}</span>}
-                <span>· {termLabel}</span>
+                <span>· {termPeriod}</span>
               </div>
             </div>
           </div>
@@ -294,7 +293,7 @@ export default function StudentStatementPage({ termId, termLabel }: Props) {
           studentName={`${student.firstName} ${student.lastName}`}
           studentNumber={student.studentNumber}
           termId={termId}
-          termLabel={termLabel}
+          termLabel={termPeriod}
           balances={balances}
           onClose={() => setPaymentOpen(false)}
           onSuccess={() => setPaymentOpen(false)}

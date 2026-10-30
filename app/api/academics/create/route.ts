@@ -2,7 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { academicYearService } from "@/src/services/academics/academic.service";
 import { NextRequest, NextResponse } from "next/server";
-import { Role } from "@/app/generated/prisma/enums"
+import { Role } from "@prisma/client"
 
 
 export const POST = async(req: NextRequest ) => {

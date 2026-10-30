@@ -1,4 +1,4 @@
-import { ClassLevel } from "@/app/generated/prisma/enums";
+import { ClassLevel } from "@prisma/client";
 import z from "zod";
 
 

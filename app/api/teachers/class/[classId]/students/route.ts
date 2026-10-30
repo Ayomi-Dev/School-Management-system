@@ -1,7 +1,7 @@
 import { requireRoleForTenant } from "@/src/lib/tenant";
 import { classService } from "@/src/services/class/class.service";
 import { ClassParamsContext } from "@/src/types";
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async(req: NextRequest, context: ClassParamsContext) => {

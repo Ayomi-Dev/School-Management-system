@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { baseSchemaForUserCreation } from "./baseSchema";
-import { Relationship, Role } from "@/app/generated/prisma/enums";
+import { Relationship, Role } from "@prisma/client";
 
 
 export const RelationshipType = z.enum(Relationship)

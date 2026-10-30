@@ -13,7 +13,7 @@ import {
   adminCreateUserSchema,
   CreateUserFormData,
 } from '@/src/validators/adminSchema';
-import { ClassLevel, Gender } from '@/app/generated/prisma/enums';
+import { ClassLevel, Gender } from '@prisma/client';
  
 /* ─────────────────────────────────────────────────────────
    Enum-derived options
