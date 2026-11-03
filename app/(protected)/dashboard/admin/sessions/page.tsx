@@ -1,19 +1,22 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useAcademicYearsList, useCreateAcademicYearMutation } from '@/src/hooks/queries/useAdmin';
+import { useAcademicYearsList } from '@/src/hooks/queries/useAcademic';
 import { Card } from '@/src/components/ui/Card';
 import { DataTable } from '@/src/components/ui/DataTable';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';
-import { Edit2, Trash2, Plus, CheckCircle } from 'lucide-react';
+import { Edit2, Trash2, Plus, CheckCircle, X } from 'lucide-react';
 import CreateAcademicYearModal from './components/CreateAcademicYearModal';
+import CreateTermModal from './components/CreateTermModal';
 
 export default function SessionsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateTermModalOpen, setIsCreateTermModalOpen] = useState(false);
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string | null>(null);
   const { data: yearsData, isLoading } = useAcademicYearsList();
 
-  const years = useMemo(() => yearsData?.data.data || [], [yearsData]);
+  const years = useMemo(() => yearsData || [], [yearsData]);
   console.log(years)
 
   const formatDate = (date: string) => {
@@ -55,10 +58,16 @@ export default function SessionsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-bold text-gray-900">{year.label}</h3>
-                    {year.isActive && (
+                    {year.isCurrent ? (
                       <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                         <CheckCircle size={14} />
                         Active
+                      </span>
+                    ) 
+                    : (
+                      <span className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                        <X size={14} />
+                        Session Inaactive
                       </span>
                     )}
                   </div>
@@ -82,7 +91,10 @@ export default function SessionsPage() {
                         </div>
                       ))}
                     </div>
-                    <Button variant="outline" size="sm" className="w-full mt-3">
+                    <Button variant="outline" size="sm" className="w-full mt-3" onClick={() => {
+                      setSelectedAcademicYearId(year.id);
+                      setIsCreateTermModalOpen(true);
+                    }}>
                       Add Term
                     </Button>
                   </div>
@@ -121,6 +133,13 @@ export default function SessionsPage() {
         <CreateAcademicYearModal
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => setIsCreateModalOpen(false)}
+        />
+      )}
+      {isCreateTermModalOpen && (
+        <CreateTermModal
+          academicYearId={selectedAcademicYearId ?? ''}
+          onClose={() => setIsCreateTermModalOpen(false)}
+          onSuccess={() => setIsCreateTermModalOpen(false)}
         />
       )}
     </div>

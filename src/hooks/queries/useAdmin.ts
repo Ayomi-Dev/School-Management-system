@@ -13,6 +13,7 @@ import { CreateTimetableSlotBody, UpdateTimetableSlotBody } from '@/src/types/ti
 import { getErrorMessage } from '@/src/utils/error';
 import { useAuthStore } from '@/src/stores/authStore';
 import { queryClient } from '@/src/lib/queryClient';
+import { academicYearService } from '@/src/services/client/academic';
 
 export const queryKeys = {
   admin: ['admin'],
@@ -423,7 +424,7 @@ export const useAcademicYearsList = (params?: { page?: number; limit?: number })
     queryKey: [...queryKeys.academicYears(), params],
     queryFn: async () => {
       try {
-        return await adminService.getAcademicYears(params)
+        return await academicYearService.list(params?.page, params?.limit)
       } catch (error) {
         const message = getErrorMessage(error);
         showError(message);

@@ -118,7 +118,7 @@ export const adminService = {
 
   // Academic Year Management 
   getAcademicYears: (params?: { page?: number; limit?: number }) =>
-    client.get(`${API_BASE}/academics`, { params }),
+    client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST, { params }),
 
   getAcademicYearById: (id: string) => client.get(`${API_BASE}/academic-years/${id}`),
 

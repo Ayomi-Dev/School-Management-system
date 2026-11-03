@@ -3,6 +3,7 @@ import { TermPeriod } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { resolveAcademicYear, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { createAcademicYearSchema } from "@/src/validators/schoolSchema";
+import { createTermSchema } from "@/src/validators/academicSchema";
 
 
 // ACADEMIC YEAR SERVICE
@@ -116,7 +117,7 @@ export const academicYearService = {
   /** Returns the current academic year + active term for a school */
     async getCurrentAcademicYear(schoolId: string) {
       try {
-        const year = await prisma.academicYear.findFirst({
+        const year = await prisma.academicYear.findMany({
           where: { schoolId, isCurrent: true },
           include: {
             terms: {
@@ -125,6 +126,7 @@ export const academicYearService = {
             },
           },
         });
+        console.log("[academicYearService.getCurrent]", year)
         if (!year) {
           return NextResponse.json(
             { error: "No active academic year found." },
@@ -143,13 +145,7 @@ export const academicYearService = {
 // ============================================================
 // TERM SERVICE
 // ============================================================
- interface TermType {
-    academicYearId: string;
-    period: TermPeriod;
-    startDate: Date;
-    endDate: Date;
-    isCurrent: boolean
- }
+
 export const termService = {
   /**
    * Create a term inside an academic year.
@@ -158,28 +154,43 @@ export const termService = {
    */
   
     async createTerm(
+      req: NextRequest,
       tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
-      schoolId: string, {
-        academicYearId, 
-        period, startDate, 
-        endDate, 
-        isCurrent
-    }: TermType) {;
-      const academicYear = await tx.academicYear.updateMany({
-        where: { schoolId, isCurrent: true },
-        data:  { isCurrent: false },
+      schoolId: string
+   ) {
+      const body = await req.json();
+      const parsedBody = createTermSchema.safeParse(body);
+      if (!parsedBody.success) {
+        return NextResponse.json(
+          { error: "validation failed", details: parsedBody.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+
+      const { academicYearId, period, startDate, endDate, isCurrent } = parsedBody.data;
+      console.log("[termService.createTerm] parsedBody:", parsedBody.data)
+      const academicYear = await tx.academicYear.findFirst({
+        where: { schoolId, id: academicYearId },
+        select: { id: true, label: true }
       });
+      console.log("[termService.createTerm] academicYear:", academicYear)
       if(!academicYear){
-        throw new Error(`Academic year ${academicYearId} not found for school ${schoolId}.`);
+        return NextResponse.json(
+          { error: `Academic year ${academicYearId} not found for school ${schoolId}.` },
+          { status: 404 }
+        );
       }
     
         // Unique check: one period per academic year
-      const existingTerm = await prisma.term.findUnique({
+      const existingTerm = await tx.term.findUnique({
         where: { academicYearId_period: { academicYearId, period } },
         select: { id: true },
       }); 
       if (existingTerm) {
-        throw new Error("Term already exist for this academic year!")
+        return NextResponse.json(
+          { error: "Term already exists for this academic year!" },
+          { status: 400 }
+        );
       }
     
       if (isCurrent) {
@@ -192,17 +203,32 @@ export const termService = {
           data: { isCurrent: false },
         });
       }
-    
-      return tx.term.create({
+      const term = await tx.term.create({
         data: { academicYearId, period, startDate, endDate, isCurrent: isCurrent ?? false },
       });
+      console.log("[termService.createTerm] term created:", term)
+      return NextResponse.json(
+        {
+          message: "Term created.",
+          data: term,
+        },
+        { status: 201 }
+      )
   },
 
  
-    async updateTerm(schoolId: string, {
-      academicYearId, period, startDate, endDate, isCurrent
-    }: TermType) {
+    async updateTerm(req: NextRequest,schoolId: string) {
       try {
+
+        const body = await req.json();
+        const parsedBody = createTermSchema.safeParse(body);
+        if (!parsedBody.success) {
+          return NextResponse.json(
+            { error: "validation failed", details: parsedBody.error.flatten().fieldErrors },
+            { status: 400 }
+          );
+        }
+        const { academicYearId, period, startDate, endDate, isCurrent } = parsedBody.data;
         const termId = await resolveTermByPeriod(schoolId, period, academicYearId).then(t => t.id);
       
         // Confirm term belongs to this school (via academic year)

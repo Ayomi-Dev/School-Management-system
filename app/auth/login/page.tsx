@@ -26,6 +26,7 @@ function LoginForm() {
     ? searchParams.charAt(0).toUpperCase() + searchParams.slice(1)
     : '';
   const isParamsTrue = roles.includes(searchParams);
+  console.log("isParamsTrue", isParamsTrue, "capsParams", capsParams);
   const router = useRouter();
   const { user, error: authError, setError: setAuthError } = useAuthStore();
   const { handleLogin, loginMutation } = useLoginMutation();

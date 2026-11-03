@@ -65,11 +65,21 @@ export const useAcademicYearsList = (page = 1, limit = 20) => {
   });
 };
 
-export const useActiveAcademicYear = (schoolId: string) => {
+export const useActiveAcademicYear = () => {
+  const { error: toastError } = useToast();
   return useQuery({
-    queryKey: [...queryKeys.academicYears.all, schoolId, 'active'],
-    queryFn: () => academicYearService.getActive(schoolId),
-    enabled: !!schoolId,
+    queryKey: [...queryKeys.academicYears.all, 'active'],
+    queryFn: async () => {
+      try{
+        return await academicYearService.getActive()
+      }
+      catch (error) {
+        const message = getErrorMessage(error)
+        toastError(message);
+        return null;
+      }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
@@ -124,15 +134,22 @@ export const useCurrentTerm = () => {
 
 export const useCreateTermMutation = () => {
   const { success, error: toastError } = useToast();
-
+  
   return useMutation({
-    mutationFn: (data: CreateTermRequest) => termService.create(data),
-    onSuccess: () => {
+    mutationFn: async(data: CreateTermRequest) => {
+      try {
+        console.log("term hook called")
+        return await termService.create(data)
+      } catch (error) {
+        const message = getErrorMessage(error);
+        toastError(message);
+        return null
+      }
+    },
+    onSuccess: (data) => {
+      if(!data) return console.log("no data processed") 
       success(SUCCESS_MESSAGES.CREATED_SUCCESS);
       queryClient.invalidateQueries({ queryKey: ['terms'] });
-    },
-    onError: (error: any) => {
-      toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
     },
   });
 };

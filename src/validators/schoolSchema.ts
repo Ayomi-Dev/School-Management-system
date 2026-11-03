@@ -66,3 +66,4 @@ export const userCodeContextSchema = z.object({
   year: z.number().int().optional(),
   term: z.enum(["FIRST", "SECOND", "THIRD"]).optional(),
 });
+

@@ -46,10 +46,10 @@ export const academicYearService = {
     page = 1,
     limit = 20
   ): Promise<AcademicYear[]> => {
-    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST(), {
+    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST, {
       params: { page, limit },
     });
-    return response.data;
+    return response.data.data;
   },
 
   create: async (data: CreateAcademicYearRequest): Promise<AcademicYear> => {
@@ -57,11 +57,9 @@ export const academicYearService = {
     return response.data;
   },
 
-  getActive: async (schoolId: string): Promise<AcademicYear> => {
-    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_LIST(), {
-      params: { isActive: true, limit: 1 },
-    });
-    return response.data.data[0];
+  getActive: async (): Promise<AcademicYear> => {
+    const response = await client.get(API_ENDPOINTS.ACADEMIC_YEARS_GET_ACTIVE());
+    return response.data.data;
   },
 };
 

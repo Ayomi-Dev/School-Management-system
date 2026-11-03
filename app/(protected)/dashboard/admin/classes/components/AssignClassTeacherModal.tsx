@@ -30,7 +30,7 @@ export default function AssignClassTeacherModal({
   onSuccess,
 }: AssignClassTeacherModalProps) {
     const schoolId = useAuthStore((state) => state.user?.schoolId ?? ''); 
-  const { data: activeYear } = useActiveAcademicYear(schoolId);
+  const { data: activeYear } = useActiveAcademicYear();
   
   const [selectedTeacher, setSelectedTeacher] = useState<SelectedTeacher | null>(null);
   const [academicYearLabel, setAcademicYearLabel] = useState("");

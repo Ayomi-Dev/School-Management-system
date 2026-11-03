@@ -12,7 +12,6 @@ import {
   AlertCircle,
   Clock,
   Plus,
-  TrendingUp,
 } from 'lucide-react';
 import { usePaymentHistory, useStudentStatement } from '@/src/hooks/queries/useFees';
 import RecordPaymentModal from '../../components/modals/RecordPayment';

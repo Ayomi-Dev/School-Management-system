@@ -153,10 +153,11 @@ export interface Term {
 }
 
 export interface CreateTermRequest {
-  name: string;
+  period: TermPeriod;
   startDate: string;
   endDate: string;
   academicYearId: string;
+  isCurrent?: boolean;
 }
 
 // Student Types
