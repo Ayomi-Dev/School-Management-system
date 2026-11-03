@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node init && next dev",
     "postinstall": "prisma generate",
-    "build": "prisma generate && next build --webpack",
-    "start": "next start",
+    "build": "node init && prisma generate && next build --webpack",
+    "start": "node init && next start",
     "lint": "eslint"
   },
   "prisma": {
