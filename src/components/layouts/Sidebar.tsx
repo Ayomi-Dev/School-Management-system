@@ -69,7 +69,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams()
   const { user, school } = useAuth();
-  const schoolId = user?.schoolId || '';
   const schoolName = school?.name || 'SchoolHub';
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());

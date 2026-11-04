@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLinkedStudents } from '@/src/hooks/queries/useParent';
 import { Topbar } from './Topbar';
+import { useAuth } from '@/src/hooks/useAuth';
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,8 @@ function SidebarContent({
   onNavClick?: () => void;
 }) {
   const { data: students = [] } = useLinkedStudents();
+   const { school } = useAuth();
+    const schoolName = school?.name || 'SchoolHub';
 
   return (
     <div className="flex flex-col h-full">
@@ -66,7 +69,7 @@ function SidebarContent({
             <GraduationCap size={18} className="text-white" />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">SchoolHub</p>
+            <p className="text-white font-bold text-sm leading-tight">{schoolName}</p>
             <p className="text-blue-200 text-[11px]">Parent Portal</p>
           </div>
         </div>
