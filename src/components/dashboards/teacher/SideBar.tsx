@@ -34,7 +34,8 @@ import { useMySubjectAssignments } from '@/src/hooks/queries/useTeacher';
 
 export function TeacherSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, school } = useAuth();
+  const schoolName = school?.name || 'SchoolHub';
 
   const { data: assignedClass,       isLoading: loadingClass   } = useMyClass();
   const { data: subjectAssignments,  isLoading: loadingSubjects } = useMySubjectAssignments();
@@ -184,9 +185,9 @@ export function TeacherSidebar() {
               <span className="text-white font-bold text-lg">T</span>
             </div>
             <div>
-              <h1 className="font-bold text-gray-900">SchoolHub</h1>
+              <h1 className="font-bold text-gray-900">{schoolName}</h1>
               <p className="text-xs text-gray-500 capitalize">
-                {user?.role?.toLowerCase()}
+                {user?.role ? user?.role.charAt(0).toUpperCase() + user?.role.slice(1).toLowerCase() : ''}
               </p>
             </div>
           </div>

@@ -1,148 +1,270 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { Activity, ArrowLeft, Download, RefreshCw, Users } from 'lucide-react';
 import { Card } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
 import { DataTable } from '@/src/components/ui/DataTable';
-import { Download, Filter } from 'lucide-react';
+import { useAcademicReport } from '@/src/hooks/queries/useAcademicReport';
+import { AcademicReportClassRow, AcademicReportStudentRow } from '@/src/types/academicReport';
 
-const mockAcademicData = [
-  { id: '1', className: 'JSS1A', totalStudents: 45, avgScore: 72.5, passRate: '88%' },
-  { id: '2', className: 'JSS1B', totalStudents: 42, avgScore: 68.3, passRate: '82%' },
-  { id: '3', className: 'JSS2A', totalStudents: 48, avgScore: 75.1, passRate: '92%' },
-  { id: '4', className: 'SS1', totalStudents: 40, avgScore: 73.6, passRate: '90%' },
-];
+const selectClassName = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100';
+
+const formatPercent = (value: number | null | undefined) => value == null ? '—' : `${value.toFixed(value % 1 ? 1 : 0)}%`;
+const formatScore = (value: number | null | undefined) => value == null ? '—' : `${value.toFixed(value % 1 ? 1 : 0)}%`;
+const escapeCsv = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
 
 export default function AcademicReportsPage() {
-  const [selectedClass, setSelectedClass] = useState('');
-  const [selectedTerm, setSelectedTerm] = useState('');
+  const [academicYearId, setAcademicYearId] = useState('');
+  const [termId, setTermId] = useState('');
+  const [classId, setClassId] = useState('');
+  const filters = useMemo(() => ({
+    ...(academicYearId ? { academicYearId } : {}),
+    ...(termId ? { termId } : {}),
+    ...(classId ? { classId } : {}),
+  }), [academicYearId, termId, classId]);
+  const reportQuery = useAcademicReport(filters);
+  const report = reportQuery.data;
+
+  const selectedYearId = academicYearId || report?.selectedAcademicYearId || '';
+  const selectedYear = report?.academicYears.find((year) => year.id === selectedYearId);
+  const selectedTermValue = termId || report?.selectedTermId || '';
+  const selectedClass = report?.classes.find((classItem) => classItem.id === classId);
+
+  const exportReport = () => {
+    if (!report) return;
+    const rows: (string | number)[][] = [
+      ['Academic performance report', ''],
+      ['Academic year', selectedYear?.label ?? '—'],
+      ['Term', report.selectedTermLabel],
+      ['Class filter', selectedClass?.level ?? 'All classes'],
+      [],
+      ['Class', 'Enrolled students', 'Assessed students', 'Average score', 'Pass rate'],
+      ...report.classPerformance.map((row) => [
+        row.className,
+        row.totalStudents,
+        row.assessedStudents,
+        row.averageScore ?? '—',
+        row.passRate == null ? '—' : `${row.passRate}%`,
+      ]),
+      [],
+      ['Student', 'Student number', 'Class', 'Average score', 'Subjects assessed'],
+      ...report.studentPerformance.map((row) => [
+        row.studentName,
+        row.studentNumber,
+        row.className,
+        row.averageScore,
+        row.subjectsAttempted,
+      ]),
+    ];
+    const csv = rows.map((row) => row.map((cell) => escapeCsv(cell)).join(',')).join('\r\n');
+    const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `academic-report-${(selectedYear?.label ?? 'school-year').replace(/[^a-z0-9-]/gi, '-')}.csv`;
+    link.click();
+    URL.revokeObjectURL(blobUrl);
+  };
+
+  const classColumns = [
+    { key: 'className' as const, label: 'Class', render: (value: unknown) => <span className="font-semibold text-gray-900">{String(value)}</span> },
+    { key: 'totalStudents' as const, label: 'Enrolled' },
+    { key: 'assessedStudents' as const, label: 'Assessed' },
+    {
+      key: 'averageScore' as const,
+      label: 'Average score',
+      render: (value: unknown) => <span className="font-medium text-gray-900">{formatScore(value as number | null)}</span>,
+    },
+    {
+      key: 'passRate' as const,
+      label: 'Pass rate',
+      render: (value: unknown) => value == null
+        ? <span className="text-gray-400">No published scores</span>
+        : <span className={(value as number) >= 50 ? 'font-semibold text-green-700' : 'font-semibold text-amber-700'}>{formatPercent(value as number)}</span>,
+    },
+  ];
+
+  const studentColumns = [
+    { key: 'studentName' as const, label: 'Student', render: (value: unknown) => <span className="font-medium text-gray-900">{String(value)}</span> },
+    { key: 'studentNumber' as const, label: 'Student number' },
+    { key: 'className' as const, label: 'Class' },
+    { key: 'subjectsAttempted' as const, label: 'Subjects assessed' },
+    { key: 'averageScore' as const, label: 'Average score', render: (value: unknown) => <span className="font-semibold text-gray-900">{formatScore(value as number)}</span> },
+  ];
+
+  const openClass = (row: AcademicReportClassRow) => setClassId(row.id);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
+          <p className="mb-1 text-sm font-medium text-blue-700">Reports / Academic</p>
           <h1 className="text-3xl font-bold text-gray-900">Academic Reports</h1>
-          <p className="text-gray-600 mt-1">View class and student performance</p>
+          <p className="mt-1 text-gray-600">Published student results by class and term.</p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Download size={18} />
-          Export Report
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => reportQuery.refetch()}>
+            <RefreshCw size={16} className={reportQuery.isFetching ? 'animate-spin' : ''} />
+            Refresh
+          </Button>
+          <Button className="flex items-center gap-2" onClick={exportReport} disabled={!report || reportQuery.isLoading}>
+            <Download size={17} />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
       <Card>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+            <h2 className="font-semibold text-gray-900">Report filters</h2>
+            <p className="mt-0.5 text-sm text-gray-500">Results update when you change a filter.</p>
+          </div>
+          {report && <span className="text-xs text-gray-500">Auto refresh every 30 seconds</span>}
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <label className="block text-sm font-medium text-gray-700">
+            Academic year
             <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              value={selectedYearId}
+              onChange={(event) => { setAcademicYearId(event.target.value); setTermId(''); setClassId(''); }}
+              className={`${selectClassName} mt-2`}
+              disabled={!report?.academicYears.length}
             >
-              <option value="">All Classes</option>
-              <option value="JSS1A">JSS1A</option>
-              <option value="JSS1B">JSS1B</option>
-              <option value="JSS2A">JSS2A</option>
+              {report?.academicYears.map((year) => <option key={year.id} value={year.id}>{year.label}{year.isCurrent ? ' · Current' : ''}</option>)}
+              {!report?.academicYears.length && <option value="">No academic years</option>}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Term</label>
+          </label>
+          <label className="block text-sm font-medium text-gray-700">
+            Term
             <select
-              value={selectedTerm}
-              onChange={(e) => setSelectedTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              value={selectedTermValue}
+              onChange={(event) => setTermId(event.target.value)}
+              className={`${selectClassName} mt-2`}
+              disabled={!selectedYear?.terms.length}
             >
-              <option value="">All Terms</option>
-              <option value="TERM1">Term 1</option>
-              <option value="TERM2">Term 2</option>
-              <option value="TERM3">Term 3</option>
+              <option value="all">All terms</option>
+              {selectedYear?.terms.map((term) => <option key={term.id} value={term.id}>{term.period}{term.isCurrent ? ' · Current' : ''}</option>)}
+              {!selectedYear?.terms.length && <option value="">No terms available</option>}
             </select>
-          </div>
-          <div className="flex items-end">
-            <Button variant="outline" className="w-full flex items-center justify-center gap-2">
-              <Filter size={18} />
-              Apply Filters
-            </Button>
-          </div>
+          </label>
+          <label className="block text-sm font-medium text-gray-700">
+            Class
+            <select value={classId} onChange={(event) => setClassId(event.target.value)} className={`${selectClassName} mt-2`}>
+              <option value="">All classes</option>
+              {report?.classes.map((item) => <option key={item.id} value={item.id}>{item.level}</option>)}
+            </select>
+          </label>
         </div>
       </Card>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="text-center">
-          <p className="text-sm text-gray-600">Total Students</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">175</p>
+      {reportQuery.isError ? (
+        <Card>
+          <div className="py-8 text-center">
+            <p className="font-semibold text-red-700">Could not load academic results.</p>
+            <p className="mt-1 text-sm text-gray-600">Check your connection and try again.</p>
+            <Button variant="outline" className="mt-4" onClick={() => reportQuery.refetch()}>Try again</Button>
+          </div>
         </Card>
-        <Card className="text-center">
-          <p className="text-sm text-gray-600">Average Score</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">72.4</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-sm text-gray-600">Pass Rate</p>
-          <p className="text-3xl font-bold text-green-600 mt-2">88%</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-sm text-gray-600">Fail Rate</p>
-          <p className="text-3xl font-bold text-red-600 mt-2">12%</p>
-        </Card>
-      </div>
+      ) : reportQuery.isLoading ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {[0, 1, 2, 3].map((item) => <Card key={item}><div className="h-20 animate-pulse rounded bg-gray-100" /></Card>)}
+        </div>
+      ) : report ? (
+        <>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <SummaryCard label="Enrolled students" value={report.summary.totalStudents.toLocaleString()} detail="In the selected year and scope" icon={<Users size={18} />} />
+            <SummaryCard label="Assessed students" value={report.summary.assessedStudents.toLocaleString()} detail="Have published scores" icon={<Activity size={18} />} />
+            <SummaryCard label="Average score" value={formatScore(report.summary.averageScore)} detail="Mean student average" />
+            <SummaryCard label="Pass rate" value={formatPercent(report.summary.passRate)} detail={`Passing average: ${report.passThreshold}% or higher`} accent="green" />
+          </div>
 
-      {/* Class Performance Table */}
-      <Card>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Class Performance</h2>
-        <DataTable
-          data={mockAcademicData}
-          columns={[
-            {
-              key: 'className',
-              label: 'Class',
-            },
-            {
-              key: 'totalStudents',
-              label: 'Students',
-            },
-            {
-              key: 'avgScore',
-              label: 'Average Score',
-              render: (value) => (
-                <span className="font-medium">{value as number}%</span>
-              ),
-            },
-            {
-              key: 'passRate',
-              label: 'Pass Rate',
-              render: (value) => (
-                <span className="text-green-600 font-medium">{value as string}</span>
-              ),
-            },
-          ]}
-          rowActions={() => (
-            <Button variant="outline" size="sm">
-              View Details
-            </Button>
-          )}
-        />
-      </Card>
+          {reportQuery.isFetching && <p className="text-right text-xs text-gray-500">Updating report…</p>}
 
-      {/* Top Performers */}
-      <Card>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Top 5 Performers</h2>
-        <div className="space-y-3">
-          {['Chioma Adebayo (92%)', 'Okafor Chinedu (91%)', 'Ngozi Obi (90%)', 'Adekunle Bello (89%)', 'Zainab Hassan (88%)'].map((student, i) => (
-            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center font-bold text-sm">
-                  {i + 1}
-                </div>
-                <span className="font-medium text-gray-900">{student}</span>
+          <Card>
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Class performance</h2>
+                <p className="mt-1 text-sm text-gray-500">{selectedYear?.label ?? 'Academic year'} · {report.selectedTermLabel}. Pass rate uses assessed students.</p>
               </div>
-              <span className="text-sm text-green-600 font-semibold">⭐</span>
+              {classId && <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={() => setClassId('')}><ArrowLeft size={15} /> All classes</Button>}
             </div>
-          ))}
-        </div>
-      </Card>
+            <DataTable<AcademicReportClassRow>
+              data={report.classPerformance}
+              columns={classColumns}
+              emptyMessage="No enrolled classes are available for these filters."
+              rowActions={(row) => <Button variant="outline" size="sm" onClick={() => openClass(row)}>View students</Button>}
+            />
+          </Card>
+
+          {classId ? (
+            <Card>
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-gray-900">{selectedClass?.level ?? 'Class'} student results</h2>
+                <p className="mt-1 text-sm text-gray-500">Students with published scores, ranked by average.</p>
+              </div>
+              <DataTable<AcademicReportStudentRow>
+                data={report.studentPerformance}
+                columns={studentColumns}
+                emptyMessage="No published scores are available for this class and period."
+              />
+            </Card>
+          ) : (
+            <Card>
+              <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Top performers</h2>
+                  <p className="mt-1 text-sm text-gray-500">Highest student averages in the selected scope.</p>
+                </div>
+              </div>
+              {report.studentPerformance.length ? (
+                <div className="divide-y divide-gray-100">
+                  {report.studentPerformance.slice(0, 5).map((student, index) => (
+                    <div key={student.id} className="flex items-center justify-between gap-4 py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-700">{index + 1}</span>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-gray-900">{student.studentName}</p>
+                          <p className="text-xs text-gray-500">{student.studentNumber} · {student.className}</p>
+                        </div>
+                      </div>
+                      <span className="shrink-0 font-bold text-gray-900">{formatScore(student.averageScore)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="py-8 text-center text-sm text-gray-500">No published student scores for this period yet.</p>}
+            </Card>
+          )}
+
+          <p className="text-xs text-gray-500">Reports include published scores only. Unpublished marks are excluded until they are published.</p>
+        </>
+      ) : null}
     </div>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+  detail,
+  icon,
+  accent = 'blue',
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  icon?: ReactNode;
+  accent?: 'blue' | 'green';
+}) {
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium text-gray-600">{label}</p>
+        {icon && <span className={accent === 'green' ? 'text-green-600' : 'text-blue-600'}>{icon}</span>}
+      </div>
+      <p className={`mt-3 text-3xl font-bold ${accent === 'green' ? 'text-green-700' : 'text-gray-900'}`}>{value}</p>
+      <p className="mt-1 text-xs text-gray-500">{detail}</p>
+    </Card>
   );
 }

@@ -1,6 +1,7 @@
 import { Bell, Landmark, LogOut } from "lucide-react";
 import { NAV_GROUPS, SidebarStats } from "./navbars/sidebarStats";
 import Link from "next/link";
+import { useAuth } from "@/src/hooks/useAuth";
 
 export function SidebarContent({
   pathname,
@@ -11,6 +12,8 @@ export function SidebarContent({
   termId:     string;
   onNavClick?: () => void;
 }) {
+  const { school } = useAuth();
+  const schoolName = school?.name || 'SchoolHub';
   return (
     <div className="flex flex-col h-full">
  
@@ -21,7 +24,7 @@ export function SidebarContent({
             <Landmark size={18} className="text-white" />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight">EduTrack</p>
+            <p className="text-white font-bold text-sm leading-tight">{schoolName}</p>
             <p className="text-emerald-300 text-[11px]">Bursar Portal</p>
           </div>
         </div>

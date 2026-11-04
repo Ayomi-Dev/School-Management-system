@@ -54,7 +54,8 @@ const studentNavItems: NavItem[] = [
 
 export function StudentSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, school } = useAuth();
+  const schoolName = school?.name || 'SchoolHub';
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -159,8 +160,8 @@ export function StudentSidebar() {
               <span className="text-white font-bold text-lg">S</span>
             </div>
             <div>
-              <h1 className="font-bold text-gray-900">SchoolHub</h1>
-              <p className="text-xs text-gray-500">{user?.role.toLowerCase()}</p>
+              <h1 className="font-bold text-gray-900">{schoolName}</h1>
+              <p className="text-xs text-gray-500">{user?.role ? user?.role.charAt(0).toUpperCase() + user?.role.slice(1).toLowerCase() : ''}</p>
             </div>
           </div>
         </div>

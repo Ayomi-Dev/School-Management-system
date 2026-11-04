@@ -38,6 +38,7 @@ export const API_ENDPOINTS = {
   GET_ADMIN_PROFILE: (id: string) => `/api/admin/${id}/profile`,
   UPDATE_USER_STATUS: (userId: string) => `/api/admin/users/${userId}/status`,
   GET_STUDENT_ACADEMIC_SUMMARY: (id: string) => `/api/admin/students/${id}/academic-summary`,
+  ADMIN_ACADEMIC_REPORT: '/api/admin/reports/academic',
 
 
   // Classes
