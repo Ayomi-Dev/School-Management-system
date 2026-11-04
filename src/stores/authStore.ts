@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthStore } from '@/src/types/store';
-import { User } from '@/src/types/api';
+import { School, User } from '@/src/types/api';
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -11,6 +11,11 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       isLoading: false,
       error: null,
+      school: null,
+
+      setSchool: (school: School) => {
+        set({ school });
+      },
 
       setUser: (user: User) => {
         set({ user });
@@ -41,6 +46,7 @@ export const useAuthStore = create<AuthStore>()(
         set({
           user: null,
           error: null,
+          school: null,
           isLoading: false,
         });
         // Dispatch logout event for other listeners

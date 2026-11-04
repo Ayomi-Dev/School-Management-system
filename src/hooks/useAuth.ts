@@ -5,7 +5,7 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'next/navigation';
 
 export const useAuth = () => {
-  const { user, isLoading, error, clearAuth } = useAuthStore();
+  const { user, isLoading, error, clearAuth, school } = useAuthStore();
   const router = useRouter();
 
   // isAuthenticated determined by presence of user (set on login)
@@ -18,6 +18,7 @@ export const useAuth = () => {
   };
 
   return {
+    school,
     user,
     isLoading,
     error,

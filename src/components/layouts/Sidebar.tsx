@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useState } from 'react';
 import { ChevronDown, Menu, X } from 'lucide-react';
+import { useSchoolDetail } from '@/src/hooks/queries/useSchools';
 
 interface NavItem {
   label: string;
@@ -67,7 +68,9 @@ const adminNavItems: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams()
-  const { user } = useAuth();
+  const { user, school } = useAuth();
+  const schoolId = user?.schoolId || '';
+  const schoolName = school?.name || 'SchoolHub';
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -189,8 +192,8 @@ const isActive = (href: string) => {
               <span className="text-white font-bold text-lg">S</span>
             </div>
             <div>
-              <h1 className="font-bold text-gray-900">SchoolHub</h1>
-              <p className="text-xs text-gray-500">{user?.role.toLowerCase()}</p>
+              <h1 className="font-bold text-gray-900">{schoolName }</h1>
+              <p className="text-xs text-gray-500">{user?.role ? user?.role.charAt(0).toUpperCase() + user?.role.slice(1).toLowerCase() : ''}</p>
             </div>
           </div>
         </div>

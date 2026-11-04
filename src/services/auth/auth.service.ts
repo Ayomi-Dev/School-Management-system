@@ -120,13 +120,26 @@ export const authService = {
             schoolId: user.schoolId 
         };
 
+        const school = await prisma.school.findUnique({
+            where: { id: (payload.schoolId as string) },
+            select: { id: true, name: true, address: true, email: true, phone: true }
+        });
+
+        if(!school) {
+            return NextResponse.json(
+                { error: "School not found for the user" },
+                { status: 404 }
+            );
+        }
+        console.log("Login successful for user:", user.email, "in school:", school.name);
+
         const [ accessToken, refreshToken ] = await Promise.all([
             signAccessToken(payload),
             persistRefreshToken(user.id, meta)
         ])
  
         const res = NextResponse.json(
-            { message: "Login successful", user},
+            { message: "Login successful", user, school, },
             { status: 200}
         )
         buildTokenCookies(res, accessToken, refreshToken)

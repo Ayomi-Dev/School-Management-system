@@ -6,6 +6,7 @@ import { queryKeys, queryClient } from '@/src/lib/queryClient';
 import { CreateSchoolRequest } from '@/src/types/api';
 import { useToast } from '../useToast';
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/src/config/constants';
+import { getErrorMessage } from '@/src/utils/error';
 
 export const useSchoolsList = (page = 1, limit = 20) => {
   const { error: toastError } = useToast();
@@ -31,13 +32,15 @@ export const useSchoolDetail = (id: string) => {
     queryFn: async () => {
       try {
         return await schoolService.get(id);
-      } catch (error: any) {
-        toastError(error?.error || ERROR_MESSAGES.UNKNOWN_ERROR);
-        throw error;
+      } 
+      catch (error) {
+        const message = getErrorMessage(error);
+        toastError(message || ERROR_MESSAGES.UNKNOWN_ERROR);
+        return null;
       }
     },
     enabled: !!id,
-  });
+  })
 };
 
 export const useCreateSchoolMutation = () => {

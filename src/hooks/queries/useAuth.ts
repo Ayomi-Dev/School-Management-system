@@ -13,7 +13,7 @@ import { getErrorMessage } from '@/src/utils/error';
 
 
 export const useLoginMutation = () => { //this is a mutation because it changes auth state
-  const { setUser, setError: setAuthError } = useAuthStore();
+  const { setUser, setSchool, setError: setAuthError } = useAuthStore();
   const { success, error: toastError } = useToast();
 
   const loginMutation = useMutation({
@@ -31,6 +31,7 @@ export const useLoginMutation = () => { //this is a mutation because it changes 
       if (!data) return;
       // Backend handles token cookies - frontend only stores user
       setUser(data.user);
+      setSchool(data.school);
       success(SUCCESS_MESSAGES.LOGIN_SUCCESS);
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
     },

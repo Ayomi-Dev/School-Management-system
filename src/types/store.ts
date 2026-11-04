@@ -1,14 +1,16 @@
-import { User } from './index';
+import { School, User } from './index';
 
 // Auth Store Types
 export interface AuthStoreState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
+  school: School | null;
   // Tokens are managed via httpOnly cookies - not stored in store
 }
 
 export interface AuthStoreActions {
+  setSchool: (school: School) => void;
   setUser: (user: User) => void;
   setTokens: () => void; // Tokens managed by backend cookies
   clearAuth: () => void;

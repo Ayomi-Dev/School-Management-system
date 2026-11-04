@@ -21,10 +21,10 @@ export const API_ENDPOINTS = {
   AUTH_FORGOT_PASSWORD: '/api/auth/forgot-password',
   AUTH_RESET_PASSWORD: '/api/auth/reset-password', 
 
-  // Super Admin
+  // SCHOOLS
   SCHOOLS_LIST: '/api/super-admin/schools',
   SCHOOLS_CREATE: '/api/super-admin/create-school',
-  SCHOOLS_GET: (id: string) => `/api/super-admin/schools/${id}`,
+  SCHOOLS_GET: (id: string) => `/api/schools/${id}`,
   SCHOOLS_UPDATE: (id: string) => `/api/super-admin/schools/${id}`,
   SCHOOLS_CREATE_ADMIN: (id: string) => `/api/super-admin/schools/${id}/admin`,
 

@@ -13,6 +13,7 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
+  school: School;
 }
 
 export interface AccountSetupRequest {
