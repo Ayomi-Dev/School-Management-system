@@ -58,6 +58,7 @@ export const API_ENDPOINTS = {
 
   // Admin - Academic
   ENROLLMENTS_LIST: (schoolId: string ) => `/api/students/${schoolId}/enrollment`,
+  ADMIN_ENROLLMENTS: '/api/admin/enrollments',
   GET_STATS: `/api/admin/stats`,
   ADMIN_PUBLISH_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}/publish`,
@@ -65,6 +66,8 @@ export const API_ENDPOINTS = {
     `/api/admin/report-cards/${reportCardId}/unpublish`,
   GET_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
+  DOWNLOAD_REPORT_CARD: (reportCardId: string) =>
+    `/api/report-cards/${reportCardId}/download`,
   ADMIN_UPDATE_REPORT_CARD: (reportCardId: string) =>
     `/api/admin/report-cards/${reportCardId}`,
 

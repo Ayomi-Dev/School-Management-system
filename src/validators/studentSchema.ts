@@ -53,12 +53,6 @@ export const updateStudentSchema = z.object({
   ]).optional(),
 });
 
-export const promoteStudentSchema = z.object({
-  studentIds: z.array(z.string()).min(1),
-  newClassId: z.string().min(1),
-  newAcademicYearId: z.string().min(1),
-});
-
 export const listStudentsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),

@@ -17,6 +17,7 @@ import {
   useCompileReportCard,
 } from '@/src/hooks/queries/useReportCard';
 import { CompiledCardSummary, PendingStudent } from '@/src/types';
+import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
 
 // ─── status badge ─────────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowP
 
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0">
+        <ReportCardDownloadButton reportCardId={card.reportCardId} compact />
         <Button
           variant="outline"
           size="sm"

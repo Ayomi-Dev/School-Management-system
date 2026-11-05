@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useStudentReportCard } from '@/src/hooks/queries/useParent';
 import { Loader } from '@/src/components/ui/Loader';
+import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -118,6 +119,10 @@ export default function ParentReportCardPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <ReportCardDownloadButton reportCardId={reportCardId} />
       </div>
 
       {/* Attendance strip */}

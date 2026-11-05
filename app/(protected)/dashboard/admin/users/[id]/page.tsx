@@ -238,8 +238,8 @@ export default function UserProfilePage() {
               <div className="space-y-2">
                 {summary?.data.enrollments.map((e) => (
                   <div key={e.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
-                    <span className="text-sm text-gray-700">{e.class.level}</span>
-                    <span className="text-xs text-gray-400">{e.academicYear.label}</span>
+                    <span className="text-sm text-gray-700">{e.class.level}{e.promotedFromId ? <span className="ml-2 text-xs text-emerald-600">Promoted</span> : null}</span>
+                    <span className="text-right text-xs text-gray-400">{e.academicYear.label}{e.promotedAt ? <span className="block">{new Date(e.promotedAt).toLocaleDateString()}</span> : null}</span>
                   </div>
                 ))}
               </div>

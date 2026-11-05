@@ -10,6 +10,7 @@ import {
   EnrollmentWithDetails,
 } from '@/src/types/api';
 import { PaginatedResponse } from '@/src/types';
+import { EnrollmentPromotionResponse, PromoteStudentsRequest, PromoteStudentsResponse } from '@/src/types/enrollment';
 
 const client = getApiClient();
 
@@ -86,6 +87,14 @@ export const termService = {
 };
 
 export const enrollmentService = {
+  promotionCandidates: async (params: { sourceAcademicYearId?: string; sourceClassId?: string; targetAcademicYearId?: string; search?: string; page?: number; limit?: number }): Promise<EnrollmentPromotionResponse> => {
+    const response = await client.get(API_ENDPOINTS.ADMIN_ENROLLMENTS, { params });
+    return response.data.data;
+  },
+  promote: async (data: PromoteStudentsRequest): Promise<PromoteStudentsResponse> => {
+    const response = await client.post(API_ENDPOINTS.ADMIN_ENROLLMENTS, data);
+    return response.data;
+  },
   list: async (schoolId: string, page = 1, limit = 20) => {
     const response = await client.get(
       API_ENDPOINTS.ENROLLMENTS_LIST(schoolId),

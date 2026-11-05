@@ -7,6 +7,7 @@ import { useProfileStore } from '@/src/stores/profileStore';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useStudentAcademicSummary } from '@/src/hooks/queries/useAcademic';
 import { ReportCard, ScoreRecord, StudentProfile } from '@/src/types/api';
+import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
 
 // ─── Grade helpers ─────────────────────────────────────────────────────────
 
@@ -247,6 +248,12 @@ export default function ResultsPage() {
               }`}>
                 {activeCard.status === 'PUBLISHED' ? '✅ Published' : '📝 Draft'}
               </span>
+            </div>
+          )}
+          {activeCard && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-widest">Download</label>
+              <ReportCardDownloadButton reportCardId={activeCard.id} compact />
             </div>
           )}
         </div>

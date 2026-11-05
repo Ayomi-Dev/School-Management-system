@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma/client";
-import { updateStudentSchema, promoteStudentSchema, listStudentsQuerySchema } from "@/src/validators/studentSchema";
+import { updateStudentSchema, listStudentsQuerySchema } from "@/src/validators/studentSchema";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
 
 // ============================================================
@@ -177,106 +177,6 @@ export const studentService = {
   },
 
   // ----------------------------------------------------------------
-  // PROMOTE STUDENTS
-  // Moves a batch of students to a new class in a new academic year.
-  // Creates a fresh Enrollment row; old one is kept for history.
-  // ----------------------------------------------------------------
-  async promoteStudent(req: NextRequest, schoolId: string) {
-    try {
-      const body = await req.json();
-      const parsed = promoteStudentSchema.safeParse(body);
-      if (!parsed.success) {
-          return NextResponse.json(
-              { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
-              { status: 400 }
-          );
-      }
-  
-      const { studentIds, newClassId, newAcademicYearId } = parsed.data;
-  
-      // Validate class + year belong to school
-      const [targetClass, targetYear] = await Promise.all([
-          prisma.class.findFirst({ where: { id: newClassId, schoolId }, select: { id: true } }),
-          prisma.academicYear.findFirst({
-              where: { id: newAcademicYearId, schoolId },
-              select: { id: true },
-          }),
-      ]);
-  
-      if(!targetClass) {
-          return NextResponse.json({ error: "Target class not found." }, { status: 404 });
-      }
-      if(!targetYear) {
-          return NextResponse.json({ error: "Target academic year not found." }, { status: 404 });
-      }
-  
-      // Fetch student profiles (must belong to school)
-      const profiles = await prisma.studentProfile.findMany({
-        where: { id: { in: studentIds }, schoolId },
-        select: { id: true },
-      });
-      if (profiles.length !== studentIds.length) {
-        return NextResponse.json(
-          { error: "One or more student IDs are invalid or not in this school." },
-          { status: 400 }
-        );
-      }
-  
-      // Fetch current enrollments (latest per student)
-      const currentEnrollments = await prisma.enrollment.findMany({
-        where: {
-          studentId: { in: studentIds },
-          academicYearId: { not: newAcademicYearId }, // ignore if already enrolled this year
-        },
-        orderBy: { enrolledAt: "desc" },
-        distinct: ["studentId"],
-        select: { id: true, studentId: true },
-      });
-      const prevEnrollmentMap = Object.fromEntries(
-        currentEnrollments.map((e) => [e.studentId, e.id])
-      );
-  
-      const now = new Date();
-  
-      // Upsert enrollments in transaction
-      const results = await prisma.$transaction(
-        profiles.map((p) =>
-          prisma.enrollment.upsert({
-            where: {
-              studentId_academicYearId: {
-                studentId: p.id,
-                academicYearId: newAcademicYearId,
-              },
-            },
-            create: {
-              studentId: p.id,
-              classId: newClassId,
-              academicYearId: newAcademicYearId,
-              enrolledAt: now,
-              promotedAt: now,
-              promotedFromId: prevEnrollmentMap[p.id] ?? null,
-            },
-            update: {
-              classId: newClassId,
-              promotedAt: now,
-              promotedFromId: prevEnrollmentMap[p.id] ?? null,
-            },
-          })
-        )
-      );
-  
-      return NextResponse.json({
-        message: `${results.length} student(s) promoted successfully.`,
-        data: results,
-      });
-    } 
-    catch (error) {
-      console.error("[studentService.promote]", error);
-      return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
-    }
-  },
-
-  // ----------------------------------------------------------------
   // GET STUDENT ACADEMIC SUMMARY
   // Returns enrollments, scores, attendance rate, report cards
   // ----------------------------------------------------------------
@@ -367,8 +267,12 @@ export const studentService = {
         // Enrollments — not term-scoped (shows full academic history)
         prisma.enrollment.findMany({
           where: { studentId: student.id },
-          include: {
-            class: { select: { level: true} },
+          select: {
+            id: true,
+            enrolledAt: true,
+            promotedAt: true,
+            promotedFromId: true,
+            class: { select: { level: true } },
             academicYear: { select: { label: true } },
           },
           orderBy: { enrolledAt: 'desc' },

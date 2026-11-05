@@ -378,6 +378,8 @@ export interface ReportCard {
 export interface EnrollmentRecord {
   id:          string;
   enrolledAt:  string;
+  promotedAt:  string | null;
+  promotedFromId: string | null;
   class:       { level: string };
   academicYear: { label: string };
 }

@@ -41,6 +41,7 @@ const adminNavItems: NavItem[] = [
       { label: 'Classes', href: '/dashboard/admin/classes', icon: '🏫' },
       { label: 'Subjects', href: '/dashboard/admin/subjects', icon: '📖' },
       { label: 'Sessions', href: '/dashboard/admin/sessions', icon: '📅' },
+      { label: 'Promote students', href: '/dashboard/admin/enrollments', icon: '⬆️' },
     ],
   },
   {

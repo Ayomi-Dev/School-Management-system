@@ -11,6 +11,7 @@ import {
 import { Card } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
 import { Loader } from '@/src/components/ui/Loader';
+import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
 import {
   ArrowLeft,
   Send,
@@ -133,7 +134,8 @@ export default function ReportCardPage() {
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 flex flex-col items-end gap-2">
+            <ReportCardDownloadButton reportCardId={reportCardId} />
             {isPublished ? (
                 <div className="block">
                     <span className="inline-flex items-center gap-1.5 text-sm text-green-700 bg-green-100 px-3 py-1.5 rounded-full">
