@@ -163,9 +163,6 @@ export const reportCardDownloadService = {
     return {
       school: {
         name: card.student.school.name,
-        address: card.student.school.branding?.address ?? card.student.school.address,
-        phone: card.student.school.branding?.phone ?? card.student.school.phone,
-        email: card.student.school.branding?.email ?? card.student.school.email,
         primaryColor: card.student.school.branding?.primaryColor ?? "#1D4ED8",
         footer: card.student.school.branding?.reportCardFooter ?? null,
       },

@@ -11,7 +11,7 @@ const PUBLIC_PATHS = [
   "/api/auth/login",
   "/api/auth/refresh",
   "/api/auth/logout",
-  "/api/super-admin/login"
+  "/api/auth/super-admin/login"
 
 ];
 
@@ -24,6 +24,10 @@ const BYPASS_PATHS = [
   "/school-not-found",
   "/not-found",
   "/root",
+  "/api/auth/refresh",
+  "/api/schools/[id]",
+  "/api/auth/super-admin/login",
+  "/api/super-admin/create-school",
 ];
 
 export async function middleware(req: NextRequest) {

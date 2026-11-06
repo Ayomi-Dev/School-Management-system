@@ -140,7 +140,7 @@ export const superAdminServices = {
                     }
 
                     // admin creation if admin data is provided at school creation
-                    const userCode = await generateUserCode(tx, adminData.role, school.id);
+                    const userCode = await generateUserCode(tx, adminData.role);
                     const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
                     const admin = await tx.user.create({
                         data: {
@@ -331,7 +331,7 @@ export const superAdminServices = {
             const admin = await prisma.$transaction(
                 async(tx) => {
                     const expiresAt     = new Date(Date.now() + 48 * 60 * 60 * 1000); // token expires48 hours from the day of creation
-                    const userCode = await generateUserCode(tx, "ADMIN", id) //generates a unique user code for the admin based on their role and school ID
+                    const userCode = await generateUserCode(tx, "ADMIN") //generates a unique user code for the admin
                     const admin = await tx.user.create({
                         data: {
                             email,

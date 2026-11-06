@@ -97,17 +97,14 @@ async function nextSequence( tx: Omit<typeof prisma, "$connect" | "$disconnect" 
 
 export const generateUserCode = async (
   tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
-  role: Role, 
-  schoolId: string,
-): Promise<string> => { // Generates a unique code based on role, school, year, and term whenever a new user is created by the admin
-  const year = new Date().getFullYear();
+  role: Role,
+): Promise<string> => {
   const session = currentSession().split("/");
+  const sessionStartYear = Number(session[0]);
   const start = session[0].slice(2)
   const end = session[1].slice(2)
   const academicSession = `${start}/${end}`
   const term = getCurrentTerm();
-
-  const sequence = await nextSequence(tx, {schoolId, type: role, year, term,});
 
   const termMap: Record<typeof term, string> = {
    [TermPeriod.FIRST]: "T1",
@@ -122,19 +119,43 @@ export const generateUserCode = async (
     PARENT: "PAR",
     BURSAR: "BUR"
   };
-  
-  switch (role) { 
-    case "STUDENT": {
-      // Zero-pad to 4 digits: 0001, 0042, 1000
-      return `${codePrefixes[role]}-${academicSession}/${termMap[term]}/${String(sequence).padStart(4, "0")}`;
+
+  if (!Number.isInteger(sessionStartYear)) {
+    throw new Error("Unable to determine the academic session for user code generation.");
+  }
+
+  // User.userCode is globally unique, so all schools share a counter scope.
+  // CodeCounter has no School relation; this reserved ObjectId keeps the
+  // shared sequence in the existing counter collection without a schema change.
+  const globalCounterScope = "000000000000000000000000";
+  const counterTerm = role === "STUDENT" ? term : TermPeriod.FIRST;
+
+  const formatCode = (sequence: number) => {
+    const paddedSequence = String(sequence).padStart(role === "STUDENT" ? 4 : 3, "0");
+    if (role === "STUDENT") {
+      return `${codePrefixes[role]}-${academicSession}/${termMap[term]}/${paddedSequence}`;
     }
-    case "TEACHER": {}
-    case "PARENT": 
-    case "ADMIN": 
-    case "BURSAR": {
-      return `${codePrefixes[role]}-${academicSession}-${String(sequence).padStart(3, "0")}`;}
-    default:
-      throw new Error("Invalid role for code generation");
+    if (role === "TEACHER" || role === "PARENT" || role === "ADMIN" || role === "BURSAR") {
+      return `${codePrefixes[role]}-${academicSession}-${paddedSequence}`;
+    }
+    throw new Error("Invalid role for code generation");
+  };
+
+  // Earlier versions used per-school counters and may already have issued
+  // codes in this format. Advance past any such code before returning one.
+  while (true) {
+    const sequence = await nextSequence(tx, {
+      schoolId: globalCounterScope,
+      type: role,
+      year: sessionStartYear,
+      term: counterTerm,
+    });
+    const userCode = formatCode(sequence);
+    const existing = await tx.user.findUnique({
+      where: { userCode },
+      select: { id: true },
+    });
+    if (!existing) return userCode;
   }
 };
 

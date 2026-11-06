@@ -67,7 +67,7 @@ function LoginForm() {
               control={control}
               name="userCode"
               label="User Code / Email"
-              placeholder="e.g. STU-25/26-0001 or admin@school.com"
+              placeholder="Enter your user code or email"
               required
             />
 

@@ -91,7 +91,7 @@ export const adminServices = {
             
             const newUser = await prisma.$transaction(
                 async(tx) => {
-                    const userCode = await generateUserCode(tx, userInput.role, schoolId )
+                    const userCode = await generateUserCode(tx, userInput.role)
                     const userPayload = buildUserPayload(userInput, {schoolId, userCode}, passwordHash)
                     const newUser = await tx.user.create(
                         {
@@ -235,7 +235,7 @@ export const adminServices = {
             return NextResponse.json(
                 {
                     message: "User provisioned successfully",
-                    user: newUser, token: rawSetUpToken
+                    user: newUser, token: rawSetUpToken,
                 }
             )
     }
