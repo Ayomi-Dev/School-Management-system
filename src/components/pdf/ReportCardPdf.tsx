@@ -48,13 +48,13 @@ export function createReportCardPdfDocument(data: ReportCardPdfData) {
       <Page size="A4" style={styles.page} wrap>
         <View style={[styles.topRule, { backgroundColor: accent }]} />
         <View style={styles.header}>
-          <View>
+          {/* <View>
             <Text style={styles.schoolName}>{data.school.name}</Text>
             {data.school.address && <Text style={styles.schoolDetail}>{data.school.address}</Text>}
             {[data.school.phone, data.school.email].filter(Boolean).length > 0 && (
               <Text style={styles.schoolDetail}>{[data.school.phone, data.school.email].filter(Boolean).join("  ·  ")}</Text>
             )}
-          </View>
+          </View> */}
           <View>
             <Text style={[styles.documentLabel, { color: accent }]}>STUDENT REPORT CARD</Text>
             <Text style={styles.status}>{data.reportCard.status === "PUBLISHED" ? "Published" : "Compiled · Draft"}</Text>
