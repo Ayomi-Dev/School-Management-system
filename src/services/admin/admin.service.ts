@@ -5,7 +5,7 @@ import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
 import { currentSession, generateUserCode } from "../../utils/userCode";
 import { generalTempPassword, generateSetUpToken } from "../notification/services";
 import { passwordServices } from "../passwords/password.service";
-import { resolveAcademicYear } from "@/src/utils/resolvers";
+import { resolveCurrentAcademicYear } from "@/src/utils/resolvers";
 import { classService } from "../class/class.service";
 import { _levelOrder } from "@/src/utils/levelOrder";
 import { linkStudentToGuardians } from "@/src/utils/linkStudentToGuardian";
@@ -133,8 +133,17 @@ export const adminServices = {
                             throw new Error("No student record found for this user")
                         }
                         const classRecord = await classService.getOrCreate(tx, schoolId, profile.level, _levelOrder(profile.level))
-                        const label      = currentSession();
-                        const yearRecord = await resolveAcademicYear(schoolId, label);
+                        const yearRecord = await tx.academicYear.findFirst({
+                            where: { schoolId, isCurrent: true },
+                            orderBy: { startDate: "desc" },
+                            select: { id: true, label: true },
+                        }) ?? await tx.academicYear.findFirst({
+                            where: { schoolId, label: currentSession() },
+                            select: { id: true, label: true },
+                        });
+                        if (!yearRecord) {
+                            throw new Error("No current academic session is configured for this school.");
+                        }
 
                         await tx.enrollment.create({
                             data: {
@@ -155,7 +164,7 @@ export const adminServices = {
                         const currentTerm = await tx.term.findFirst({
                             where: {
                                 academicYearId: yearRecord.id,
-                                isCurrent:      true,
+                                isCurrent: true,
                             },
                             select: { id: true },
                         });
@@ -646,6 +655,7 @@ export const adminServices = {
   },
   async getClassDetail(schoolId: string, classId: string) {
     try {
+      const academicYear = await resolveCurrentAcademicYear(schoolId);
       const classRecord = await prisma.class.findFirst({
         where: { id: classId, schoolId },
         select: {
@@ -671,6 +681,7 @@ export const adminServices = {
             orderBy: { name: 'asc' },
           },
           enrollments: {
+            where: { academicYearId: academicYear.id },
             select: {
               id: true,
               student: {
@@ -686,7 +697,10 @@ export const adminServices = {
             orderBy: { enrolledAt: 'asc' },
           },
           _count: {
-            select: { enrollments: true, subjects: true },
+            select: {
+              enrollments: { where: { academicYearId: academicYear.id } },
+              subjects: true,
+            },
           },
         },
       });

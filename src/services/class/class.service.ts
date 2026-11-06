@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma/client";
 import { createClassSchema, updateClassSchema, createSubjectSchema, updateSubjectSchema } from "@/src/validators/classSchema";
-import { resolveAcademicYear, resolveClass, ResolverError } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveCurrentAcademicYear, resolveClass, ResolverError } from "@/src/utils/resolvers";
 import { ClassLevel, Department } from "@/src/types/types";
-import { currentSession } from "@/src/utils/userCode";
 import { _levelOrder } from "@/src/utils/levelOrder";
 
 // ============================================================
@@ -171,6 +170,7 @@ export const classService = {
   // ----------------------------------------------------------------
   async classList(req: NextRequest, schoolId: string,) {
     try {
+      const academicYear = await resolveCurrentAcademicYear(schoolId);
       const { searchParams } = new URL(req.url);
       const level      = searchParams.get("level")      ?? undefined;
       const department = searchParams.get("department") ?? undefined;
@@ -191,6 +191,7 @@ export const classService = {
             }
           },
           enrollments: {
+            where: { academicYearId: academicYear.id },
             select: { academicYearId: true, academicYear: true},
           },
           teacherAssignments: { 
@@ -200,7 +201,11 @@ export const classService = {
             select: { id: true, name: true, code: true}
           },
           _count: {
-            select: { enrollments: true, subjectTeachers: true, subjects: true },
+            select: {
+              enrollments: { where: { academicYearId: academicYear.id } },
+              subjectTeachers: true,
+              subjects: true,
+            },
           },
         },
       });
@@ -229,8 +234,9 @@ export const classService = {
       }
  
       // Resolve academic year
-      const yearLabel = currentSession()
-      const academicYear = await resolveAcademicYear(schoolId, yearLabel)
+      const academicYear = academicYearLabel
+        ? await resolveAcademicYear(schoolId, academicYearLabel)
+        : await resolveCurrentAcademicYear(schoolId);
       if (!academicYear) {
         return NextResponse.json(
           { error: "Academic year not found." },

@@ -1,5 +1,6 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { ClassLevel } from "../types";
+import { currentSession } from "@/src/utils/userCode";
 
 // ============================================================
 // SERVER-SIDE ENTITY RESOLVER
@@ -57,6 +58,19 @@ export async function resolveAcademicYear(
   }
 
   return year;
+}
+
+/** Resolve the school's active session from its academic-year setting. */
+export async function resolveCurrentAcademicYear(schoolId: string) {
+  const year = await prisma.academicYear.findFirst({
+    where: { schoolId, isCurrent: true },
+    orderBy: { startDate: "desc" },
+    select: { id: true, label: true, isCurrent: true },
+  });
+  if (year) return year;
+
+  // Keep older schools usable while their current-session flag is being set.
+  return resolveAcademicYear(schoolId, currentSession());
 }
 
 // ─────────────────────────────────────────────────────────────

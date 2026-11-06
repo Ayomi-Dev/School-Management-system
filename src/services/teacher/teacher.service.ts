@@ -2,7 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { ClassLevel, Department, TermPeriod } from "@/src/types";
 import { computeTotalAndGrade, resolveAssessmentConfig } from "@/src/utils/grading";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
-import { resolveAcademicYear, resolveClassByName, ResolverError, resolveScoreAccess, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
+import { resolveAcademicYear, resolveClassByName, resolveCurrentAcademicYear, ResolverError, resolveScoreAccess, resolveSubject, resolveTeacher, resolveTerm, resolveTermByPeriod } from "@/src/utils/resolvers";
 import { markAttendanceSchema } from "@/src/validators/attendanceSchema";
 import { saveScoresSchema } from "@/src/validators/scoreSchema";
 import { assignClassTeacherSchema, assignSubjectToTeacherSchema } from "@/src/validators/teacherSchema";
@@ -238,7 +238,12 @@ export const teacherServices = {
           academicYearId: academicYear.id,
           isClassTeacher,
         },
-        update: { isClassTeacher },
+        update: {
+          classId: classRecord.id,
+          academicYearId: academicYear.id,
+          isClassTeacher,
+          assignedAt: new Date(),
+        },
       });
       return NextResponse.json({
         message: `${teacherId} assigned to ${classRecord.level} (${academicYear.label}).`,
@@ -501,7 +506,7 @@ export const teacherServices = {
     if (!teacher) {
       return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
     }
- 
+
     const assignment = await prisma.teacherClassAssignment.findUnique({
       where: { teacherId: teacher.id },
       select: { classId: true },
@@ -1256,6 +1261,8 @@ export const teacherServices = {
     if (!teacher) {
       return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
     }
+
+    const academicYear = await resolveCurrentAcademicYear(teacher.schoolId);
  
     // Resolve both assignment types and active term in parallel —
     // all three are independent of each other.
@@ -1276,7 +1283,7 @@ export const teacherServices = {
         orderBy: [{ class: { level: 'asc' } }, { subject: { name: 'asc' } }],
       }),
       prisma.term.findFirst({
-        where: { isCurrent: true },
+        where: { isCurrent: true, academicYearId: academicYear.id },
         select: { id: true, academicYearId: true },
       }),
     ]);
@@ -1285,6 +1292,22 @@ export const teacherServices = {
  
     let classSection = null;
  
+    if (classAssignment && !term) {
+      const classId = classAssignment.class.id;
+      const studentCount = await prisma.enrollment.count({
+        where: { classId, academicYearId: academicYear.id },
+      });
+      classSection = {
+        classId,
+        className: classAssignment.class.level,
+        isClassTeacher: classAssignment.isClassTeacher,
+        studentCount,
+        attendance: { state: 'not_started', markedCount: 0, totalCount: 0, sessionId: null },
+        reportCards: { totalEnrolled: studentCount, compiledCount: 0, publishedCount: 0, pendingCount: studentCount },
+        recentActivity: [],
+      };
+    }
+
     if (classAssignment && term) {
       const classId = classAssignment.class.id;
  
@@ -1302,7 +1325,7 @@ export const teacherServices = {
       ] = await Promise.all([
         // How many students in the class this academic year
         prisma.enrollment.count({
-          where: { classId, academicYearId: term.academicYearId },
+          where: { classId, academicYearId: academicYear.id },
         }),
  
         // Today's daily session — tells us if attendance is done, in
