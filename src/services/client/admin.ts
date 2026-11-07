@@ -96,6 +96,8 @@ export const adminService = {
   deleteClass: (classId: string) => client.delete(API_ENDPOINTS.CLASSES_DELETE(classId)),
   getClassStudents: (classId: string) => client.get(`${API_BASE}/classes/${classId}/students`),
   assignTeacherToCLass: (payload: AssignClassTeacherPayload) => client.post(API_ENDPOINTS.ASSIGN_TEACHER_TO_CLASS, payload),
+  unassignTeacherFromClass: (teacherId: string) =>
+    client.delete(API_ENDPOINTS.ASSIGN_TEACHER_TO_CLASS, { params: { teacherId } }),
 
  
 

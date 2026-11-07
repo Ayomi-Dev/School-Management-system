@@ -49,25 +49,31 @@ export const useCreateClassMutation = () => {
 
 export const useAssignClassTeacherMutation = () => {
   const queryClient = useQueryClient();
-  const { success, error: showError } = useToast()
+  const { success } = useToast()
   return useMutation({
-    mutationFn: async (payload: AssignClassTeacherPayload) => {
-      try{
-        return await adminService.assignTeacherToCLass(payload)
-      }
-      catch (error) {
-        const message = getErrorMessage(error);
-        showError(message);
-        return null;
-      }
-    },
-    onSuccess: (data) => {
-      if(!data) return;
+    mutationFn: (payload: AssignClassTeacherPayload) => adminService.assignTeacherToCLass(payload),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.classes() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teachers() });
       success('Teacher assigned to class')
     }
   })
 }
+
+export const useUnassignClassTeacherMutation = () => {
+  const queryClient = useQueryClient();
+  const { success, error: showError } = useToast();
+
+  return useMutation({
+    mutationFn: (teacherId: string) => adminService.unassignTeacherFromClass(teacherId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.classes() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teachers() });
+      success('Teacher unassigned from class');
+    },
+    onError: (error) => showError(getErrorMessage(error)),
+  });
+};
 
 export const useClassDetail = (classId: string) => {
   const { error: showError } = useToast();
