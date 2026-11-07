@@ -5,7 +5,7 @@ import { InputProps } from '@/src/types/ui';
 import { clsx } from 'clsx';
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, icon, className, ...props }, ref) => {
+  ({ label, error, helperText, icon, endAdornment, className, ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
@@ -32,10 +32,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 hover:border-gray-400',
               icon && 'pl-10',
+              endAdornment && 'pr-11',
               className
             )}
             {...props}
           />
+          {endAdornment && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">{endAdornment}</div>
+          )}
         </div>
 
         {error && <p className="mt-1 text-sm text-red-600">{error}</p>}

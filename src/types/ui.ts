@@ -15,6 +15,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
   helperText?: string;
   icon?: ReactNode;
+  endAdornment?: ReactNode;
 }
 
 // Select Component

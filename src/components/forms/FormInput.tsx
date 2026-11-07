@@ -18,6 +18,7 @@ interface FormInputProps<
   required?: boolean;
   helperText?: string;
   icon?: React.ReactNode;
+  endAdornment?: React.ReactNode;
 }
 
 
@@ -32,6 +33,7 @@ export const FormInput = <TFieldValues extends FieldValues = FieldValues,
   required = false,
   helperText,
   icon,
+  endAdornment,
 }: FormInputProps<TFieldValues, TName>) => {
     const { field, fieldState } = useController({ control, name });
     return (
@@ -44,6 +46,7 @@ export const FormInput = <TFieldValues extends FieldValues = FieldValues,
         error={fieldState?.error?.message}
         helperText={helperText}
         icon={icon}
+        endAdornment={endAdornment}
       />
     );
 }

@@ -1,18 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard,
   Users,
-  FileText,
   Bell,
   LogOut,
-  Menu,
   X,
   GraduationCap,
-  ChevronRight,
 } from 'lucide-react';
 import { useLinkedStudents } from '@/src/hooks/queries/useParent';
 import { Topbar } from './Topbar';
@@ -51,10 +48,8 @@ function avatarGradient(name: string) {
 
 function SidebarContent({
   pathname,
-  onNavClick,
 }: {
   pathname: string;
-  onNavClick?: () => void;
 }) {
   const { data: students = [] } = useLinkedStudents();
    const { school } = useAuth();
@@ -77,6 +72,21 @@ function SidebarContent({
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {NAV.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(href + '/');
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <Icon size={17} />
+              {label}
+            </Link>
+          );
+        })}
 
         {/* Children quick-links */}
         {students.length > 0 && (
@@ -84,7 +94,7 @@ function SidebarContent({
             <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-blue-300">
               My Children
             </p>
-            {students.map((s, i) => {
+            {students.map((s) => {
               const href    = `/dashboard/parent/students/${s.studentId}`;
               const active  = pathname.startsWith(href);
               const initials = `${s.firstName[0]}${s.lastName[0]}`.toUpperCase();
@@ -93,7 +103,6 @@ function SidebarContent({
                 <Link
                   key={s.studentId}
                   href={href}
-                  onClick={onNavClick}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
                     active
                       ? 'bg-white/20 text-white'
@@ -122,7 +131,6 @@ function SidebarContent({
       <div className="px-3 pb-5 space-y-0.5 border-t border-white/10 pt-3">
         <Link
           href="/parent/notifications"
-          onClick={onNavClick}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-blue-100 hover:bg-white/10 hover:text-white transition-all"
         >
           <Bell size={17} />
@@ -150,6 +158,11 @@ export function ParentDashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -159,10 +172,39 @@ export function ParentDashboardLayout({
         <SidebarContent pathname={pathname} />
       </aside>
 
+      {drawerOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+      <aside
+        id="parent-mobile-navigation"
+        aria-label="Parent navigation"
+        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-linear-to-b from-blue-700 to-blue-800 shadow-2xl transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setDrawerOpen(false)}
+          className="absolute right-4 top-4 rounded-lg p-1.5 text-white hover:bg-white/15"
+        >
+          <X size={18} />
+        </button>
+        <SidebarContent pathname={pathname} />
+      </aside>
+
       {/* ── Main content ── */}
       <div className="flex-1 flex flex-col min-w-0 lg:pl-60">
         {/* Mobile topbar */}
-        <Topbar />
+        <Topbar
+          menuOpen={drawerOpen}
+          onMenuToggle={() => setDrawerOpen((open) => !open)}
+          mobileMenuId="parent-mobile-navigation"
+          mobileMenuBreakpoint="lg"
+        />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">

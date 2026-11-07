@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -9,6 +9,7 @@ import { Button } from '@/src/components/ui/Button';
 import { useLoginMutation } from '@/src/hooks/queries/useAuth';
 import { UserLoginInput, userLoginSchema } from '@/src/validators/userLoginSchema';
 import { useAuthStore } from '@/src/stores/authStore';
+import { Eye, EyeOff } from 'lucide-react';
 
 const roles = ["admin", "student", "teacher", "parent", "bursar"];
 
@@ -21,12 +22,12 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams().get("role") as string;
   const capsParams = searchParams
     ? searchParams.charAt(0).toUpperCase() + searchParams.slice(1)
     : '';
   const isParamsTrue = roles.includes(searchParams);
-  console.log("isParamsTrue", isParamsTrue, "capsParams", capsParams);
   const router = useRouter();
   const { user, error: authError, setError: setAuthError } = useAuthStore();
   const { handleLogin, loginMutation } = useLoginMutation();
@@ -75,9 +76,20 @@ function LoginForm() {
               control={control}
               name="password"
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Enter your password"
               required
+              endAdornment={(
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  className="rounded p-1 text-gray-500 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              )}
             />
 
             <div className="flex justify-end">

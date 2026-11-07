@@ -93,7 +93,6 @@ export const classService = {
     department?: Department,
   ): Promise<{ id: string; level: string; isNew: boolean }> {
     const classRecord = await resolveClass(tx, schoolId, level)
-    console.log("resolving class")
     if (classRecord?.level === level) {
       // Validate the level matches what we expect
       console.log("class exist but code didnt break")

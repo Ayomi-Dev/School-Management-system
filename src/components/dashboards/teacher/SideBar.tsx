@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
-import { useState } from 'react';
-import { ChevronDown, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import {
   buildClassNavSections,
   buildSubjectTeacherNavSections,
@@ -32,7 +32,13 @@ import { useMySubjectAssignments } from '@/src/hooks/queries/useTeacher';
 //                      depend on a classId are shown — prevents undefined
 //                      classId from reaching any page.
 
-export function TeacherSidebar() {
+export function TeacherSidebar({
+  mobileOpen,
+  onMobileClose,
+}: {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}) {
   const pathname = usePathname();
   const { user, school } = useAuth();
   const schoolName = school?.name || 'SchoolHub';
@@ -40,8 +46,11 @@ export function TeacherSidebar() {
   const { data: assignedClass,       isLoading: loadingClass   } = useMyClass();
   const { data: subjectAssignments,  isLoading: loadingSubjects } = useMySubjectAssignments();
 
-  const [isOpen,   setIsOpen]   = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    onMobileClose();
+  }, [pathname, onMobileClose]);
 
   const isLoading = loadingClass || loadingSubjects;
 
@@ -156,25 +165,19 @@ export function TeacherSidebar() {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 hover:bg-gray-100 rounded-lg"
-        aria-label="Toggle sidebar"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {isOpen && (
+      {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={onMobileClose}
         />
       )}
 
       <aside
+        id="teacher-mobile-navigation"
+        aria-label="Teacher navigation"
         className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-white border-r
-                    border-gray-200 flex flex-col overflow-hidden z-40 transition-transform ${
-                      isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+                    border-gray-200 flex flex-col overflow-hidden z-50 md:z-40 transition-transform ${
+                      mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
                     }`}
       >
         {/* Logo + identity header */}

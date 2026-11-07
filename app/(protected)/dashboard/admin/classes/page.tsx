@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 export default function ClassesPage() {
   const { data: classesData, isLoading } = useClassesList();
   const classes = useMemo(() => classesData || [], [classesData]);
+  console.log("classesData:", classesData)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
 
@@ -128,9 +129,6 @@ export default function ClassesPage() {
                     {classItem.teacherAssignments[0]?.isClassTeacher ? 'Reassign Teacher' : 'Assign Teacher'}
                   </Button>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 flex items-center justify-center gap-1">
-                      <Edit2 size={14} /> Edit
-                    </Button>
                     <Button variant="outline" size="sm" className="flex-1 text-red-600 flex items-center justify-center gap-1">
                       <Trash2 size={14} /> Delete
                     </Button>

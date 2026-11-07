@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
-import { useState } from 'react';
-import { ChevronDown, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useSchoolDetail } from '@/src/hooks/queries/useSchools';
 
 interface NavItem {
@@ -66,13 +66,23 @@ const adminNavItems: NavItem[] = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  mobileOpen,
+  onMobileClose,
+}: {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams()
   const { user, school } = useAuth();
   const schoolName = school?.name || 'SchoolHub';
-  const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const currentSearch = searchParams.toString();
+
+  useEffect(() => {
+    onMobileClose();
+  }, [pathname, currentSearch, onMobileClose]);
 
   const toggleExpanded = (label: string) => {
     const newExpanded = new Set(expanded);
@@ -106,21 +116,48 @@ const isActive = (href: string) => {
   const NavLinks = ({ items }: { items: NavItem[] }) => (
     <nav className="space-y-1 px-2">
       {items.map((item) => {
-        const active = isActive(item.href);
         const hasChildren = item.children && item.children.length > 0;
+        const active = hasChildren
+          ? item.children!.some((child) => isActive(child.href))
+          : isActive(item.href);
         const isExpanded = expanded.has(item.label);
 
         return (
           <div key={item.label}>
-            <button
-              onClick={() => hasChildren && toggleExpanded(item.label)}
-              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors ${
-                active
-                  ? 'bg-blue-100 text-blue-700 font-semibold'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <Link href={item.href} className="flex items-center gap-3 flex-1">
+            {hasChildren ? (
+              <button
+                type="button"
+                aria-expanded={isExpanded}
+                onClick={() => toggleExpanded(item.label)}
+                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors ${
+                  active
+                    ? 'bg-blue-100 text-blue-700 font-semibold'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="flex items-center gap-3 flex-1 text-left">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </span>
+                <ChevronDown
+                  size={18}
+                  className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+            ) : (
+              <Link
+                href={item.href}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                  active
+                    ? 'bg-blue-100 text-blue-700 font-semibold'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
                 <span className="text-lg">{item.icon}</span>
                 <span className="text-sm font-medium">{item.label}</span>
                 {item.badge && (
@@ -129,13 +166,7 @@ const isActive = (href: string) => {
                   </span> 
                 )}
               </Link>
-              {hasChildren && (
-                <ChevronDown
-                  size={18}
-                  className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                />
-              )}
-            </button>
+            )}
 
             {hasChildren && isExpanded && (
               <div className="pl-8 space-y-1 mt-1 border-l-2 border-gray-200">
@@ -163,26 +194,20 @@ const isActive = (href: string) => {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 hover:bg-gray-100 rounded-lg"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
       {/* Overlay */}
-      {isOpen && (
+      {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={onMobileClose}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 overflow-y-auto z-40 transition-transform ${
-          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        id="admin-mobile-navigation"
+        aria-label="Admin navigation"
+        className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 overflow-y-auto z-50 md:z-40 transition-transform ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Logo Section */}

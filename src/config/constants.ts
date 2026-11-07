@@ -42,7 +42,7 @@ export const API_ENDPOINTS = {
 
 
   // Classes
-  CLASSES_CREATE: '/api/classes/create',
+  CLASSES_CREATE: '/api/classes',
   CLASSES_LIST:  `/api/classes`,
   CLASSES_GET: (classId: string) => `/api/classes/${classId}`,
   CLASSES_UPDATE: (classId: string) => `/api/classes/${classId}`,

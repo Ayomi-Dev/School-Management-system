@@ -2,21 +2,37 @@
 
 import { useAuth } from '@/src/hooks/useAuth';
 import { useLogoutMutation } from '@/src/hooks/queries/useAuth';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { ChevronDown, LogOut, User, Settings, Bell } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { ChevronDown, LogOut, User, Settings, Bell, Menu, X } from 'lucide-react';
 
-export function Topbar() {
+export function Topbar({
+  menuOpen = false,
+  onMenuToggle,
+  mobileMenuId,
+  mobileMenuBreakpoint = 'md',
+}: {
+  menuOpen?: boolean;
+  onMenuToggle?: () => void;
+  mobileMenuId?: string;
+  mobileMenuBreakpoint?: 'md' | 'lg';
+}) {
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const logoutMutation = useLogoutMutation();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  useEffect(() => {
+    setIsProfileOpen(false);
+  }, [pathname]);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
     router.replace('/auth/login');
   };
   const handleProfile = () => {
+    setIsProfileOpen(false);
     router.push(`/dashboard/${user?.role?.toLocaleLowerCase()}/profile`);
   };
 
@@ -31,16 +47,28 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 w-full bg-white border-b border-gray-200 shadow-sm">
-      <div className="px-6 py-4 flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
         {/* Left Section */}
-        <div className="flex items-center gap-8 flex-1">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-8">
+          {onMenuToggle && (
+            <button
+              type="button"
+              onClick={onMenuToggle}
+              aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={menuOpen}
+              aria-controls={mobileMenuId}
+              className={`${mobileMenuBreakpoint === 'lg' ? 'lg:hidden' : 'md:hidden'} inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500`}
+            >
+              {menuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+            </button>
+          )}
+          <h2 className="min-w-0 truncate text-base font-semibold text-gray-900 sm:text-lg">
             Welcome, {user?.userCode}
           </h2>
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4 cursor-pointer">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           {/* Notifications */}
           <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Bell size={20} className="text-gray-600" />
@@ -56,7 +84,7 @@ export function Topbar() {
               <div className="w-8 h-8 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-semibold">{getInitials()}</span>
               </div>
-              <div className="text-left">
+              <div className="hidden text-left sm:block">
                 <p className="text-sm font-medium text-gray-900">
                   {user?.firstName} {user?.lastName}
                 </p>

@@ -2,7 +2,7 @@
 
 import { useCurrentTerm } from "@/src/hooks/queries/useAcademic";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SidebarContent } from "./SideBar";
 import { Bell, Search, X } from "lucide-react";
 import { Breadcrumb, pageTitle } from "./navbars/breadCrumb";
@@ -16,6 +16,10 @@ export default function BursarLayoutClient({
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
  
   // Resolve current term once — passed down to SidebarStats and the search bar
   const { termId, termPeriod } = useCurrentTerm();
@@ -39,11 +43,14 @@ export default function BursarLayoutClient({
  
       {/* ── Mobile drawer ── */}
       <aside
+        id="bursar-mobile-navigation"
+        aria-label="Bursar navigation"
         className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-linear-to-b from-emerald-700 to-teal-800 shadow-2xl transition-transform duration-300 ease-in-out ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <button
+          type="button"
           onClick={() => setDrawerOpen(false)}
           className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           aria-label="Close menu"
@@ -53,7 +60,6 @@ export default function BursarLayoutClient({
         <SidebarContent
           pathname={pathname}
           termId={termId}
-          onNavClick={() => setDrawerOpen(false)}
         />
       </aside>
  
@@ -61,7 +67,12 @@ export default function BursarLayoutClient({
       <div className="flex-1 flex flex-col min-w-0 lg:pl-60">
         
         {/* Desktop topbar */}
-        <Topbar />
+        <Topbar
+          menuOpen={drawerOpen}
+          onMenuToggle={() => setDrawerOpen((open) => !open)}
+          mobileMenuId="bursar-mobile-navigation"
+          mobileMenuBreakpoint="lg"
+        />
         <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
           <div>
             <h1 className="text-base font-bold text-gray-900">
@@ -75,7 +86,7 @@ export default function BursarLayoutClient({
           <div className="flex items-center gap-3">
             {/* Quick student search shortcut */}
             <Link
-              href="/bursar/students"
+              href="/dashboard/bursar/students"
               className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
             >
               <Search size={13} />

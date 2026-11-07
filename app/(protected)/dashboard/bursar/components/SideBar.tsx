@@ -6,11 +6,9 @@ import { useAuth } from "@/src/hooks/useAuth";
 export function SidebarContent({
   pathname,
   termId,
-  onNavClick,
 }: {
   pathname:   string;
   termId:     string;
-  onNavClick?: () => void;
 }) {
   const { school } = useAuth();
   const schoolName = school?.name || 'SchoolHub';
@@ -48,7 +46,6 @@ export function SidebarContent({
                   <Link
                     key={href}
                     href={href}
-                    onClick={onNavClick}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                       active
                         ? 'bg-white text-emerald-700 shadow-sm'
@@ -75,7 +72,6 @@ export function SidebarContent({
       <div className="px-3 pb-5 border-t border-white/10 pt-3 space-y-0.5 shrink-0">
         <Link
           href="/bursar/notifications"
-          onClick={onNavClick}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-emerald-100 hover:bg-white/10 hover:text-white transition-all"
         >
           <Bell size={17} />
