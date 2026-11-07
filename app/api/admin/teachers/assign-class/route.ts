@@ -17,3 +17,16 @@ export const POST = async(req: NextRequest) => {
     const result = await teacherServices.assignClassTeacher(req, schoolId as string);
     return result;
 }
+
+export const DELETE = async(req: NextRequest) => {
+    const auth = await requireRoleForTenant(req, [Role.ADMIN]);
+    if(!auth.success){
+        return NextResponse.json(
+            { error: auth.error },
+            { status: auth.status }
+        )
+    }
+
+    const { schoolId } = auth;
+    return teacherServices.unassignClassTeacher(req, schoolId as string);
+}

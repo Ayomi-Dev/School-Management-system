@@ -210,7 +210,7 @@ export const teacherServices = {
       const {teacherId, isClassTeacher, academicYearLabel, level } = parsed.data;
       console.log("teacher id:", teacherId, "level:", level, "academicYearLabel:", academicYearLabel)
  
-      let teacher:      { id: string  };
+      let teacher:      { id: string; employeeNumber: string };
       let classRecord:  { level: ClassLevel; id: string; department: Department | null; } | null
       let academicYear: { id: string; label: string };
  
@@ -230,27 +230,83 @@ export const teacherServices = {
         throw err;
       }
       
-      const assignment = await prisma.teacherClassAssignment.upsert({
-        where: { teacherId: teacher.id},
-        create: {
-          teacherId:      teacher.id,
-          classId:        classRecord.id,
-          academicYearId: academicYear.id,
-          isClassTeacher,
-        },
-        update: {
-          classId: classRecord.id,
-          academicYearId: academicYear.id,
-          isClassTeacher,
-          assignedAt: new Date(),
+      const currentAssignment = await prisma.teacherClassAssignment.findUnique({
+        where: { teacherId: teacher.id },
+        select: {
+          id: true,
+          class: { select: { level: true } },
         },
       });
-      return NextResponse.json({
-        message: `${teacherId} assigned to ${classRecord.level} (${academicYear.label}).`,
-        data: assignment,
-      });
+      if (currentAssignment) {
+        return NextResponse.json(
+          {
+            error: `Teacher ${teacher.employeeNumber} is already assigned to ${currentAssignment.class.level}. Unassign them from that class before assigning them to another class.`,
+            code: "TEACHER_ALREADY_ASSIGNED",
+          },
+          { status: 409 }
+        );
+      }
+
+      try {
+        const assignment = await prisma.teacherClassAssignment.create({
+          data: {
+            teacherId:      teacher.id,
+            classId:        classRecord.id,
+            academicYearId: academicYear.id,
+            isClassTeacher,
+          },
+        });
+        return NextResponse.json({
+          message: `${teacherId} assigned to ${classRecord.level} (${academicYear.label}).`,
+          data: assignment,
+        });
+      } catch (error) {
+        // The unique teacherId constraint also protects against two admins
+        // assigning the same teacher at the same time.
+        if (
+          typeof error === "object" && error !== null && "code" in error &&
+          (error as { code?: string }).code === "P2002"
+        ) {
+          return NextResponse.json(
+            {
+              error: "This teacher has a current class assignment. Unassign them from that class before assigning them to another class.",
+              code: "TEACHER_ALREADY_ASSIGNED",
+            },
+            { status: 409 }
+          );
+        }
+        throw error;
+      }
     } catch (error) {
       console.error("[teacherService.assignClassTeacher]", error);
+      return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
+    }
+  },
+
+  async unassignClassTeacher(req: NextRequest, schoolId: string) {
+    try {
+      const teacherId = new URL(req.url).searchParams.get("teacherId");
+      if (!teacherId) {
+        return NextResponse.json({ error: "Teacher ID is required." }, { status: 400 });
+      }
+
+      const assignment = await prisma.teacherClassAssignment.findFirst({
+        where: {
+          teacherId,
+          teacher: { schoolId },
+        },
+        select: { id: true, class: { select: { level: true } } },
+      });
+      if (!assignment) {
+        return NextResponse.json({ error: "No class assignment found for this teacher." }, { status: 404 });
+      }
+
+      await prisma.teacherClassAssignment.delete({ where: { id: assignment.id } });
+      return NextResponse.json({
+        message: `Teacher unassigned from ${assignment.class.level}. They can now be assigned to another class.`,
+      });
+    } catch (error) {
+      console.error("[teacherService.unassignClassTeacher]", error);
       return NextResponse.json({ error: "Unexpected error." }, { status: 500 });
     }
   },
@@ -344,7 +400,12 @@ export const teacherServices = {
           orderBy: { lastName: "asc" },
           include: {
             user: { select: { email: true, userCode: true, status: true } },
-            classAssignment: { select: { isClassTeacher: true }}
+            classAssignment: {
+              select: {
+                isClassTeacher: true,
+                class: { select: { level: true } },
+              },
+            },
           },
         }),
       ]);

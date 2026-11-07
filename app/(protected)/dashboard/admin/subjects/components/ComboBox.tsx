@@ -93,6 +93,7 @@ export function TeacherCombobox({
                   <li key={teacher.id}>
                     <button
                       type="button"
+                      disabled={!!teacher.classAssignment}
                       onClick={() =>
                         handleSelect({
                           id: teacher.id,
@@ -102,14 +103,13 @@ export function TeacherCombobox({
                         })
                     
                       }
-                      // disabled={teacher.classAssignment && teacher.classAssignment.isClassTeacher}
                       className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors ${
                         isSelected
                           ? 'bg-blue-50 text-blue-700 font-medium'
                           : 'hover:bg-gray-50 text-gray-700'
                         }
-                        ${teacher.classAssignment && teacher.classAssignment.isClassTeacher
-                          ? 'opacity-50 cursor-not-allowed'
+                        ${teacher.classAssignment
+                          ? 'opacity-60 cursor-not-allowed bg-gray-50'
                           : ''}`
                         }
                     >
@@ -120,6 +120,11 @@ export function TeacherCombobox({
                         <span className="text-gray-400 ml-2 text-xs">
                           {teacher.employeeNumber}
                         </span>
+                        {teacher.classAssignment && (
+                          <span className="mt-0.5 block text-xs font-normal text-amber-700">
+                            Assigned to {teacher.classAssignment.class.level}; unassign first
+                          </span>
+                        )}
                       </span>
                       {isSelected && <Check size={15} className="text-blue-600 shrink-0" />}
                     </button>
