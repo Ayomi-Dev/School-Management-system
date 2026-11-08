@@ -138,34 +138,7 @@ export default function AdminDashboardPage() {
           />
         </div>
       </div>
-
-      {/* System Health */}
-      <Card>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">System Health</h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-            <div>
-              <p className="font-medium text-gray-900">Database Status</p>
-              <p className="text-sm text-gray-600">All systems operational</p>
-            </div>
-            <span className="text-2xl">✓</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-            <div>
-              <p className="font-medium text-gray-900">API Response Time</p>
-              <p className="text-sm text-gray-600">200ms average</p>
-            </div>
-            <span className="text-2xl">⚡</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-            <div>
-              <p className="font-medium text-gray-900">Last Backup</p>
-              <p className="text-sm text-gray-600">2 hours ago</p>
-            </div>
-            <span className="text-2xl">💾</span>
-          </div>
-        </div>
-      </Card>
+      
 
       {/* Recent Activity */}
       <Card>
