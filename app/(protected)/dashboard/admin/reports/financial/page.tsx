@@ -66,6 +66,7 @@ export default function AdminFinancialReportsPage() {
     limit: 50,
   }), [activeTermId, paymentSearch, paymentPage]);
   const paymentsQuery = useFeePayments(paymentFilters, tab === 'payments');
+  console.log("paymentsQuery", paymentsQuery.data, paymentsQuery.isLoading, paymentsQuery.isError)
 
   const exportPayments = () => {
     const rows = paymentsQuery.data?.data ?? [];
