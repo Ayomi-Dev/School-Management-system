@@ -34,9 +34,7 @@ export default function StudentsPage() {
   const activeTermId  = selectedTermId  || defaultTermId;
   const activeClassId = selectedClassId; // empty = all classes
  
-  const { data: students = [], isLoading: studentsLoading, isError } =
-   useStudentList();
-   console.log(students)
+  
  
   // ── Client-side filters ───────────────────────────────────────────────────
  
