@@ -5,16 +5,23 @@ import { getErrorMessage } from "@/src/utils/error";
 
 const studentQueryKeys = {
     student: ["student"],
-    studentList: () => [...studentQueryKeys.student, "studentList"]
+    studentList: (params?: unknown) => [...studentQueryKeys.student, "studentList", params],
 }
 
-export const useStudentList = () => {
+export const useStudentList = (params: {
+  page?: number;
+  limit?: number;
+  classId?: string;
+  academicYearId?: string;
+  search?: string;
+  status?: string;
+} ) => {
     const { error: showError } = useToast()
     return useQuery({
-      queryKey: [...studentQueryKeys.student],
+      queryKey: studentQueryKeys.studentList(params),
       queryFn: async() => {
         try {
-          return await studentService.list()
+          return await studentService.list(params.page, params.limit, params)
         } catch (error) {
           const message = getErrorMessage(error);
           showError(message);

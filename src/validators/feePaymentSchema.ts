@@ -42,7 +42,15 @@ export const recordPaymentSchema = z.object({
   paymentDate:     z.string().datetime({ offset: true }).or(z.string().date()),
   paymentMethod:   z.enum(PAYMENT_METHODS),
   note:            z.string().trim().max(500).optional(),
-  recordedById: z.string().trim().max(500).min(1)
 });
  
 export type RecordPaymentFormData = z.infer<typeof recordPaymentSchema>;
+
+export const updateFeePaymentSchema = z.object({
+  amount: z.number().positive('Amount must be greater than 0'),
+  paymentDate: z.string().datetime({ offset: true }).or(z.string().date()),
+  paymentMethod: z.enum(PAYMENT_METHODS),
+  feeStructureId: z.string().nullable(),
+  note: z.string().trim().max(500).nullable(),
+});
+export type UpdateFeePaymentBody = z.infer<typeof updateFeePaymentSchema>;

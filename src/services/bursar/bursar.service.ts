@@ -36,6 +36,14 @@ export const bursarService = {
             return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
         }
         
+      const term = await prisma.term.findFirst({
+        where: { id: termId, academicYear: { schoolId } },
+        select: { id: true, academicYearId: true },
+      });
+      if (!term) {
+        return NextResponse.json({ error: 'Term not found for this school.' }, { status: 404 });
+      }
+
       // Pull all fee balances for this school and term in one query
         const [balances, recentPayments, classes] = await Promise.all([
             prisma.feeBalance.findMany({
@@ -45,7 +53,9 @@ export const bursarService = {
                 amountPaid: true,
                 student: {
                   select: {
+                    id: true,
                     enrollments: {
+                      where: { academicYearId: term.academicYearId },
                       take: 1,
                       orderBy: { enrolledAt: 'desc' },
                       select: { classId: true },
@@ -79,7 +89,7 @@ export const bursarService = {
         const totalCollected   = balances.reduce((s, b) => s + b.amountPaid,  0);
         const totalDue         = balances.reduce((s, b) => s + b.amountDue,   0);
         const totalOutstanding = totalDue - totalCollected;
-        const totalStudents    = new Set(balances.map((b) => b.student)).size;
+        const totalStudents    = new Set(balances.map((b) => b.student.id)).size;
         
         // Group balances by class for the breakdown
         const classCollected   = new Map<string, number>();
@@ -104,14 +114,22 @@ export const bursarService = {
           .filter((c) => c.total > 0)
           .sort((a, b) => b.outstanding - a.outstanding);
         
+        const studentTotals = new Map<string, { due: number; paid: number }>();
+        for (const balance of balances) {
+          const current = studentTotals.get(balance.student.id) ?? { due: 0, paid: 0 };
+          current.due += balance.amountDue;
+          current.paid += balance.amountPaid;
+          studentTotals.set(balance.student.id, current);
+        }
+
         return NextResponse.json({
           data: {
             totalCollected,
             totalOutstanding,
             totalDue,
             totalStudents,
-            clearedCount:  balances.filter((b) => b.amountDue - b.amountPaid <= 0).length,
-            pendingCount:  balances.filter((b) => b.amountDue - b.amountPaid >  0).length,
+            clearedCount:  [...studentTotals.values()].filter((student) => student.due - student.paid <= 0).length,
+            pendingCount:  [...studentTotals.values()].filter((student) => student.due - student.paid > 0).length,
             recentPayments,
             classBreakdown,
           },

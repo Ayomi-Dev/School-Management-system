@@ -33,15 +33,6 @@ export const POST = async ( req: NextRequest ) => {
             { status: auth.status}
         )
     }
-    const { searchParams } = new URL(req.url);
-    const termId = searchParams.get("termId")?.trim();
-
-    if (!termId) {
-      return NextResponse.json(
-        { error: "termId query param is required" },
-        { status: 400 }
-      );
-    }
     const { schoolId } = auth;
     const feeStructureList = await feeServices.createFeeStructure(req, schoolId as string)
     return feeStructureList;

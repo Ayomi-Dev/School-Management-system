@@ -91,7 +91,13 @@ export const academicReportService = {
       where: {
         academicYearId: selectedYear.id,
         class: { schoolId, ...(selectedClassId ? { id: selectedClassId } : {}) },
-        student: { schoolId, deletedAt: null },
+        student: {
+          schoolId,
+          OR: [
+            { deletedAt: null },
+            { deletedAt: { isSet: false } },
+          ],
+        },
       },
       select: {
         studentId: true,
@@ -112,7 +118,10 @@ export const academicReportService = {
         },
         student: {
           schoolId,
-          deletedAt: null,
+          OR: [
+            { deletedAt: null },
+            { deletedAt: { isSet: false } },
+          ],
           enrollments: {
             some: {
               academicYearId: selectedYear.id,

@@ -9,12 +9,12 @@ export const studentService = {
   list: async(
     page = 1,
     limit = 20,
-    filters?: { classId?: string; level?: string; search?: string }
+    filters?: { classId?: string; level?: string; academicYearId?: string; status?: string; search?: string }
   ): Promise<PaginatedResponse<StudentProfile>> => {
     const response = await client.get(API_ENDPOINTS.STUDENTS_LIST(), {
       params: { page, limit, ...filters },
     });
-    return response.data.data;
+    return response.data;
   },
 
   get: async (id: string): Promise<StudentProfile> => {

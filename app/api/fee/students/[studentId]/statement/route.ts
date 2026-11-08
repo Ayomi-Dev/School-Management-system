@@ -15,6 +15,7 @@ export const GET = async (req: NextRequest, context: ParamsContext) => {
     const { searchParams } = new URL(req.url);
     const termId = searchParams.get("termId")?.trim();
     const { studentId } = await context.params
+    console.log("studentId", studentId, "termId", termId)
     const { schoolId } = auth
     const statement = await feeServices.getStudentFeeStatement( schoolId as string, studentId as string, termId as string )
     return statement;

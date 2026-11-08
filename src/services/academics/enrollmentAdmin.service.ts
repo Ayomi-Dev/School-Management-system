@@ -73,7 +73,14 @@ export const enrollmentAdminService = {
             where: {
               academicYearId: sourceYear.id,
               classId: classItem.id,
-              student: { schoolId, deletedAt: null, status: "ACTIVE" },
+              student: {
+                schoolId,
+                status: "ACTIVE",
+                OR: [
+                  { deletedAt: null },
+                  { deletedAt: { isSet: false } },
+                ],
+              },
             },
           });
           return [classItem.id, count] as const;
@@ -100,15 +107,22 @@ export const enrollmentAdminService = {
           class: { schoolId },
           student: {
             schoolId,
-            deletedAt: null,
             status: "ACTIVE" as const,
-            ...(search ? {
-              OR: [
-                { firstName: { contains: search, mode: "insensitive" as const } },
-                { lastName: { contains: search, mode: "insensitive" as const } },
-                { studentNumber: { contains: search, mode: "insensitive" as const } },
-              ],
-            } : {}),
+            AND: [
+              {
+                OR: [
+                  { deletedAt: null },
+                  { deletedAt: { isSet: false } },
+                ],
+              },
+              ...(search ? [{
+                OR: [
+                  { firstName: { contains: search, mode: "insensitive" as const } },
+                  { lastName: { contains: search, mode: "insensitive" as const } },
+                  { studentNumber: { contains: search, mode: "insensitive" as const } },
+                ],
+              }] : []),
+            ],
           },
         };
         [total, candidates] = await Promise.all([
@@ -215,7 +229,14 @@ export const enrollmentAdminService = {
             studentId: { in: studentIds },
             academicYearId: sourceYear.id,
             classId: sourceClass.id,
-            student: { schoolId, deletedAt: null, status: "ACTIVE" },
+            student: {
+              schoolId,
+              status: "ACTIVE",
+              OR: [
+                { deletedAt: null },
+                { deletedAt: { isSet: false } },
+              ],
+            },
           },
           select: { id: true, studentId: true },
         });

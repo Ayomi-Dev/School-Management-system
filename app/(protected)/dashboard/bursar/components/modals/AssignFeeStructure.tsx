@@ -16,6 +16,7 @@ interface AssignFeeModalProps {
   feeStructure:   FeeStructure;
   classes:        Array<{ id: string; level: string }>;
   academicYears:  AcademicYear[];
+  activeAcademicYearId?: string;
   onClose:        () => void;
   onSuccess:      () => void;
 }
@@ -24,6 +25,7 @@ export function AssignFeeModal({
   feeStructure,
   classes,
   academicYears,
+  activeAcademicYearId,
   onClose,
   onSuccess,
 }: AssignFeeModalProps) {
@@ -37,7 +39,7 @@ export function AssignFeeModal({
     resolver: zodResolver(assignFeeSchema),
     defaultValues: {
       classId:        feeStructure.classId ?? '',
-      academicYearId: academicYears[0]?.id ?? '',
+      academicYearId: activeAcademicYearId ?? academicYears[0]?.id ?? '',
     },
   });
 

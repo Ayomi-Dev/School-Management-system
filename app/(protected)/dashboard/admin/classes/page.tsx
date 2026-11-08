@@ -14,7 +14,6 @@ import { useUnassignClassTeacherMutation } from '@/src/hooks/queries/useClasses'
 export default function ClassesPage() {
   const { data: classesData, isLoading } = useClassesList();
   const classes = useMemo(() => classesData || [], [classesData]);
-  console.log("classesData:", classesData)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
 

@@ -144,7 +144,7 @@ export default function RecordPaymentModal({
               type="number"
               step="0.01"
               placeholder="0.00"
-              {...register('amount')}
+              {...register('amount', { valueAsNumber: true })}
               error={errors.amount?.message}
             />
           </div>

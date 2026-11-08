@@ -1,6 +1,6 @@
 import { getApiClient } from "@/src/config/api";
 import { API_ENDPOINTS } from "@/src/config/constants";
-import { AssignFeeToClassBody, ClassFeeOverviewRow, CreateFeeStructureBody, FeePayment, FeeStructure, RecordPaymentBody, StudentFeeStatement } from "@/src/types/fees";
+import { AssignFeeToClassBody, ClassFeeOverviewRow, CreateFeeStructureBody, FeePayment, FeePaymentListResponse, FeeStructure, RecordPaymentBody, StudentFeeStatement, UpdateFeePaymentBody } from "@/src/types/fees";
 
 const client = getApiClient()
 export const feeService = {
@@ -10,7 +10,7 @@ export const feeService = {
   },
  
   createFeeStructure: async (body: CreateFeeStructureBody): Promise<FeeStructure> => {
-    const res = await client.post(API_ENDPOINTS.CREATE_FEE_STRUCTURE(), body);
+    const res = await client.post(API_ENDPOINTS.CREATE_FEE_STRUCTURE(body.termId), body);
     return res.data.data;
   },
  
@@ -29,6 +29,16 @@ export const feeService = {
     const res = await client.post(API_ENDPOINTS.RECORD_PAYMENT(), body);
     return res.data.data;
   },
+
+  listPayments: async (filters: { termId?: string; search?: string; page?: number; limit?: number }): Promise<FeePaymentListResponse> => {
+    const res = await client.get(API_ENDPOINTS.RECORD_PAYMENT(), { params: filters });
+    return res.data 
+  },
+
+  updatePayment: async (paymentId: string, body: UpdateFeePaymentBody): Promise<FeePayment> => {
+    const res = await client.patch(`${API_ENDPOINTS.RECORD_PAYMENT()}?paymentId=${paymentId}`, body);
+    return res.data.data;
+  },
  
   getStudentStatement: async (
     studentId: string,
@@ -37,7 +47,11 @@ export const feeService = {
     const res = await client.get(
       API_ENDPOINTS.GET_STUDENT_STATEMENT(studentId, termId),
     );
-    return res.data.data;
+    const statement = res.data?.data;
+    if (!statement) {
+      throw new Error('The student statement response was empty.');
+    }
+    return statement;
   },
  
   getPaymentHistory: async (studentId: string): Promise<FeePayment[]> => {

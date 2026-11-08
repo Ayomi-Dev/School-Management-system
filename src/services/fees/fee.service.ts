@@ -1,8 +1,12 @@
 import { prisma } from "@/src/lib/prisma/client";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { assignFeeSchema, createFeeStructureSchema, recordPaymentSchema } from "@/src/validators/feePaymentSchema";
-import { error } from "console";
+import {
+  assignFeeSchema,
+  createFeeStructureSchema,
+  recordPaymentSchema,
+  updateFeePaymentSchema,
+} from "@/src/validators/feePaymentSchema";
 
 // ============================================================
 // TYPES
@@ -55,8 +59,21 @@ export const feeServices = {
       )
     }
     const {classId, termId, name, amount, isOptional = false } = parsedBody.data;
+    const term = await prisma.term.findFirst({
+      where: { id: termId, academicYear: { schoolId } },
+      select: { id: true },
+    });
+    if (!term) {
+      return NextResponse.json({ error: 'Term not found for this school.' }, { status: 404 });
+    }
+    if (classId) {
+      const classRecord = await prisma.class.findFirst({ where: { id: classId, schoolId }, select: { id: true } });
+      if (!classRecord) {
+        return NextResponse.json({ error: 'Class not found for this school.' }, { status: 404 });
+      }
+    }
  
-    const feeStructure = prisma.feeStructure.create({
+    const feeStructure = await prisma.feeStructure.create({
      data: { 
        schoolId, 
        classId: classId ?? null, 
@@ -104,12 +121,29 @@ export const feeServices = {
     }
     const { classId, academicYearId } = parsedBody.data
  
-    const feeStructure = await prisma.feeStructure.findFirst({
+    const [feeStructure, classRecord, academicYear] = await Promise.all([
+      prisma.feeStructure.findFirst({
       where:  { id: feeStructureId, schoolId },
-      select: { id: true, amount: true },
-    });
+      select: { id: true, amount: true, termId: true, classId: true },
+      }),
+      prisma.class.findFirst({ where: { id: classId, schoolId }, select: { id: true } }),
+      prisma.academicYear.findFirst({ where: { id: academicYearId, schoolId }, select: { id: true } }),
+    ]);
     if (!feeStructure) {
       return NextResponse.json({ error: 'Fee structure not found.' }, { status: 404 });
+    }
+    if (!classRecord || !academicYear) {
+      return NextResponse.json({ error: 'Class or academic year not found for this school.' }, { status: 404 });
+    }
+    if (feeStructure.classId && feeStructure.classId !== classId) {
+      return NextResponse.json({ error: 'This fee structure is for a different class.' }, { status: 400 });
+    }
+    const term = await prisma.term.findFirst({
+      where: { id: feeStructure.termId, academicYearId },
+      select: { id: true },
+    });
+    if (!term) {
+      return NextResponse.json({ error: 'The fee structure term does not belong to the selected academic year.' }, { status: 400 });
     }
  
     const enrollments = await prisma.enrollment.findMany({
@@ -117,7 +151,7 @@ export const feeServices = {
       select: { studentId: true },
     });
  
-   const results = enrollments.map((e) =>
+   const results = await Promise.all(enrollments.map((e) =>
      prisma.feeBalance.upsert({
       where: {
         studentId_feeStructureId: {
@@ -133,7 +167,7 @@ export const feeServices = {
          amountPaid: 0,
        },
      })
-   );
+   ));
  
     return NextResponse.json({
       message: `Fee assigned to ${results.length} student(s).`,
@@ -145,7 +179,7 @@ export const feeServices = {
  // RECORD PAYMENT
  // ============================================================
  
-  async recordPayment(req: NextRequest, schoolId: string ) {
+  async recordPayment(req: NextRequest, schoolId: string, recordedById: string ) {
    const body = await req.json()
    const parsedBody = recordPaymentSchema.safeParse(body)
    if(!parsedBody.success){
@@ -161,7 +195,6 @@ export const feeServices = {
      amount,
      paymentDate,
      paymentMethod,
-     recordedById,
      note,
    } = parsedBody.data
  
@@ -171,12 +204,30 @@ export const feeServices = {
      )
    }
 
-   const student = await prisma.studentProfile.findFirst({
+   const [student, term] = await Promise.all([
+     prisma.studentProfile.findFirst({
       where:  { id: studentId, schoolId },
       select: { id: true },
-    });
+     }),
+     prisma.term.findFirst({
+       where: { id: termId, academicYear: { schoolId } },
+       select: { id: true },
+     }),
+   ]);
     if (!student) {
       return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
+    }
+    if (!term) {
+      return NextResponse.json({ error: 'Term not found for this school.' }, { status: 404 });
+    }
+    if (feeStructureId) {
+      const feeStructure = await prisma.feeStructure.findFirst({
+        where: { id: feeStructureId, schoolId, termId },
+        select: { id: true, amount: true },
+      });
+      if (!feeStructure) {
+        return NextResponse.json({ error: 'Fee structure not found for this term.' }, { status: 404 });
+      }
     }
  
    return prisma.$transaction(async (tx) => {
@@ -188,9 +239,9 @@ export const feeServices = {
          feeStructureId: feeStructureId ?? null,
          receiptNumber: generateReceiptNumber(),
          amount,
-         paymentDate,
+         paymentDate: new Date(paymentDate),
          paymentMethod,
-         recordedById: recordedById ?? null,
+         recordedById,
          note: note ?? null,
          status: "PAID"
        },
@@ -212,6 +263,15 @@ export const feeServices = {
            where: { studentId_feeStructureId: { studentId, feeStructureId } },
            data: { amountPaid: newAmountPaid },
          });
+      } else {
+        const feeStructure = await tx.feeStructure.findUnique({
+          where: { id: feeStructureId },
+          select: { amount: true },
+        });
+        if (!feeStructure) throw new Error('Fee structure is no longer available.');
+        await tx.feeBalance.create({
+          data: { studentId, feeStructureId, amountDue: feeStructure.amount, amountPaid: amount },
+        });
        }
      }
  
@@ -219,6 +279,119 @@ export const feeServices = {
        { data: payment }, { status: 200 }
      )
    });
+  },
+
+  async listPayments(schoolId: string, termId?: string, search?: string, page = 1, limit = 100) {
+    const where = {
+      term: { academicYear: { schoolId }, ...(termId ? { id: termId } : {}) },
+      ...(search ? {
+        student: {
+          OR: [
+            { firstName: { contains: search, mode: 'insensitive' as const } },
+            { lastName: { contains: search, mode: 'insensitive' as const } },
+            { studentNumber: { contains: search, mode: 'insensitive' as const } },
+          ],
+        },
+      } : {}),
+    };
+    const [payments, total] = await Promise.all([
+      prisma.feePayment.findMany({
+        where,
+        orderBy: [{ paymentDate: 'desc' }, { createdAt: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          student: { select: { id: true, firstName: true, lastName: true, studentNumber: true } },
+          term: { select: { id: true, period: true, academicYear: { select: { label: true } } } },
+        },
+      }),
+      prisma.feePayment.count({ where }),
+    ]);
+    return NextResponse.json({ data: payments, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
+  },
+
+  async updatePayment(req: NextRequest, schoolId: string, paymentId: string) {
+    try {
+      const body = await req.json();
+      const parsed = updateFeePaymentSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed.', details: parsed.error.flatten().fieldErrors },
+          { status: 400 },
+        );
+      }
+      const payment = await prisma.feePayment.findFirst({
+        where: { id: paymentId, student: { schoolId }, term: { academicYear: { schoolId } } },
+        select: { id: true, studentId: true, termId: true, feeStructureId: true, amount: true },
+      });
+      if (!payment) {
+        return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
+      }
+
+      const { amount, paymentDate, paymentMethod, feeStructureId, note } = parsed.data;
+      if (feeStructureId) {
+        const feeStructure = await prisma.feeStructure.findFirst({
+          where: { id: feeStructureId, schoolId, termId: payment.termId },
+          select: { id: true },
+        });
+        if (!feeStructure) {
+          return NextResponse.json({ error: 'Fee structure not found for this payment term.' }, { status: 404 });
+        }
+      }
+
+      const updated = await prisma.$transaction(async (tx) => {
+        if (payment.feeStructureId) {
+          const previousBalance = await tx.feeBalance.findUnique({
+            where: { studentId_feeStructureId: { studentId: payment.studentId, feeStructureId: payment.feeStructureId } },
+            select: { amountPaid: true },
+          });
+          if (previousBalance && previousBalance.amountPaid < payment.amount) {
+            throw new Error('The associated fee balance is inconsistent. The payment cannot be edited safely.');
+          }
+          if (previousBalance) {
+            await tx.feeBalance.update({
+              where: { studentId_feeStructureId: { studentId: payment.studentId, feeStructureId: payment.feeStructureId } },
+              data: { amountPaid: previousBalance.amountPaid - payment.amount },
+            });
+          }
+        }
+
+        if (feeStructureId) {
+          const newBalance = await tx.feeBalance.findUnique({
+            where: { studentId_feeStructureId: { studentId: payment.studentId, feeStructureId } },
+            select: { amountPaid: true },
+          });
+          if (newBalance) {
+            await tx.feeBalance.update({
+              where: { studentId_feeStructureId: { studentId: payment.studentId, feeStructureId } },
+              data: { amountPaid: newBalance.amountPaid + amount },
+            });
+          } else {
+            const structure = await tx.feeStructure.findUnique({ where: { id: feeStructureId }, select: { amount: true } });
+            if (!structure) throw new Error('The selected fee structure is no longer available.');
+            await tx.feeBalance.create({
+              data: { studentId: payment.studentId, feeStructureId, amountDue: structure.amount, amountPaid: amount },
+            });
+          }
+        }
+
+        return tx.feePayment.update({
+          where: { id: payment.id },
+          data: { amount, paymentDate: new Date(paymentDate), paymentMethod, feeStructureId, note },
+          include: {
+            student: { select: { firstName: true, lastName: true, studentNumber: true } },
+            term: { select: { id: true, period: true, academicYear: { select: { label: true } } } },
+          },
+        });
+      });
+      return NextResponse.json({ data: updated });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('cannot be edited safely')) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      console.error('[feeServices.updatePayment]', error);
+      return NextResponse.json({ error: 'Unable to update payment.' }, { status: 500 });
+    }
   },
  
  // ============================================================
@@ -242,6 +415,13 @@ export const feeServices = {
     if (!student) {
       return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
     }
+    const term = await prisma.term.findFirst({
+      where: { id: termId, academicYear: { schoolId } },
+      select: { id: true },
+    });
+    if (!term) {
+      return NextResponse.json({ error: 'Term not found for this school.' }, { status: 404 });
+    }
     const [balances, payments] = await Promise.all([
       prisma.feeBalance.findMany({
         where: {
@@ -255,6 +435,10 @@ export const feeServices = {
       prisma.feePayment.findMany({
         where: { studentId, termId },
         orderBy: { paymentDate: "desc" },
+        include: {
+          student: { select: { id: true, firstName: true, lastName: true, studentNumber: true } },
+          term: { select: { id: true, period: true, academicYear: { select: { label: true } } } },
+        },
       }),
    ]);
  
@@ -263,7 +447,21 @@ export const feeServices = {
    const outstanding = totalDue - totalPaid;
  
    return NextResponse.json(
-     { balances, payments, totalDue, totalPaid, outstanding }, { status: 200 }
+     { data: {
+       student: {
+         id: student.id,
+         firstName: student.firstName,
+         lastName: student.lastName,
+         studentNumber: student.studentNumber,
+         currentClass: student.enrollments[0]?.class ?? null,
+       },
+       balances,
+       payments,
+       totalDue,
+       totalPaid,
+       outstanding,
+     } },
+     { status: 200 },
    );
   },
  
@@ -279,6 +477,13 @@ export const feeServices = {
     });
     if (!classRecord) {
       return NextResponse.json({ error: 'Class not found.' }, { status: 404 });
+    }
+    const [term, academicYear] = await Promise.all([
+      prisma.term.findFirst({ where: { id: termId, academicYear: { schoolId } }, select: { id: true, academicYearId: true } }),
+      prisma.academicYear.findFirst({ where: { id: academicYearId, schoolId }, select: { id: true } }),
+    ]);
+    if (!term || !academicYear || term.academicYearId !== academicYearId) {
+      return NextResponse.json({ error: 'Term and academic year must belong to this school and match.' }, { status: 400 });
     }
     const enrollments = await prisma.enrollment.findMany({
       where: { classId, academicYearId },
@@ -312,7 +517,7 @@ export const feeServices = {
       };
    });
    return NextResponse.json(
-    { data: overview }, { status: 200 }
+    { data: { classLevel: classRecord.level, rows: overview } }, { status: 200 }
    )
   },
  
@@ -324,10 +529,11 @@ export const feeServices = {
     if (!student) {
       return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
     }
-    const history =  prisma.feePayment.findMany({
-      where: { studentId },
+    const history = await prisma.feePayment.findMany({
+      where: { studentId, term: { academicYear: { schoolId } } },
       include: {
-        term: { select: { period: true, academicYearId: true } },
+        student: { select: { id: true, firstName: true, lastName: true, studentNumber: true } },
+        term: { select: { id: true, period: true, academicYear: { select: { label: true } } } },
       },
       orderBy: { paymentDate: "desc" },
     });

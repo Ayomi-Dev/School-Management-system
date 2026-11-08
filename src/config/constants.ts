@@ -163,27 +163,27 @@ export const API_ENDPOINTS = {
   /** GET  /bursar/fee-structures?termId= */
   LIST_FEE_STRUCTURES: (termId: string) => `/api/fee/structure?termId=${termId}`,
  
-  /** POST /bursar/fee-structures */
-  CREATE_FEE_STRUCTURE: () => `/api/bursar/fee-structures`,
+  /** Fee structure endpoints */
+  CREATE_FEE_STRUCTURE: (termId: string) => `/api/fee/structure?termId=${termId}`,
  
   /** POST /bursar/fee-structures/:id/assign */
   ASSIGN_FEE_TO_CLASS: (feeStructureId: string) =>
-    `/api/bursar/fee-structures/${feeStructureId}/assign`,
+    `/api/fee/structure/${feeStructureId}/assign`,
  
   /** POST /bursar/payments */
   RECORD_PAYMENT: () => `/api/fee/payments`,
  
   /** GET  /bursar/students/:studentId/statement?termId= */
   GET_STUDENT_STATEMENT: (studentId: string, termId: string) =>
-    `/api/bursar/students/${studentId}/statement?termId=${termId}`,
+    `/api/fee/students/${studentId}/statement?termId=${termId}`,
  
   /** GET  /bursar/students/:studentId/payment-history */
   GET_PAYMENT_HISTORY: (studentId: string) =>
-    `/api/bursar/students/${studentId}/payment-history`,
+    `/api/fee/students/${studentId}/payment-history`,
  
   /** GET  /bursar/classes/:classId/fee-overview?termId=&academicYearId= */
   GET_CLASS_FEE_OVERVIEW: (classId: string, termId: string, academicYearId: string) =>
-    `/api/bursar/classes/${classId}/fee-overview?termId=${termId}&academicYearId=${academicYearId}`,
+    `/api/fee/classes/${classId}/overview?termId=${termId}&academicYearId=${academicYearId}`,
 } as const;
 
 export const API_CONFIG = {

@@ -53,7 +53,20 @@ export interface FeePayment {
   note:          string | null;
   status:        PaymentStatus;
   student:       { firstName: string; lastName: string; studentNumber: string };
-  term:          { period: string };
+  term:          { id?: string; period: string; academicYear?: { label: string } };
+}
+
+export interface FeePaymentListResponse {
+  data: FeePayment[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export interface UpdateFeePaymentBody {
+  amount: number;
+  paymentDate: string;
+  paymentMethod: PaymentMethod;
+  feeStructureId: string | null;
+  note: string | null;
 }
 
 export interface RecordPaymentBody {
