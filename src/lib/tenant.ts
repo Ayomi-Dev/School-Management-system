@@ -80,6 +80,26 @@ export async function requireRoleForTenant(
       status: 403 
     };
   }
+
+  // Capture authenticated admin write actions centrally so dashboard activity
+  // reflects real tenant-scoped operations instead of placeholder events.
+  if (auth.role === Role.ADMIN && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    try {
+      const pathname = new URL(req.url).pathname;
+      await prisma.auditLog.create({
+        data: {
+          userId: auth.userId,
+          schoolId: tenantSchoolId,
+          action: `${req.method} ${pathname}`,
+          resource: pathname,
+          metadata: { method: req.method, pathname },
+        },
+      });
+    } catch (error) {
+      console.error('[admin activity log]', error);
+    }
+  }
+
   return {
     success: true,
     userId: auth.userId,

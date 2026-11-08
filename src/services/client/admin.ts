@@ -24,6 +24,7 @@ import { ClassDetail,
   LinkStudentToParentBody,
   LinkStudentToParentResponse
  } from '@/src/types/admin';
+import { AdminActivityItem, AdminAttendanceReport, AdminAttendanceReportParams } from '@/src/types/admin';
 
 const API_BASE = '/api/admin';
 const client = getApiClient();
@@ -31,6 +32,16 @@ const client = getApiClient();
 export const adminService = {
   // Dashboard Stats
   getStats: () => client.get(`${API_BASE}/stats`),
+
+  getAttendanceReport: async (params: AdminAttendanceReportParams): Promise<AdminAttendanceReport> => {
+    const res = await client.get(`${API_BASE}/reports/attendance`, { params });
+    return res.data.data;
+  },
+
+  getRecentActivity: async (): Promise<AdminActivityItem[]> => {
+    const res = await client.get(`${API_BASE}/activity`);
+    return res.data.data;
+  },
 
   // User Management
   getUsers: (params?: { role?: string; search?: string; page?: number; limit?: number }) =>
@@ -216,9 +227,6 @@ export const adminService = {
 
   getFinancialReport: (params?: { startDate?: string; endDate?: string }) =>
     client.get(`${API_BASE}/reports/financial`, { params }),
-
-  getAttendanceReport: (params?: { classId?: string; month?: string }) =>
-    client.get(`${API_BASE}/reports/attendance`, { params }),
 
   // Settings
   getSettings: () => client.get(`${API_BASE}/settings`),

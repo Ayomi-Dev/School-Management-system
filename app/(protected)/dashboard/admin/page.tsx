@@ -1,9 +1,10 @@
 'use client';
 
 import { MetricCard, Card } from '@/src/components/ui/Card';
-import { useAdminStats } from '@/src/hooks/queries/useAdmin';
+import { useAdminRecentActivity, useAdminStats } from '@/src/hooks/queries/useAdmin';
 import { Loader } from '@/src/components/ui/Loader';
 import Link from 'next/link';
+import { naira } from '../bursar/components/methodbadge';
 
 const QuickAction = ({ label, description, icon, href }: any) => (
   <Link
@@ -18,6 +19,7 @@ const QuickAction = ({ label, description, icon, href }: any) => (
 
 export default function AdminDashboardPage() {
   const { data: stats,  isLoading } = useAdminStats();
+  const activityQuery = useAdminRecentActivity();
 
   if (isLoading) {
     return (
@@ -66,7 +68,8 @@ export default function AdminDashboardPage() {
         <MetricCard
           href='/dashboard/admin/users?type=fees'
           label="Total Revenue"
-          value={`$${statsData?.totalRevenue || 0}`}
+          // value={`$${statsData?.totalRevenue || 0}`}
+          value={`${naira(statsData?.totalRevenue) || 0}`}
           icon="💰"
           color="orange"
           trend={{ value: 12, isPositive: true }}
@@ -167,21 +170,21 @@ export default function AdminDashboardPage() {
       {/* Recent Activity */}
       <Card>
         <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h2>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-200 last:border-0">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  New user registered
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {i} hour{i > 1 ? 's' : ''} ago
-                </p>
+        {activityQuery.isLoading ? <div className="flex h-24 items-center justify-center"><Loader /></div> : activityQuery.isError ? (
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-red-50 p-4 text-sm text-red-700"><span>Recent activity could not be loaded.</span><button onClick={() => void activityQuery.refetch()} className="font-semibold underline">Retry</button></div>
+        ) : activityQuery.data?.length ? (
+          <div className="divide-y divide-gray-100">
+            {activityQuery.data.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="break-all text-sm font-medium text-gray-900">{activity.action}</p>
+                  <p className="mt-1 text-xs text-gray-500">{new Date(activity.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : <p className="py-6 text-center text-sm text-gray-500">No admin activity recorded yet. Changes made through the portal will appear here.</p>}
       </Card>
     </div>
   );

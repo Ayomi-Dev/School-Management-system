@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/src/utils/error';
 import { useAuthStore } from '@/src/stores/authStore';
 import { queryClient } from '@/src/lib/queryClient';
 import { academicYearService } from '@/src/services/client/academic';
+import { AdminActivityItem, AdminAttendanceReport, AdminAttendanceReportParams } from '@/src/types/admin';
 
 export const queryKeys = {
   admin: ['admin'],
@@ -28,6 +29,8 @@ export const queryKeys = {
   academicYearById: (id: string) => [...queryKeys.admin, 'academicYears', id],
   terms: (academicYearId: string) => [...queryKeys.admin, 'terms', academicYearId],
   reports: () => [...queryKeys.admin, 'reports'],
+  attendanceReport: (params: { from?: string; to?: string }) => [...queryKeys.admin, 'reports', 'attendance', params],
+  recentActivity: () => [...queryKeys.admin, 'activity'],
   settings: () => [...queryKeys.admin, 'settings'],
   teachers: () => [...queryKeys.admin, 'teachers'],
   reportCard:       (reportCardId: string) => ['admin-report-card', reportCardId] as const,
@@ -36,6 +39,38 @@ export const queryKeys = {
   parentsList: ()=> ['admin-parents-list'] as const,
   timetable:    (classId: string) => ['timetable', classId]         as const,
   classTeachers:(classId: string) => ['timetable-teachers', classId] as const,
+};
+
+export const useAdminAttendanceReport = (params: AdminAttendanceReportParams) => {
+  const { error: showError } = useToast();
+  return useQuery<AdminAttendanceReport>({
+    queryKey: queryKeys.attendanceReport(params),
+    queryFn: async () => {
+      try {
+        return await adminService.getAttendanceReport(params);
+      } catch (error) {
+        showError(getErrorMessage(error));
+        throw error;
+      }
+    },
+    staleTime: 30_000,
+  });
+};
+
+export const useAdminRecentActivity = () => {
+  const { error: showError } = useToast();
+  return useQuery<AdminActivityItem[]>({
+    queryKey: queryKeys.recentActivity(),
+    queryFn: async () => {
+      try {
+        return await adminService.getRecentActivity();
+      } catch (error) {
+        showError(getErrorMessage(error));
+        throw error;
+      }
+    },
+    staleTime: 30_000,
+  });
 };
 
 // Stats Queries

@@ -192,6 +192,39 @@ export interface LinkStudentToParentResponse {
     wasExisting: boolean;
   };
 }
+
+export interface AdminAttendanceReport {
+  summary: { sessions: number; students: number; present: number; absent: number; late: number; unmarked: number };
+  sessions: Array<{
+    id: string;
+    date: string | Date;
+    label: string | null;
+    isCompleted: boolean;
+    class: { id: string; level: string };
+    term: { id: string; period: string; academicYear: { label: string } };
+    teacher: { firstName: string; lastName: string } | null;
+    attendances: Array<{
+      id: string;
+      status: 'PRESENT' | 'ABSENT' | 'LATE' | 'UNMARKED';
+      remark: string | null;
+      student: { id: string; firstName: string; lastName: string; studentNumber: string };
+    }>;
+  }>;
+}
+
+export interface AdminAttendanceReportParams {
+  from?: string;
+  to?: string;
+}
+
+export interface AdminActivityItem {
+  id: string;
+  action: string;
+  resource: string | null;
+  resourceId: string | null;
+  createdAt: string | Date;
+  metadata: unknown;
+}
  
 export interface ParentListItem {
   id: string;           // User.id
@@ -203,4 +236,3 @@ export interface ParentListItem {
   guardianId: string | null;   // null if no Guardian record yet
   linkedCount: number;          // how many students already linked
 }
- 

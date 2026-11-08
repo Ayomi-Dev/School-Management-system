@@ -58,6 +58,41 @@ export interface MarkTeacherAttendanceInput {
  */
 export const attendanceServices = {
 
+    async getSchoolAttendanceReport(schoolId: string, from?: Date, to?: Date) {
+      const sessions = await prisma.classSession.findMany({
+        where: {
+          class: { schoolId },
+          ...(from || to ? { date: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
+        },
+        include: {
+          class: { select: { id: true, level: true } },
+          term: { select: { id: true, period: true, academicYear: { select: { label: true } } } },
+          teacher: { select: { firstName: true, lastName: true } },
+          attendances: {
+            include: {
+              student: { select: { id: true, firstName: true, lastName: true, studentNumber: true } },
+            },
+            orderBy: { student: { lastName: 'asc' } },
+          },
+        },
+        orderBy: [{ date: 'desc' }, { class: { level: 'asc' } }],
+      });
+
+      const summary = sessions.reduce((result, session) => {
+        result.sessions += 1;
+        result.students += session.attendances.length;
+        for (const attendance of session.attendances) {
+          if (attendance.status === AttendanceStatus.PRESENT) result.present += 1;
+          else if (attendance.status === AttendanceStatus.ABSENT) result.absent += 1;
+          else if (attendance.status === AttendanceStatus.LATE) result.late += 1;
+          else result.unmarked += 1;
+        }
+        return result;
+      }, { sessions: 0, students: 0, present: 0, absent: 0, late: 0, unmarked: 0 });
+
+      return { summary, sessions };
+    },
+
     async openClassSession(input: CreateClassSessionInput) {
       const { classId, termId, teacherId, date, label } = input;
     
