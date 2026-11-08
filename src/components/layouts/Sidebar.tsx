@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, GraduationCap } from 'lucide-react';
 import { useSchoolDetail } from '@/src/hooks/queries/useSchools';
 
 interface NavItem {
@@ -214,7 +214,7 @@ const isActive = (href: string) => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
+              <GraduationCap size={22} className="text-white" aria-hidden="true" />
             </div>
             <div>
               <h1 className="font-bold text-gray-900">{schoolName }</h1>

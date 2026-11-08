@@ -1,4 +1,4 @@
-import { Bell, Landmark, LogOut } from "lucide-react";
+import { Bell, GraduationCap, LogOut } from "lucide-react";
 import { NAV_GROUPS, SidebarStats } from "./navbars/sidebarStats";
 import Link from "next/link";
 import { useAuth } from "@/src/hooks/useAuth";
@@ -19,7 +19,7 @@ export function SidebarContent({
       <div className="px-6 py-5 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Landmark size={18} className="text-white" />
+            <GraduationCap size={18} className="text-white" aria-hidden="true" />
           </div>
           <div>
             <p className="text-white font-bold text-sm leading-tight">{schoolName}</p>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, GraduationCap } from 'lucide-react';
 import {
   buildClassNavSections,
   buildSubjectTeacherNavSections,
@@ -185,7 +185,7 @@ export function TeacherSidebar({
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-emerald-700
                             rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">T</span>
+              <GraduationCap size={22} className="text-white" aria-hidden="true" />
             </div>
             <div>
               <h1 className="font-bold text-gray-900">{schoolName}</h1>
