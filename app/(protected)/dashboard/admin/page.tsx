@@ -20,6 +20,7 @@ const QuickAction = ({ label, description, icon, href }: any) => (
 export default function AdminDashboardPage() {
   const { data: stats,  isLoading } = useAdminStats();
   const activityQuery = useAdminRecentActivity();
+  console.log("AdminDashboardPage activityQuery:", activityQuery.data);
 
   if (isLoading) {
     return (
@@ -152,7 +153,7 @@ export default function AdminDashboardPage() {
                 <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                 <div className="min-w-0 flex-1">
                   <p className="break-all text-sm font-medium text-gray-900">{activity.action}</p>
-                  <p className="mt-1 text-xs text-gray-500">{new Date(activity.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                  <p className="mt-1 text-xs text-gray-500" title={new Date(activity.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}>{relativeTime(activity.createdAt)}</p>
                 </div>
               </div>
             ))}
@@ -161,4 +162,16 @@ export default function AdminDashboardPage() {
       </Card>
     </div>
   );
+}
+
+function relativeTime(value: string | Date) {
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  if (elapsedSeconds < 60) return 'Just now';
+  const minutes = Math.floor(elapsedSeconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+  return new Date(value).toLocaleDateString('en-GB', { dateStyle: 'medium' });
 }

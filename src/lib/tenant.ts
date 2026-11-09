@@ -4,6 +4,7 @@ import { prisma } from "./prisma/client";
 import { NextRequest } from "next/server";
 import { AuthFailure, AuthSuccess, requireRole } from "./middleware/requireRole";
 import { Role } from "@prisma/client";
+import { describeAdminActivity } from "@/src/services/admin/adminActivity.service";
 
 /**
  * Returns the current tenant's schoolId from middleware-injected headers.
@@ -47,7 +48,6 @@ export async function requireRoleForTenant(
 ): Promise<TenantAuthResult> {
   // Auth check
   const auth = await requireRole(req, requiredRoles);
-  console.log("requireRoleForTenant: Auth result:", auth);
   if (!auth.success) return auth;
   
   //Tenant resolution — prefer reading x-school-id from the incoming NextRequest
@@ -73,7 +73,6 @@ export async function requireRoleForTenant(
   }
 
   if (auth.schoolId !== tenantSchoolId) {
-    // console.log("requireRoleForTenant: School context mismatch. Token schoolId:", auth.schoolId, "Tenant schoolId:", tenantSchoolId);
     return { 
       success: false, 
       error: "Forbidden: School context mismatch", 
@@ -86,11 +85,12 @@ export async function requireRoleForTenant(
   if (auth.role === Role.ADMIN && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     try {
       const pathname = new URL(req.url).pathname;
+      const action = await describeAdminActivity(req, tenantSchoolId);
       await prisma.auditLog.create({
         data: {
           userId: auth.userId,
           schoolId: tenantSchoolId,
-          action: `${req.method} ${pathname}`,
+          action,
           resource: pathname,
           metadata: { method: req.method, pathname },
         },
