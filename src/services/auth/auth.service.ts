@@ -50,16 +50,32 @@ export const authService = {
         return user?.isActive ?? false; // If user not found, treat as inactive
     },
     //login service
-    async login( userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
+    async login(schoolId: string, userInput: UserLoginInput, meta: { ipAddress?: string; userAgent?: string }){
         const user = await prisma.user.findFirst({
             where: {
-              OR: [
+              OR: [ 
                 { email: userInput.userCode },
                 { userCode: userInput.userCode },
-              ],
+              ], 
             },
             select: USER_SELECT
         });
+        const school = await prisma.school.findUnique({
+            where: { id: schoolId },
+            select: { id: true, name: true, address: true, email: true, phone: true }
+        });
+        if(!user || user.schoolId !== schoolId){
+            return NextResponse.json(
+                { error: "Invalid credentials or user not associated with this school" },
+                { status: 401 }
+            );
+        }
+        if(!school) {
+            return NextResponse.json(
+                { error: "School not found for the user" },
+                { status: 404 }
+            );
+        }
         
         if(!user || !user.passwordHash){
             return NextResponse.json(
@@ -68,7 +84,6 @@ export const authService = {
             );
         }
 
-        // ── 2. Password check ────────────────────────────────────────────────────────
         const passwordMatches = await passwordServices.verifyPassword(userInput.password, user.passwordHash);
         if(!passwordMatches){
             return NextResponse.json(
@@ -76,7 +91,6 @@ export const authService = {
                 { status: 401 }
             );
         }
-        // ── 3. Lock check ────────────────────────────────────────────────────────────
         if (user?.lockedUntil && user.lockedUntil > new Date()) {
             const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
             return NextResponse.json(
@@ -84,8 +98,6 @@ export const authService = {
               { status: 429 }
             );
         }
-
-        // ── 4. Status checks ─────────────────────────────────────────────────────────
         if(user.status === "SUSPENDED"){
             return NextResponse.json(
                 { error: "Your account has been suspended. Contact your administrator." },
@@ -107,7 +119,6 @@ export const authService = {
 
         // }
 
-        // ── 5. Reset failed counter + stamp last login ────────────────────────────────
         await this.handleFailedLogin(user.id, 0)
         await prisma.user.update({
           where: { id: user.id },
@@ -120,18 +131,7 @@ export const authService = {
             schoolId: user.schoolId 
         };
 
-        const school = await prisma.school.findUnique({
-            where: { id: (payload.schoolId as string) },
-            select: { id: true, name: true, address: true, email: true, phone: true }
-        });
-
-        if(!school) {
-            return NextResponse.json(
-                { error: "School not found for the user" },
-                { status: 404 }
-            );
-        }
-        console.log("Login successful for user:", user.email, "in school:", school.name);
+        
 
         const [ accessToken, refreshToken ] = await Promise.all([
             signAccessToken(payload),

@@ -31,9 +31,7 @@ const BYPASS_PATHS = [
 ];
 
 export async function middleware(req: NextRequest) {
-  console.log("[middleware] Processing request:", req.url);
   const { pathname } = req.nextUrl;
-  console.log("[middleware] Pathname:", pathname);
   const host = req.headers.get("host") ?? "";
   const isApiRoute = pathname.startsWith("/api/");
   const isBypass = BYPASS_PATHS.some((p) => pathname.startsWith(p));
@@ -52,7 +50,6 @@ export async function middleware(req: NextRequest) {
     host.endsWith(".vercel.app") ||          // www prefix
     host === "localhost:3000" ||             // dev root
     host === "127.0.0.1:3000";              // dev root alt
-    console.log("[middleware] Host:", host, "App domain:", appDomain, "Is root domain:", isRootDomain);
 
   if (isRootDomain) {
     // Rewrite to a root landing page — URL stays the same in browser

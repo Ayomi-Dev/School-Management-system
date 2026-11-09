@@ -16,7 +16,7 @@ export const POST = async( req: NextRequest) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
-
+  const schoolId = req.headers.get("x-school-id");
   const body   = await req.json()
   const parsed = loginSchema.safeParse(body); //parses the incoming request body against a predefined schema (loginSchema) to validate the structure and types of the login credentials. If the parsing fails, it returns an error response with details about what went wrong, helping the client understand how to correct their request.
  
@@ -28,7 +28,7 @@ export const POST = async( req: NextRequest) => {
   }
  
   const credentials = parsed.data;
-  const loginResult = await authService.login(credentials, {
+  const loginResult = await authService.login(schoolId as string, credentials, {
     ipAddress: req.headers.get("x-forwarded-for") ?? undefined,
     userAgent: req.headers.get("user-agent") ?? undefined
   });

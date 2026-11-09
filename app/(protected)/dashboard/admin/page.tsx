@@ -20,7 +20,6 @@ const QuickAction = ({ label, description, icon, href }: any) => (
 export default function AdminDashboardPage() {
   const { data: stats,  isLoading } = useAdminStats();
   const activityQuery = useAdminRecentActivity();
-  console.log("AdminDashboardPage activityQuery:", activityQuery.data);
 
   if (isLoading) {
     return (
