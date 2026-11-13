@@ -11,7 +11,7 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
             { error: auth.error},
             { status: auth.status }
         )
-    }
+    } 
     const { classId } = await context.params
     const result = await teacherServices.manageAttendance(req, auth.userId, classId as string);
     return result;

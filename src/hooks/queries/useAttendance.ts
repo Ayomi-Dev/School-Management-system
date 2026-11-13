@@ -3,6 +3,8 @@ import { teacherService } from "@/src/services/client/teacher";
 import { StudentAcademicSummaryResponse, UseStudentAcademicSummaryParams } from "@/src/types/api";
 import { AttendanceHistoryParams, MarkAttendancePayload } from "@/app/(protected)/dashboard/teacher/components/teacher";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getErrorMessage } from "@/src/utils/error";
+import { useToast } from "../useToast";
 
 export const attendanceKeys = {
   all: ['attendance'] as const,
@@ -13,9 +15,19 @@ export const attendanceKeys = {
 };
 
 export const useDailyRoster = (classId: string, date?: string) => {
+  const { error: showError } = useToast()
   return useQuery({
     queryKey: attendanceKeys.roster(classId, date),
-    queryFn: () => teacherService.getDailyRoster(classId, date),
+    queryFn: async () => {
+      try{
+        return await teacherService.getDailyRoster(classId, date)
+      }
+      catch(error) {
+        const message = getErrorMessage(error)
+        showError(message)
+        return null;
+      }
+    },
     enabled: !!classId,
     staleTime: 30 * 1000, // short — attendance is actively being edited
   });

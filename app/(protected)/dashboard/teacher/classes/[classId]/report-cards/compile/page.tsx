@@ -194,7 +194,7 @@ export default function CompileReportCardsPage() {
           {[
             { label: 'Total Students', value: meta.classCount, icon: <Users size={16} /> },
             { label: 'Compiled', value: meta.compiledCount, icon: <FileText size={16} /> },
-            { label: 'Published', value: meta.publishedCount, icon: <CheckCircle2 size={16} /> },
+            { label: 'Published by admin', value: meta.publishedCount, icon: <CheckCircle2 size={16} /> },
             {
               label: 'Pending',
               value: meta.classCount - meta.compiledCount,

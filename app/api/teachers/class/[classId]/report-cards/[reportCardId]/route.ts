@@ -21,7 +21,7 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
 
 
 export const PATCH = async(req: NextRequest, context: ClassParamsContext)  => {
-     const auth = await requireRoleForTenant(req, [Role.TEACHER, Role.ADMIN]);
+     const auth = await requireRoleForTenant(req, [Role.TEACHER]);
     if(!auth.success){
         return NextResponse.json(
             { error: auth.error },

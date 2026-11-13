@@ -129,10 +129,16 @@ export default function ClassDetailPage() {
               <ChevronRight size={14} className="text-purple-400" />
             </button>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm shrink-0">
-              <UserCog size={14} />
-              No teacher assigned
-            </span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm shrink-0">
+                <UserCog size={14} />
+                No teacher assigned
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm shrink-0">
+                <UserCog size={14} />
+                Assign Teacher
+              </span>
+            </div>
           )}
         </div>
       </Card>

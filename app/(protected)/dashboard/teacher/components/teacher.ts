@@ -358,11 +358,6 @@ export function buildClassNavSections(classId: string): NavSection[] {
               href: `${base}/report-cards/compile`,
               icon: '🔧',
             },
-            {
-              label: 'Publish',
-              href: `${base}/report-cards/publish`,
-              icon: '📤',
-            },
           ],
         },
         {

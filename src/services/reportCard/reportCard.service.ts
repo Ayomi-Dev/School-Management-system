@@ -42,18 +42,13 @@ export const reportCardServices = {
           return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
         }
  
-        // Authorization: class teacher only
         const classAssignment = await prisma.teacherClassAssignment.findUnique({
           where: { teacherId: teacher.id },
           select: { classId: true },
         });
         if (classAssignment?.classId !== classId) {
-          return NextResponse.json(
-            { error: 'Only the class teacher can compile report cards.' },
-            { status: 403 },
-          );
+          return NextResponse.json({ error: 'Only the class teacher can compile report cards.' }, { status: 403 });
         }
- 
       const body = await req.json();
       const parsed = compileSchema.safeParse(body);
       if (!parsed.success) {
@@ -598,6 +593,13 @@ export const reportCardServices = {
         { status: 400 },
       );
     }
+
+    if (parsed.data.action !== 'remark') {
+      return NextResponse.json(
+        { error: 'Only an admin can publish report cards.' },
+        { status: 403 },
+      );
+    }
  
     // ── remark ────────────────────────────────────────────────────────────
     if (parsed.data.action === 'remark') {
@@ -612,31 +614,7 @@ export const reportCardServices = {
       });
     }
  
-    // ── publish ───────────────────────────────────────────────────────────
-    if (existing.status === 'PUBLISHED') {
-      return NextResponse.json(
-        { error: 'This report card is already published.' },
-        { status: 409 },
-      );
-    }
- 
-    if (!existing.teacherRemark?.trim()) {
-      return NextResponse.json(
-        { error: 'Add a teacher remark before publishing.' },
-        { status: 400 },
-      );
-    }
- 
-    const published = await prisma.reportCard.update({
-      where: { id: reportCardId },
-      data: { status: 'PUBLISHED', publishedAt: new Date() },
-      select: { id: true, status: true, publishedAt: true },
-    });
- 
-    return NextResponse.json({
-      message: 'Report card published successfully.',
-      data: published,
-    });
+    return NextResponse.json({ error: 'Unsupported report card action.' }, { status: 400 });
   } catch (error) {
     console.error('[reportCardService.update]', error);
     return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });

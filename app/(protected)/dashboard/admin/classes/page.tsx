@@ -62,7 +62,7 @@ export default function ClassesPage() {
                 key={classItem.id}
                 className="hover:shadow-lg transition-all cursor-pointer group border border-transparent hover:border-blue-200"
               >
-              <div className="space-y-4" onClick={() => handleCardClick(classItem.id)}>
+              <div className="space-y-4">
                 {/* Class Header */}
                 <div className="flex items-start justify-between">
                   <div>
@@ -84,10 +84,6 @@ export default function ClassesPage() {
                         Unassigned
                       </span>
                     )}
-                    <ChevronRight
-                      size={16}
-                      className="text-gray-300 group-hover:text-blue-500 transition-colors"
-                    />
                   </div>
                 </div>
 
@@ -124,6 +120,11 @@ export default function ClassesPage() {
                   className="flex flex-col gap-2 pt-4 border-t border-gray-200"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  <div className="flex gap-2"  onClick={() => handleCardClick(classItem.id)}>
+                    <Button variant="outline" size="sm" className="flex-1 text-green-600 flex items-center justify-center gap-1">
+                      <UserCog size={14} /> View Details
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -151,6 +152,7 @@ export default function ClassesPage() {
                       <Trash2 size={14} /> Delete
                     </Button>
                   </div>
+                  
                 </div>
               </div>
               </Card>
