@@ -134,7 +134,7 @@ export function AttendanceCard({ attendance, isLoading, isError }: AttendanceCar
         <StatPill
           icon="📝"
           label="Unmarked"
-          value={attendance.unmarked as number}
+          value={attendance.unmarked }
           colorClass="text-gray-600 bg-gray-50 border-gray-200"
         />
       </div>

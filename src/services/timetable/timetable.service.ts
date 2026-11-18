@@ -3,9 +3,69 @@ import { SLOT_SELECT } from "@/src/lib/prisma/fields";
 import { resolveAdminSchool } from "@/src/utils/resolvers";
 import { createSlotSchema, updateSlotSchema } from "@/src/validators/timetable";
 import { NextRequest, NextResponse } from "next/server";
+import { Role } from "@prisma/client";
 
  
 export const timetableService = {
+
+  async getMyTimetable(userId: string, schoolId: string, role: Role, studentId?: string) {
+    try {
+      let classIds: string[] = [];
+      let teacherId: string | undefined;
+
+      if (role === Role.TEACHER) {
+        const teacher = await prisma.teacherProfile.findFirst({
+          where: { userId, schoolId },
+          select: { id: true },
+        });
+        if (!teacher) return NextResponse.json({ error: 'Teacher not found.' }, { status: 404 });
+        teacherId = teacher.id;
+      } else {
+        let studentProfileId = studentId;
+        if (role === Role.STUDENT) {
+          const student = await prisma.studentProfile.findFirst({
+            where: { userId, schoolId },
+            select: { id: true },
+          });
+          if (!student) return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
+          studentProfileId = student.id;
+        } else if (role === Role.PARENT) {
+          if (!studentId) return NextResponse.json({ error: 'Choose a student to view their timetable.' }, { status: 400 });
+          const guardian = await prisma.guardian.findUnique({ where: { userId }, select: { id: true } });
+          const student = guardian ? await prisma.studentProfile.findFirst({
+            where: { id: studentId, guardianId: guardian.id, schoolId },
+            select: { id: true },
+          }) : null;
+          if (!student) return NextResponse.json({ error: 'Student is not linked to this parent.' }, { status: 403 });
+          studentProfileId = student.id;
+        }
+
+        const enrollment = await prisma.enrollment.findFirst({
+          where: { studentId: studentProfileId, academicYear: { schoolId, isCurrent: true } },
+          select: { classId: true, class: { select: { id: true, level: true } } },
+        });
+        if (!enrollment) return NextResponse.json({ data: { classId: null, classLevel: null, slots: [] } });
+        classIds = [enrollment.classId];
+      }
+
+      const slots = await prisma.timetableSlot.findMany({
+        where: {
+          schoolId,
+          ...(teacherId ? { teacherId } : { classId: { in: classIds } }),
+        },
+        select: {
+          ...SLOT_SELECT,
+          class: { select: { level: true } },
+        },
+      });
+      const dayOrder: Record<string, number> = { MONDAY: 0, TUESDAY: 1, WEDNESDAY: 2, THURSDAY: 3, FRIDAY: 4 };
+      slots.sort((a, b) => dayOrder[a.dayOfWeek] - dayOrder[b.dayOfWeek] || a.startTime.localeCompare(b.startTime));
+      return NextResponse.json({ data: { slots } });
+    } catch (error) {
+      console.error('[timetableService.getMyTimetable]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
  
   // ───────────────────────────────────────────────────────────────────────────
   // GET /admin/classes/:classId/timetable

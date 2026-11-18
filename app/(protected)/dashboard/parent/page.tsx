@@ -8,6 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import { StudentCard } from './components/studentCard';
+import { MyTimetableCard } from '@/src/components/timetable/MyTimetableCard';
 
 
 
@@ -57,11 +58,19 @@ export default function ParentDashboard() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {students?.map((student, i) => (
-            <StudentCard key={student.studentId} student={student} index={i} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {students?.map((student, i) => (
+              <StudentCard key={student.studentId} student={student} index={i} />
+            ))}
+          </div>
+          <section className="space-y-4">
+            <div><h2 className="text-lg font-bold text-gray-900">Students’ Timetables</h2><p className="text-sm text-gray-500">View each child’s schedule for the selected day.</p></div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {students?.map((student) => <MyTimetableCard key={`timetable-${student.studentId}`} title={`${student.firstName}’s Timetable`} studentId={student.studentId} audience="parent" />)}
+            </div>
+          </section>
+        </>
       )}
     </div>
   );

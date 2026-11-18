@@ -7,6 +7,7 @@ import {
   useTeacherOverview
 } from '@/src/hooks/queries/useTeacher';
 import { ClassTeacherSection, SubjectTeacherSection } from './components/overviiew';
+import { MyTimetableCard } from '@/src/components/timetable/MyTimetableCard';
 
 
 
@@ -60,6 +61,8 @@ export default function TeacherDashboardPage() {
           })}
         </p>
       </div>
+
+      <MyTimetableCard title="Today’s Teaching Schedule" audience="teacher" />
 
       {/* Class teacher section — shown first, primary role */}
       {classSection && <ClassTeacherSection section={classSection} />}

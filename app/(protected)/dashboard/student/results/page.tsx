@@ -58,14 +58,14 @@ function ScoreRow({ score }: { score: ScoreRecord }) {
       {/* CA */}
       <td className="py-3 px-4 text-center">
         <span className="text-sm text-gray-700 font-medium">
-          {score.caScore !== null ? `${score.caScore}/40` : '—'}
+          {score.caScore !== null ? `${score.caScore}` : '—'}
         </span>
       </td>
 
       {/* Exam */}
       <td className="py-3 px-4 text-center">
         <span className="text-sm text-gray-700 font-medium">
-          {score.examScore !== null ? `${score.examScore}/60` : '—'}
+          {score.examScore !== null ? `${score.examScore}` : '—'}
         </span>
       </td>
 
@@ -156,8 +156,8 @@ export default function ResultsPage() {
   }, [allScores, activeCard]);
 
   // Summary stats for the active term
-  const publishedScores  = termScores.filter((s) => s.isPublished);
-  const scoredSubjects   = publishedScores.filter((s) => s.totalScore !== null);
+  const subjectScores  = termScores.filter((s) => s.subject);
+  const scoredSubjects   = subjectScores.filter((s) => s.totalScore !== null);
   const termAverage      = scoredSubjects.length > 0
     ? Math.round(scoredSubjects.reduce((acc, s) => acc + (s.totalScore ?? 0), 0) / scoredSubjects.length)
     : null;

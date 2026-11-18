@@ -29,6 +29,10 @@ export interface TimetableSlot {
   };
 }
 
+export interface MyTimetableSlot extends TimetableSlot {
+  class?: { level: string };
+}
+
 // Response shape from GET /admin/classes/:classId/timetable
 export interface ClassTimetable {
   classId:   string;

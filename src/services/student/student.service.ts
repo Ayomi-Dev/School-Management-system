@@ -212,7 +212,7 @@ export const studentService = {
       await Promise.all([
         // Scores — scoped to term when provided
         prisma.score.findMany({
-          where: { studentId: student.id, ...(includeUnpublished ? {} : { isPublished: true }), ...termFilter },
+          where: { studentId: student.id, ...termFilter },
           select: {
             id:          true,
             subjectId:   true,
@@ -306,7 +306,10 @@ export const studentService = {
       totalSessions > 0
         ? parseFloat((((presentCount + lateCount) / totalSessions) * 100).toFixed(1))
         : 0;
-    const scoresWithGrades = await Promise.all(scores.map(async (score) => {
+    const publishedTermIds = new Set(reportCards.filter((card) => card.status === 'PUBLISHED').map((card) => card.termId));
+    const scoresWithGrades = await Promise.all(scores
+      .filter((score) => includeUnpublished || score.isPublished || publishedTermIds.has(score.termId))
+      .map(async (score) => {
       const totalScore = score.totalScore ?? (
         score.caScore !== null && score.examScore !== null ? score.caScore + score.examScore : null
       );

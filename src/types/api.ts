@@ -306,7 +306,7 @@ export interface AttendanceSummary {
   present: number;
   absent: number;
   late: number;
-  unmarked?: number;
+  unmarked: number;
 }
  
 export interface ReportCardDetail {

@@ -1,10 +1,14 @@
 import { getApiClient } from "@/src/config/api";
 import { API_ENDPOINTS } from "@/src/config/constants";
-import { ClassTeacher, ClassTimetable, CreateTimetableSlotBody, CreateTimetableSlotResponse, UpdateTimetableSlotBody, UpdateTimetableSlotResponse } from "@/src/types/timetable";
+import { ClassTeacher, ClassTimetable, CreateTimetableSlotBody, CreateTimetableSlotResponse, MyTimetableSlot, UpdateTimetableSlotBody, UpdateTimetableSlotResponse } from "@/src/types/timetable";
 
 const client = getApiClient();
 
 export const timetableService = {
+  getMyTimetable: async (studentId?: string): Promise<{ slots: MyTimetableSlot[] }> => {
+    const res = await client.get(API_ENDPOINTS.GET_MY_TIMETABLE(), { params: studentId ? { studentId } : undefined });
+    return res.data.data;
+  },
   getTimetable: async (classId: string): Promise<ClassTimetable> => {
     const res = await client.get(API_ENDPOINTS.GET_TIMETABLE(classId));
     return res.data.data;
