@@ -10,5 +10,7 @@ export const GET = async (req: NextRequest) => {
   }
 
   const studentId = new URL(req.url).searchParams.get('studentId')?.trim() || undefined;
-  return timetableService.getMyTimetable(auth.userId, auth.schoolId, auth.role, studentId);
+  const { userId, schoolId, role } = auth
+  const timetable = await timetableService.getMyTimetable(userId, schoolId as string, role, studentId);
+  return timetable
 };
