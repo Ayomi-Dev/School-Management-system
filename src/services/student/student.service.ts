@@ -186,6 +186,7 @@ export const studentService = {
     schoolId: string,
     termId?: string,
     includeUnpublished = false,
+    classId?: string,
 ) {
   try {
     // ── 1. Verify student belongs to this school ──────────────────────────
@@ -201,6 +202,10 @@ export const studentService = {
     // All four queries now apply the same termId filter so the summary is
     // always scoped consistently — either to a specific term or all-time.
     const termFilter = termId ? { termId } : {};
+    if (classId) {
+      const classRecord = await prisma.class.findFirst({ where: { id: classId, schoolId }, select: { id: true } });
+      if (!classRecord) return NextResponse.json({ error: 'Class not found for this school.' }, { status: 404 });
+    }
 
     // ── 3. Parallel queries ───────────────────────────────────────────────
     const [scores, attendanceCounts, reportCards, enrollments] =
@@ -237,9 +242,10 @@ export const studentService = {
           by: ['status'],
           where: {
             studentId: student.id,
-            ...(termId
-              ? { session: { termId } } // scope to term via ClassSession
-              : {}),
+            session: {
+              ...(termId ? { termId } : {}),
+              ...(classId ? { classId } : {}),
+            },
           },
           _count: { status: true },
         }),
@@ -289,7 +295,11 @@ export const studentService = {
     const lateCount     = countFor('LATE');
     const absentCount   = countFor('ABSENT');
     const unmarkedCount = countFor('UNMARKED');
-    const totalSessions = presentCount + lateCount + absentCount + unmarkedCount;
+    const totalSessions = classId
+      ? await prisma.classSession.count({
+          where: { classId, ...(termId ? { termId } : {}) },
+        })
+      : presentCount + lateCount + absentCount + unmarkedCount;
 
     // attendanceRate is always a number (0 when no sessions) — never a string
     const attendanceRate =

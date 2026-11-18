@@ -944,6 +944,7 @@ export const adminServices = {
           principalRemark: true,
           publishedAt:     true,
           termId:          true,
+          academicYearId:  true,
           createdAt:       true,
           updatedAt:       true,
           student: {
@@ -954,11 +955,6 @@ export const adminServices = {
               studentNumber: true,
               gender:        true,
               schoolId:      true,
-              enrollments: {
-                orderBy: { enrolledAt: 'desc' },
-                take:    1,
-                select:  { classId: true, class: { select: { level: true } } },
-              },
             },
           },
           term: {
@@ -971,7 +967,11 @@ export const adminServices = {
         return NextResponse.json({ error: 'Report card not found.' }, { status: 404 });
       }
  
-      const classId = card.student.enrollments[0]?.classId;
+      const termEnrollment = await prisma.enrollment.findFirst({
+        where: { studentId: card.student.id, academicYearId: card.academicYearId },
+        select: { classId: true, class: { select: { level: true } } },
+      });
+      const classId = termEnrollment?.classId;
  
       // Subject scores — complete ones only (matching what compile included)
       const scores = await prisma.score.findMany({
@@ -998,7 +998,7 @@ export const adminServices = {
       // made after the initial compile.
       const sessions = classId
         ? await prisma.classSession.findMany({
-            where:  { classId, termId: card.termId, label: 'daily' },
+            where:  { classId, termId: card.termId },
             select: { id: true },
           })
         : [];
@@ -1037,7 +1037,7 @@ export const adminServices = {
               period:       card.term.period,
               academicYear: card.term.academicYear.label,
             },
-            classLevel: card.student.enrollments[0]?.class.level ?? null,
+            classLevel: termEnrollment?.class.level ?? null,
           },
           student: {
             id:            card.student.id,

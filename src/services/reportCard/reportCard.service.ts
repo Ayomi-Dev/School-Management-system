@@ -557,7 +557,7 @@ export const reportCardServices = {
     // Attendance summary — recomputed fresh so it reflects any corrections
     // made after the initial compile.
     const sessions = await prisma.classSession.findMany({
-      where: { classId, termId: card.termId, label: 'daily' },
+      where: { classId, termId: card.termId },
       select: { id: true },
     });
     const attendanceRows = await prisma.attendance.findMany({

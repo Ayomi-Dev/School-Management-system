@@ -198,10 +198,11 @@ export const adminService = {
     userId: string,
     schoolId: string,
     termId?: string,
+    classId?: string,
   ): Promise<StudentAcademicSummaryResponse> => {
     const res = await client.get(
       API_ENDPOINTS.GET_STUDENT_ACADEMIC_SUMMARY(userId),
-      { params: { schoolId, ...(termId && { termId }) } },
+      { params: { schoolId, ...(termId && { termId }), ...(classId && { classId }) } },
     );
     return res.data;
   },

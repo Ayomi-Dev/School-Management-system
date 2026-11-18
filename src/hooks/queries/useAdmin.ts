@@ -34,7 +34,7 @@ export const queryKeys = {
   settings: () => [...queryKeys.admin, 'settings'],
   teachers: () => [...queryKeys.admin, 'teachers'],
   reportCard:       (reportCardId: string) => ['admin-report-card', reportCardId] as const,
-  academicSummary: (userId: string, termId?: string) => ['admin-academic-summary', userId, termId ?? 'all'] as const,
+  academicSummary: (userId: string, termId?: string, classId?: string) => ['admin-academic-summary', userId, termId ?? 'all', classId ?? 'all-classes'] as const,
   academicSummaryPrefix: (userId: string) => ['admin-academic-summary', userId] as const,
   classScoreSheet: (classId: string) => ['admin-class-scoresheet', classId] as const,
   parentsList: ()=> ['admin-parents-list'] as const,
@@ -314,6 +314,27 @@ export const useUpdateReportCardMutation = (reportCardId: string, userId?: strin
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card updated');
+    },
+  });
+};
+
+export const useSaveReportCardPrincipalRemark = (userId: string) => {
+  const queryClient = useQueryClient();
+  const { success, error: showError } = useToast();
+  return useMutation({
+    mutationFn: async ({ reportCardId, principalRemark }: { reportCardId: string; principalRemark: string }) => {
+      try {
+        return await adminService.updateReportCard(reportCardId, { principalRemark });
+      } catch (error) {
+        showError(getErrorMessage(error));
+        return null;
+      }
+    },
+    onSuccess: (data, variables) => {
+      if (!data) return;
+      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummaryPrefix(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(variables.reportCardId) });
+      success('Principal remark saved.');
     },
   });
 };
@@ -649,13 +670,14 @@ export const useStudentAcademicSummary = (
   enabled: boolean,
   schoolId: string,
   termId?: string,
+  classId?: string,
 ) => {
     const { error: showError } = useToast();
     return useQuery({
-      queryKey: queryKeys.academicSummary(userId, termId),
+      queryKey: queryKeys.academicSummary(userId, termId, classId),
       queryFn: async() => {
         try {
-          return await adminService.getStudentAcademicSummary(userId, schoolId, termId)
+          return await adminService.getStudentAcademicSummary(userId, schoolId, termId, classId)
         } 
         catch (error) {
           const message = getErrorMessage(error);

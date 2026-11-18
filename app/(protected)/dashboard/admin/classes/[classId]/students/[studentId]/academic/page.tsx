@@ -2,8 +2,8 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle2, FileText, Send, Undo2 } from 'lucide-react';
-import { useStudentAcademicSummary, useAdminPublishReportCardMutation, useAdminUnpublishReportCardMutation } from '@/src/hooks/queries/useAdmin';
+import { ArrowLeft, CheckCircle2, FileText, Save, Send, Undo2 } from 'lucide-react';
+import { useStudentAcademicSummary, useAdminPublishReportCardMutation, useAdminUnpublishReportCardMutation, useSaveReportCardPrincipalRemark } from '@/src/hooks/queries/useAdmin';
 import { useTerms } from '@/src/hooks/queries/useAcademic';
 import { useAuthStore } from '@/src/stores/authStore';
 import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
@@ -17,16 +17,17 @@ export default function StudentAcademicReportsPage() {
   const router = useRouter();
   const schoolId = useAuthStore((state) => state.user?.schoolId ?? '');
   const [termId, setTermId] = useState('');
-  const { data, isLoading, isError } = useStudentAcademicSummary(studentId, true, schoolId, termId || undefined);
+  const [principalRemarks, setPrincipalRemarks] = useState<Record<string, string>>({});
+  const { data, isLoading, isError } = useStudentAcademicSummary(studentId, true, schoolId, termId || undefined, classId);
   const { data: terms = [] } = useTerms();
   const publishMutation = useAdminPublishReportCardMutation(studentId);
   const unpublishMutation = useAdminUnpublishReportCardMutation(studentId);
+  const savePrincipalRemark = useSaveReportCardPrincipalRemark(studentId);
 
   if (isLoading) return <div className="flex min-h-80 items-center justify-center"><Loader /></div>;
   if (isError || !data?.data) return <Card><p className="py-10 text-center text-sm text-red-600">Could not load this student’s academic reports.</p></Card>;
 
   const summary = data.data;
-  console.log('summary', summary);
   const currentTermId = terms?.find((term) => term.isCurrent)?.id;
   const reports = summary.reportCards as ReportCard[];
   const scores = summary.scores as ScoreRecord[];
@@ -61,11 +62,27 @@ export default function StudentAcademicReportsPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <ReportCardDownloadButton reportCardId={report.id} />
-                {isCurrent && report.status === 'DRAFT' && <Button variant="primary" size="sm" className="flex items-center gap-1.5" disabled={publishMutation.isPending} onClick={() => publishMutation.mutate(report.id)}><Send size={14} />Publish</Button>}
+                {isCurrent && report.status === 'DRAFT' && <Button variant="primary" size="sm" className="flex items-center gap-1.5" disabled={publishMutation.isPending || !report.principalRemark?.trim()} onClick={() => publishMutation.mutate(report.id)}><Send size={14} />Publish</Button>}
                 {isCurrent && report.status === 'PUBLISHED' && <Button variant="outline" size="sm" className="flex items-center gap-1.5" disabled={unpublishMutation.isPending} onClick={() => unpublishMutation.mutate(report.id)}><Undo2 size={14} />Unpublish</Button>}
                 {report.status === 'PUBLISHED' && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} />Published</span>}
               </div>
             </div>
+            {report.status === 'DRAFT' && isCurrent && <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50/50 p-4">
+              <label htmlFor={`principal-remark-${report.id}`} className="block text-sm font-medium text-gray-800">Principal’s remark <span className="text-red-600">*</span></label>
+              <textarea
+                id={`principal-remark-${report.id}`}
+                rows={3}
+                value={principalRemarks[report.id] ?? report.principalRemark ?? ''}
+                onChange={(event) => setPrincipalRemarks((current) => ({ ...current, [report.id]: event.target.value }))}
+                placeholder="Add the principal’s remark before publishing this report card."
+                className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              />
+              <div className="mt-2 flex justify-end">
+                <Button variant="outline" size="sm" disabled={savePrincipalRemark.isPending || !(principalRemarks[report.id] ?? report.principalRemark ?? '').trim() || (principalRemarks[report.id] ?? report.principalRemark ?? '') === (report.principalRemark ?? '')} onClick={() => savePrincipalRemark.mutate({ reportCardId: report.id, principalRemark: principalRemarks[report.id] ?? report.principalRemark ?? '' })}>
+                  <Save size={14} /> Save remark
+                </Button>
+              </div>
+            </div>}
             <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
               <table className="w-full min-w-160 text-sm">
                 <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500"><tr><th className="px-4 py-2.5">Subject</th><th className="px-4 py-2.5 text-center">CA</th><th className="px-4 py-2.5 text-center">Exam</th><th className="px-4 py-2.5 text-center">Total</th><th className="px-4 py-2.5 text-center">Grade</th><th className="px-4 py-2.5">Remark</th></tr></thead>

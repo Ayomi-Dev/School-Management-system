@@ -75,7 +75,7 @@ export function AttendanceCard({ attendance, isLoading, isError }: AttendanceCar
     );
   }
 
-  const pct          = attendance.rate;
+  const pct = attendance.rate;
   const bannerConfig = getBannerConfig(pct);
 
   return (
@@ -134,7 +134,7 @@ export function AttendanceCard({ attendance, isLoading, isError }: AttendanceCar
         <StatPill
           icon="📝"
           label="Unmarked"
-          value={attendance.unmarked}
+          value={attendance.unmarked as number}
           colorClass="text-gray-600 bg-gray-50 border-gray-200"
         />
       </div>

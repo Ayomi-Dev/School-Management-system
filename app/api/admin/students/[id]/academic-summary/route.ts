@@ -15,8 +15,9 @@ export const GET = async(req:NextRequest, context: ParamsContext) => {
     }
     const { searchParams } = new URL(req.url);
     const termId = searchParams.get("termId")?.trim();
+    const classId = searchParams.get("classId")?.trim();
     const { id } = await context.params
     const { schoolId } = auth
-    const result = await studentService.getStudentAcademicSummary(id as string, schoolId as string, termId, true);
+    const result = await studentService.getStudentAcademicSummary(id as string, schoolId as string, termId, true, classId);
     return result;
 }
