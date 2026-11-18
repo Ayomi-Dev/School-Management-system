@@ -107,6 +107,7 @@ export const reportCardServices = {
         });
         if (classAssignment?.classId !== classId) {
           return NextResponse.json({ error: 'Only the class teacher can compile report cards.' }, { status: 403 });
+          return NextResponse.json({ error: 'Only the class teacher can compile report cards.' }, { status: 403 });
         }
       const body = await req.json();
       const parsed = compileSchema.safeParse(body);

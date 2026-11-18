@@ -30,9 +30,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (keep examples available for onboarding)
-.env*
 !.env.example
 !.env.*.example
+.env
 
 # vercel
 .vercel

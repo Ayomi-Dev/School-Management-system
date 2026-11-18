@@ -454,7 +454,7 @@ export const teacherServices = {
       const term = await prisma.term.findFirst({
         where: { isCurrent: true, academicYear: { schoolId: teacherProfile.schoolId, isCurrent: true } },
         orderBy: { academicYear: { startDate: 'desc' } },
-        select: { id: true, academicYearId: true, period: true },
+        select: { id: true, academicYearId: true, period: true }
       });
       if (!term) {
         return NextResponse.json({ error: 'No active term found for this school.' }, { status: 400 });
@@ -498,6 +498,8 @@ export const teacherServices = {
       });
       console.log("term:", term, 'enrollments:', enrollments, 'session:', session)
 
+      console.log("term:", term, 'enrollments:', enrollments, 'session:', session)
+
    
       if (enrollments.length === 0) {
         return NextResponse.json({
@@ -512,6 +514,7 @@ export const teacherServices = {
         select: { id: true, studentId: true, status: true, remark: true },
       });
       const attendanceByStudent = new Map(existingAttendance.map((a) => [a.studentId, a]));
+      console.log("existingAttendance:", existingAttendance)
       console.log("existingAttendance:", existingAttendance)
       // Students enrolled but with no Attendance row yet (first time this
       // session has been opened) — create UNMARKED rows for them now so the
@@ -550,6 +553,7 @@ export const teacherServices = {
           remark: attendance.remark,
         };
       });
+      console.log("roster:", roster)
       console.log("roster:", roster)
    
       return NextResponse.json({

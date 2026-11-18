@@ -29,6 +29,7 @@ export default function MarkAttendancePage() {
 
   const { data: attendanceData, isLoading, error } = useDailyRoster(classId, dateParam);
   const { mutate: saveMutate, isPending: isSaving } = useMarkAttendance(classId);
+  console.log("attendanceData:", attendanceData)
 
   // Local draft state: studentId -> { status, remark }. Seeded from the
   // fetched roster, then edited client-side until "Save" is pressed — this
