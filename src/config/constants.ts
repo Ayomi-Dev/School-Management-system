@@ -78,6 +78,8 @@ export const API_ENDPOINTS = {
   GET_TIMETABLE: (classId: string) =>
     `/api/admin/classes/${classId}/timetable`,
   GET_MY_TIMETABLE: () => '/api/timetable/my',
+  ADMIN_ANNOUNCEMENTS: '/api/admin/announcements',
+  DASHBOARD_ANNOUNCEMENTS: '/api/announcements',
  
   /** GET  /admin/classes/:classId/timetable/teachers */
   GET_CLASS_TEACHERS: (classId: string) =>

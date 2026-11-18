@@ -14,6 +14,7 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { useEffect, useState } from 'react';
 import { useAcademicYearsList, useExtractEnrollment } from '@/src/hooks/queries/useAcademic';
 import { useStudentAcademicSummary } from '@/src/hooks/queries/useAcademic';
+import { AnnouncementFeed } from '@/src/components/announcements/AnnouncementFeed';
 
 
 const StudentDashboardPage = ( ) => {
@@ -68,6 +69,7 @@ const StudentDashboardPage = ( ) => {
       </div>
       {/* Timetable Section */}
       <TimetableCard />
+      <AnnouncementFeed />
       {/* Attendance and Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AttendanceCard attendance={attendance}

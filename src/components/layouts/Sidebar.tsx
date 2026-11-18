@@ -50,6 +50,11 @@ const adminNavItems: NavItem[] = [
     icon: '⏰',
   },
   {
+    label: 'Announcements',
+    href: '/dashboard/admin/announcements',
+    icon: '📣',
+  },
+  {
     label: 'Reports',
     href: '#',
     icon: '📈',

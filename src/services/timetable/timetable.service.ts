@@ -34,7 +34,7 @@ export const timetableService = {
           const guardian = await prisma.guardian.findUnique({ where: { userId }, select: { id: true } });
           const student = guardian ? await prisma.studentProfile.findFirst({
             where: { id: studentId, guardianId: guardian.id, schoolId },
-            select: { id: true },
+            select: { id: true }, 
           }) : null;
           if (!student) return NextResponse.json({ error: 'Student is not linked to this parent.' }, { status: 403 });
           studentProfileId = student.id;
