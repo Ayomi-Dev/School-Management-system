@@ -197,7 +197,7 @@ export default function TimetableSlotModal({
                   </option> 
                 ))}
               </select>
-            )}
+            )} 
             {errors.teacherId && (
               <p className="text-xs text-red-500 mt-1">{errors.teacherId.message}</p>
             )}

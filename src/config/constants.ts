@@ -76,26 +76,26 @@ export const API_ENDPOINTS = {
   //Timetable
   /** GET  /admin/classes/:classId/timetable */
   GET_TIMETABLE: (classId: string) =>
-    `/api/admin/classes/${classId}/timetable`,
+    `/api/classes/${classId}/timetable`,
   GET_MY_TIMETABLE: () => '/api/timetable/my',
   ADMIN_ANNOUNCEMENTS: '/api/admin/announcements',
   DASHBOARD_ANNOUNCEMENTS: '/api/announcements',
  
   /** GET  /admin/classes/:classId/timetable/teachers */
   GET_CLASS_TEACHERS: (classId: string) =>
-    `/api/admin/classes/${classId}/timetable/teachers`,
+    `/api/classes/${classId}/timetable/teachers`,
  
   /** POST /admin/classes/:classId/timetable */
   CREATE_SLOT: (classId: string) =>
-    `/api/admin/classes/${classId}/timetable`,
+    `/api/classes/${classId}/timetable`,
  
   /** PATCH /admin/classes/:classId/timetable/:slotId */
   UPDATE_SLOT: (classId: string, slotId: string) =>
-    `/api/admin/classes/${classId}/timetable/${slotId}`,
+    `/api/classes/${classId}/timetable/${slotId}`,
  
   /** DELETE /admin/classes/:classId/timetable/:slotId */
   DELETE_SLOT: (classId: string, slotId: string) =>
-    `/api/admin/classes/${classId}/timetable/${slotId}`,
+    `/api/classes/${classId}/timetable/${slotId}`,
 
   //Admin - Students
   ADMIN_GET_ACADEMIC_SUMMARY: (userId: string) =>  `/api/admin/students/${userId}/academic-summary`,

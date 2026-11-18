@@ -40,7 +40,39 @@ export default function AdminAnnouncementsPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">Published updates</h2>
-        {isLoading ? <div className="flex justify-center py-10"><Loader /></div> : isError ? <Card><p className="py-6 text-center text-sm text-red-600">Could not load published updates.</p></Card> : announcements.length === 0 ? <Card><p className="py-6 text-center text-sm text-gray-500">No announcements have been published yet.</p></Card> : announcements.map((item) => <Card key={item.id} className="p-5"><div className="flex items-start gap-3"><span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700"><Bell size={16} /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold text-gray-900">{item.title}</h3><span className="text-xs text-gray-400">{item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'Not published'}</span></div><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-600">{item.body}</p><p className="mt-3 text-xs text-gray-400">Published by {item.author.firstName} {item.author.lastName}</p></div></div></Card>)}
+        {isLoading ? 
+          <div className="flex justify-center py-10"><Loader /></div>
+           : 
+          isError ? 
+          <Card>
+          <p className="py-6 text-center text-sm text-red-600">
+            Could not load published updates.
+          </p>
+          </Card> : 
+            announcements?.length === 0 
+            ? 
+          <Card>
+            <p className="py-6 text-center text-sm text-gray-500">
+              No announcements have been published yet.
+            </p>
+          </Card> : 
+          announcements?.map((item) => <Card key={item.id} className="p-5">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+                <Bell size={16} /></span><div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-gray-900">
+                      {item.title}
+                    </h3>
+                    <span className="text-xs text-gray-400">
+                      {item.publishedAt ? new Date(item.publishedAt).toLocaleString() : 'Not published'}
+                    </span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-600">{item.body}</p>
+                  <p className="mt-3 text-xs text-gray-400">Published by {item.author.firstName} {item.author.lastName}</p>
+                </div>
+            </div>
+          </Card>)}
       </section>
     </div>
   );
