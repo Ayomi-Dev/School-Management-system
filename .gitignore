@@ -32,7 +32,6 @@ yarn-error.log*
 # env files (keep examples available for onboarding)
 !.env.example
 !.env.*.example
-.env
 
 # vercel
 .vercel
