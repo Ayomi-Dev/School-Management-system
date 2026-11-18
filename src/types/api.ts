@@ -277,6 +277,11 @@ export interface ReportCardListResponse {
     pending: PendingStudent[];
     meta: {
       termId: string;
+      termLabel: string;
+      academicYearId: string;
+      academicYearLabel: string;
+      availableAcademicYears: { id: string; label: string }[];
+      availableTerms: { id: string; period: string }[];
       classCount: number;
       compiledCount: number;
       publishedCount: number;
@@ -293,6 +298,7 @@ export interface ScoreEntry {
   totalScore: number | null;
   grade: string | null;
   gradeRemark: string | null;
+  isPublished?: boolean;
 }
  
 export interface AttendanceSummary {
@@ -300,12 +306,14 @@ export interface AttendanceSummary {
   present: number;
   absent: number;
   late: number;
+  unmarked?: number;
 }
  
 export interface ReportCardDetail {
   data: {
     reportCard: {
       id: string;
+      termId: string;
       status: ReportCardStatus;
       totalScore: number | null;
       average: number | null;

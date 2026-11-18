@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Search,
   Download,
+  CreditCard,
 } from 'lucide-react';
 import type { ClassDetail, ScoreSheet } from '@/src/types/admin';
 import { useClassDetail, useClassScoreSheet } from '@/src/hooks/queries/useClasses';
@@ -196,7 +197,8 @@ export default function ClassDetailPage() {
           enrollments={filteredStudents}
           search={studentSearch}
           onSearchChange={setStudentSearch}
-          onStudentClick={(userId) => router.push(`/dashboard/admin/users/${userId}`)}
+          onStudentClick={(userId) => router.push(`/dashboard/admin/classes/${classId}/students/${userId}/academic`)}
+          onPaymentHistoryClick={(studentId) => router.push(`/dashboard/admin/classes/${classId}/students/${studentId}/payments`)}
         />
       )}
       {activeTab === 'subjects' && <SubjectsTab subjects={classDetail.subjects} />}
@@ -218,11 +220,13 @@ function StudentsTab({
   search,
   onSearchChange,
   onStudentClick,
+  onPaymentHistoryClick,
 }: {
   enrollments: ClassDetail['enrollments'];
   search: string;
   onSearchChange: (v: string) => void;
   onStudentClick: (userId: string) => void;
+  onPaymentHistoryClick: (studentId: string) => void;
 }) {
   const statusColor: Record<string, string> = {
     ACTIVE: 'bg-green-100 text-green-800',
@@ -259,18 +263,15 @@ function StudentsTab({
             const u = enrollment.student.user;
             const initials = `${u.firstName[0]}${u.lastName[0]}`.toUpperCase();
             return (
-              <button
+              <div
                 key={enrollment.id}
-                onClick={() => onStudentClick(u.id)}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-left group"
+                className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white"
               >
                 <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-400 to-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0">
                   {initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
-                    {u.firstName} {u.lastName}
-                  </p>
+                  <button onClick={() => onStudentClick(u.id)} className="text-left text-sm font-semibold text-gray-900 hover:text-blue-700 hover:underline truncate">{u.firstName} {u.lastName}</button>
                   {enrollment.student.studentNumber && (
                     <p className="text-xs text-gray-500 truncate">{enrollment.student.studentNumber}</p>
                   )}
@@ -278,8 +279,11 @@ function StudentsTab({
                     {u.status}
                   </span>
                 </div>
-                <ChevronRight size={15} className="text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
-              </button>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <button onClick={() => onStudentClick(u.id)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50"><FileSpreadsheet size={12} /> Academic reports</button>
+                  <button onClick={() => onPaymentHistoryClick(enrollment.student.id)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"><CreditCard size={12} /> Payment history</button>
+                </div>
+              </div>
             );
           })}
         </div>

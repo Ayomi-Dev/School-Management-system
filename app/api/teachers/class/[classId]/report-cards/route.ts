@@ -14,6 +14,10 @@ export const GET = async(req: NextRequest, context: ClassParamsContext) => {
     }
     const { classId } = await context.params
     const { userId } = auth;
-    const result = await reportCardServices.getReportCards(userId, classId as string);
+    const { searchParams } = new URL(req.url);
+    const result = await reportCardServices.getReportCards(userId, classId as string, {
+        academicYearId: searchParams.get('academicYearId') ?? undefined,
+        termId: searchParams.get('termId') ?? undefined,
+    });
     return result;
 }

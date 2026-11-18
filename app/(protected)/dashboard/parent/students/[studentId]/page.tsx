@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useStudentSummary } from '@/src/hooks/queries/useParent';
 import type { ParentScoreRecord, ParentReportCardSummary } from '@/src/types/parent';
 import { Loader } from '@/src/components/ui/Loader';
+import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
 import {
   ArrowLeft,
   GraduationCap,
@@ -395,6 +396,13 @@ function AttendanceTab({
 
 function ReportCardsTab({ reportCards }: { reportCards: ParentReportCardSummary[] }) {
   const router = useRouter();
+  const [yearId, setYearId] = useState('');
+  const [termId, setTermId] = useState('');
+  const years = Array.from(new Map(reportCards.map((card) => [card.academicYear.id, card.academicYear.label])).entries());
+  const visibleCards = reportCards.filter((card) =>
+    (!yearId || card.academicYear.id === yearId) && (!termId || card.termId === termId),
+  );
+  const terms = reportCards.filter((card) => !yearId || card.academicYear.id === yearId);
 
   if (reportCards.length === 0) {
     return (
@@ -405,12 +413,25 @@ function ReportCardsTab({ reportCards }: { reportCards: ParentReportCardSummary[
   }
 
   return (
-    <div className="space-y-3">
-      {reportCards.map((rc) => (
-        <button
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 rounded-xl border border-gray-100 bg-white p-4">
+        <label className="flex flex-col gap-1 text-xs font-medium text-gray-500">Academic Year
+          <select value={yearId} onChange={(event) => { setYearId(event.target.value); setTermId(''); }} className="min-w-40 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800">
+            <option value="">All Years</option>{years.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-medium text-gray-500">Term
+          <select value={termId} onChange={(event) => setTermId(event.target.value)} className="min-w-40 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800">
+            <option value="">All Terms</option>{terms.map((card) => <option key={card.id} value={card.termId}>{card.term.period} — {card.academicYear.label}</option>)}
+          </select>
+        </label>
+      </div>
+      {visibleCards.length === 0 ? (
+        <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-400">No report cards match these filters.</div>
+      ) : visibleCards.map((rc) => (
+        <div
           key={rc.id}
-          onClick={() => router.push(`/parent/report-cards/${rc.id}`)}
-          className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-200 hover:bg-emerald-50/30 transition-all group text-left"
+          className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
         >
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
             <FileText size={18} className="text-emerald-600" />
@@ -429,13 +450,17 @@ function ReportCardsTab({ reportCards }: { reportCards: ParentReportCardSummary[
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <ReportCardDownloadButton reportCardId={rc.id} compact />
+            <button onClick={() => router.push(`/parent/report-cards/${rc.id}`)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+              View
+            </button>
             <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
               <CheckCircle2 size={10} />
               Published
             </span>
             <ChevronRight size={15} className="text-gray-300 group-hover:text-emerald-500 transition-colors" />
           </div>
-        </button>
+        </div>
       ))}
     </div>
   );

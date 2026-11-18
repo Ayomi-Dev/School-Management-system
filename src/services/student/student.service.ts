@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma/client";
 import { updateStudentSchema, listStudentsQuerySchema } from "@/src/validators/studentSchema";
 import { buildPaginationMeta, paginationArgs } from "@/src/utils/pagination";
+import { resolveGrade } from '@/src/utils/grading';
 
 // ============================================================
 // STUDENT SERVICE
@@ -184,6 +185,7 @@ export const studentService = {
     studentProfileId: string,
     schoolId: string,
     termId?: string,
+    includeUnpublished = false,
 ) {
   try {
     // ── 1. Verify student belongs to this school ──────────────────────────
@@ -205,7 +207,7 @@ export const studentService = {
       await Promise.all([
         // Scores — scoped to term when provided
         prisma.score.findMany({
-          where: { studentId: student.id, ...termFilter },
+          where: { studentId: student.id, ...(includeUnpublished ? {} : { isPublished: true }), ...termFilter },
           select: {
             id:          true,
             subjectId:   true,
@@ -244,7 +246,7 @@ export const studentService = {
 
         // Report cards — scoped to term when provided
         prisma.reportCard.findMany({
-          where: { studentId: student.id, ...termFilter },
+          where: { studentId: student.id, ...(includeUnpublished ? {} : { status: 'PUBLISHED' }), ...termFilter },
           select: {
             id:              true,
             termId:          true,
@@ -294,11 +296,20 @@ export const studentService = {
       totalSessions > 0
         ? parseFloat((((presentCount + lateCount) / totalSessions) * 100).toFixed(1))
         : 0;
+    const scoresWithGrades = await Promise.all(scores.map(async (score) => {
+      const totalScore = score.totalScore ?? (
+        score.caScore !== null && score.examScore !== null ? score.caScore + score.examScore : null
+      );
+      if (score.grade || totalScore === null) return { ...score, totalScore };
+      const resolved = await resolveGrade(schoolId, totalScore);
+      return { ...score, totalScore, grade: resolved.grade, gradeRemark: score.gradeRemark ?? resolved.gradeRemark };
+    }));
+
     return NextResponse.json({
       data: {
         student,
         enrollments,
-        scores,
+        scores: scoresWithGrades,
         attendance: {
           total:    totalSessions,
           present:  presentCount,

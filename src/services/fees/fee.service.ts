@@ -521,7 +521,11 @@ export const feeServices = {
    )
   },
  
-  async getStudentPaymentHistory(schoolId: string, studentId: string) {
+  async getStudentPaymentHistory(schoolId: string, studentId: string, termId?: string) {
+    if (termId) {
+      const term = await prisma.term.findFirst({ where: { id: termId, academicYear: { schoolId } }, select: { id: true } });
+      if (!term) return NextResponse.json({ error: 'Term not found for this school.' }, { status: 404 });
+    }
     const student = await prisma.studentProfile.findFirst({
       where:  { id: studentId, schoolId },
       select: { id: true },
@@ -530,7 +534,7 @@ export const feeServices = {
       return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
     }
     const history = await prisma.feePayment.findMany({
-      where: { studentId, term: { academicYear: { schoolId } } },
+      where: { studentId, term: { academicYear: { schoolId } }, ...(termId ? { termId } : {}) },
       include: {
         student: { select: { id: true, firstName: true, lastName: true, studentNumber: true } },
         term: { select: { id: true, period: true, academicYear: { select: { label: true } } } },

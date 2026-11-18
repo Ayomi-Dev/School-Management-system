@@ -2,6 +2,7 @@ import { prisma } from "@/src/lib/prisma/client";
 import { ReportCardStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { compileSchema, updateReportCardSchema } from "@/src/validators/reportCardSchema";
+import { resolveGrade } from '@/src/utils/grading';
 
 // ============================================================
 // TYPES
@@ -32,6 +33,64 @@ export interface UpdateReportCardInput {
 
 export const reportCardServices = {
 
+  async getStudentReportSheet(teacherUserId: string, classId: string, studentId: string) {
+    try {
+      const teacher = await prisma.teacherProfile.findUnique({
+        where: { userId: teacherUserId },
+        select: { id: true, schoolId: true },
+      });
+      if (!teacher) return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
+      const assignment = await prisma.teacherClassAssignment.findUnique({
+        where: { teacherId: teacher.id },
+        select: { classId: true },
+      });
+      if (assignment?.classId !== classId) {
+        return NextResponse.json({ error: 'Only the class teacher can view this report sheet.' }, { status: 403 });
+      }
+      const term = await prisma.term.findFirst({
+        where: { isCurrent: true, academicYear: { schoolId: teacher.schoolId, isCurrent: true } },
+        orderBy: { academicYear: { startDate: 'desc' } },
+        select: { id: true, period: true, academicYearId: true, academicYear: { select: { label: true } } },
+      });
+      if (!term) return NextResponse.json({ error: 'No active term found for this school.' }, { status: 400 });
+      const enrollment = await prisma.enrollment.findFirst({
+        where: { studentId, classId, academicYearId: term.academicYearId },
+        select: { student: { select: { id: true, firstName: true, lastName: true, studentNumber: true } } },
+      });
+      if (!enrollment) return NextResponse.json({ error: 'Student is not enrolled in this class for the current academic year.' }, { status: 404 });
+
+      const [subjects, scores, reportCard] = await Promise.all([
+        prisma.subject.findMany({ where: { classId }, select: { id: true, name: true, code: true }, orderBy: { name: 'asc' } }),
+        prisma.score.findMany({
+          where: { studentId, termId: term.id, subject: { classId } },
+          select: { subjectId: true, caScore: true, examScore: true, totalScore: true, grade: true, gradeRemark: true },
+        }),
+        prisma.reportCard.findUnique({
+          where: { studentId_termId: { studentId, termId: term.id } },
+          select: { id: true, status: true, average: true, totalScore: true, position: true, teacherRemark: true },
+        }),
+      ]);
+      const scoresWithGrades = await Promise.all(scores.map(async (score) => {
+        const totalScore = score.totalScore ?? (
+          score.caScore !== null && score.examScore !== null ? score.caScore + score.examScore : null
+        );
+        if (score.grade || totalScore === null) return { ...score, totalScore };
+        const resolved = await resolveGrade(teacher.schoolId, totalScore);
+        return { ...score, totalScore, grade: resolved.grade, gradeRemark: score.gradeRemark ?? resolved.gradeRemark };
+      }));
+      const scoreBySubject = new Map(scoresWithGrades.map((score) => [score.subjectId, score]));
+      return NextResponse.json({ data: {
+        student: enrollment.student,
+        term: { id: term.id, period: term.period, academicYear: term.academicYear.label },
+        subjects: subjects.map((subject) => ({ ...subject, score: scoreBySubject.get(subject.id) ?? null })),
+        reportCard,
+      } });
+    } catch (error) {
+      console.error('[reportCardService.getStudentReportSheet]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+
   async compileReportCards(req: NextRequest, teacherId: string, classId: string) {
       try{
         const teacher = await prisma.teacherProfile.findUnique({
@@ -41,7 +100,7 @@ export const reportCardServices = {
         if (!teacher) {
           return NextResponse.json({ error: 'Teacher profile not found.' }, { status: 404 });
         }
- 
+
         const classAssignment = await prisma.teacherClassAssignment.findUnique({
           where: { teacherId: teacher.id },
           select: { classId: true },
@@ -62,8 +121,11 @@ export const reportCardServices = {
       // Resolve active term + academic year + class snapshot in parallel
       const [term, classRecord] = await Promise.all([
         prisma.term.findFirst({
-          where: {isCurrent: true },
-          select: { id: true, academicYearId: true },
+          where: parsed.data.termId
+            ? { id: parsed.data.termId, academicYear: { schoolId: teacher.schoolId } }
+            : { isCurrent: true, academicYear: { schoolId: teacher.schoolId, isCurrent: true } },
+          orderBy: { academicYear: { startDate: 'desc' } },
+          select: { id: true, academicYearId: true, period: true },
         }),
         prisma.class.findUnique({
           where: { id: classId },
@@ -94,7 +156,7 @@ export const reportCardServices = {
     
       // Gather complete scores (both CA + Exam non-null) for this student
       // in this term, scoped to subjects belonging to this class only.
-      const scores = await prisma.score.findMany({
+      const scoreRows = await prisma.score.findMany({
         where: {
           studentId,
           termId: term.id,
@@ -112,6 +174,19 @@ export const reportCardServices = {
           subject: { select: { name: true, code: true } },
         },
       });
+      const scores = await Promise.all(scoreRows.map(async (score) => {
+        const totalScore = score.totalScore ?? score.caScore! + score.examScore!;
+        const resolved = score.grade ? null : await resolveGrade(teacher.schoolId, totalScore);
+        const grade = score.grade ?? resolved?.grade ?? null;
+        const gradeRemark = score.gradeRemark ?? resolved?.gradeRemark ?? null;
+        if (score.totalScore !== totalScore || score.grade !== grade || score.gradeRemark !== gradeRemark) {
+          await prisma.score.update({
+            where: { studentId_subjectId_termId: { studentId, subjectId: score.subjectId, termId: term.id } },
+            data: { totalScore, grade, gradeRemark },
+          });
+        }
+        return { ...score, totalScore, grade, gradeRemark };
+      }));
     
       if (scores.length === 0) {
         return NextResponse.json(
@@ -213,6 +288,7 @@ export const reportCardServices = {
           classSnapshot: true,
           teacherRemark: true,
           principalRemark: true,
+          term: { select: { id: true, period: true } },
         },
       });
     
@@ -240,7 +316,7 @@ export const reportCardServices = {
     } 
   },  
 
-  async getReportCards( teacherId: string, classId: string){
+  async  getReportCards( teacherId: string, classId: string, filters: { academicYearId?: string; termId?: string } = {}){
     try{
       const teacher = await prisma.teacherProfile.findUnique({
         where: { userId: teacherId },
@@ -261,10 +337,30 @@ export const reportCardServices = {
         );
       }
  
-      const term = await prisma.term.findFirst({
-        where: { isCurrent: true },
-        select: { id: true, academicYearId: true },
+      const academicYears = await prisma.academicYear.findMany({
+        where: { schoolId: teacher.schoolId },
+        select: {
+          id: true,
+          label: true,
+          isCurrent: true,
+          terms: { select: { id: true, period: true, isCurrent: true }, orderBy: { startDate: 'asc' } },
+        },
+        orderBy: { startDate: 'desc' },
       });
+      const activeYear = academicYears.find((year) => year.isCurrent) ?? academicYears[0];
+      const selectedYear = filters.academicYearId
+        ? academicYears.find((year) => year.id === filters.academicYearId)
+        : activeYear;
+      if (filters.academicYearId && !selectedYear) {
+        return NextResponse.json({ error: 'Academic year not found for this school.' }, { status: 404 });
+      }
+      const selectedTerm = filters.termId
+        ? selectedYear?.terms.find((term) => term.id === filters.termId)
+        : selectedYear?.terms.find((term) => term.isCurrent) ?? selectedYear?.terms[0];
+      if (filters.termId && !selectedTerm) {
+        return NextResponse.json({ error: 'Term not found in the selected academic year.' }, { status: 404 });
+      }
+      const term = selectedTerm ? { ...selectedTerm, academicYearId: selectedYear!.id } : null;
       if (!term) {
         return NextResponse.json(
           { error: 'No active term found for this school.' },
@@ -344,6 +440,11 @@ export const reportCardServices = {
         pending,
         meta: {
           termId: term.id,
+          termLabel: term.period,
+          academicYearId: term.academicYearId,
+          academicYearLabel: selectedYear?.label ?? '',
+          availableAcademicYears: academicYears.map(({ id, label }) => ({ id, label })),
+          availableTerms: selectedYear?.terms.map(({ id, period }) => ({ id, period })) ?? [],
           classCount: enrollments.length,
           compiledCount: compiled.length,
           publishedCount: compiled.filter((c) => c.status === 'PUBLISHED').length,
@@ -390,6 +491,7 @@ export const reportCardServices = {
         principalRemark: true,
         publishedAt: true,
         termId: true,
+        academicYearId: true,
         createdAt: true,
         updatedAt: true,
         student: {
@@ -417,27 +519,39 @@ export const reportCardServices = {
         { status: 404 },
       );
     }
- 
-    // Subject scores — complete ones only (matching what compile included)
-    const scores = await prisma.score.findMany({
-      where: {
-        studentId: card.student.id,
-        termId: card.termId,
-        subject: { classId },
-        caScore: { not: null },
-        examScore: { not: null },
-      },
-      select: {
-        subjectId: true,
-        caScore: true,
-        examScore: true,
-        totalScore: true,
-        grade: true,
-        gradeRemark: true,
-        subject: { select: { name: true, code: true } },
-      },
-      orderBy: { subject: { name: 'asc' } },
+    const cardEnrollment = await prisma.enrollment.findFirst({
+      where: { studentId: card.student.id, classId, academicYearId: card.academicYearId },
+      select: { id: true },
     });
+    if (!cardEnrollment) return NextResponse.json({ error: 'Report card not found for this class.' }, { status: 404 });
+ 
+    // Include every subject so teachers can enter missing CA or exam marks.
+    const [subjects, scoreRows] = await Promise.all([
+      prisma.subject.findMany({ where: { classId }, select: { id: true, name: true, code: true }, orderBy: { name: 'asc' } }),
+      prisma.score.findMany({
+        where: { studentId: card.student.id, termId: card.termId, subject: { classId } },
+        select: { subjectId: true, caScore: true, examScore: true, totalScore: true, grade: true, gradeRemark: true, isPublished: true },
+      }),
+    ]);
+    const scoreBySubject = new Map(scoreRows.map((score) => [score.subjectId, score]));
+    const scores = await Promise.all(subjects.map(async (subject) => {
+      const score = scoreBySubject.get(subject.id);
+      const totalScore = score?.totalScore ?? (
+        score?.caScore != null && score?.examScore != null ? score.caScore + score.examScore : null
+      );
+      const resolved = !score?.grade && totalScore !== null ? await resolveGrade(teacher.schoolId, totalScore) : null;
+      return {
+        subjectId: subject.id,
+        subjectName: subject.name,
+        subjectCode: subject.code,
+        caScore: score?.caScore ?? null,
+        examScore: score?.examScore ?? null,
+        totalScore,
+        grade: score?.grade ?? resolved?.grade ?? null,
+        gradeRemark: score?.gradeRemark ?? resolved?.gradeRemark ?? null,
+        isPublished: score?.isPublished ?? false,
+      };
+    }));
  
     // Attendance summary — recomputed fresh so it reflects any corrections
     // made after the initial compile.
@@ -457,12 +571,14 @@ export const reportCardServices = {
       present: attendanceRows.filter((a) => a.status === 'PRESENT').length,
       absent: attendanceRows.filter((a) => a.status === 'ABSENT').length,
       late: attendanceRows.filter((a) => a.status === 'LATE').length,
+      unmarked: attendanceRows.filter((a) => a.status === 'UNMARKED').length,
     };
  
     return NextResponse.json({
       data: {
         reportCard: {
           id: card.id,
+          termId: card.termId,
           status: card.status,
           totalScore: card.totalScore,
           average: card.average,
@@ -481,16 +597,7 @@ export const reportCardServices = {
           studentNumber: card.student.studentNumber,
           gender: card.student.gender,
         },
-        scores: scores.map((s) => ({
-          subjectId: s.subjectId,
-          subjectName: s.subject.name,
-          subjectCode: s.subject.code,
-          caScore: s.caScore,
-          examScore: s.examScore,
-          totalScore: s.totalScore,
-          grade: s.grade,
-          gradeRemark: s.gradeRemark,
-        })),
+        scores,
         attendanceSummary,
       },
     });
@@ -584,6 +691,9 @@ export const reportCardServices = {
             { status: 404 },
           );
         }
+        if (existing.status === 'PUBLISHED') {
+          return NextResponse.json({ error: 'Published report cards are locked.' }, { status: 409 });
+        }
  
     const body = await req.json();
     const parsed = updateReportCardSchema.safeParse(body);
@@ -647,7 +757,7 @@ export const reportCardServices = {
           },
         });
       
-        if (!rc) return null;
+        if (!rc || rc.status !== 'PUBLISHED') return null;
       
         // Attach scores
         const scores = await prisma.score.findMany({
@@ -713,7 +823,7 @@ export const reportCardServices = {
     
     async getStudentAllReportCards(studentId: string) {
       return prisma.reportCard.findMany({
-        where: { studentId },
+        where: { studentId, status: 'PUBLISHED' },
         include: {
           term: { select: { period: true } },
           academicYear: { select: { label: true } },

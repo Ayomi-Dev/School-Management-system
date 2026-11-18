@@ -79,7 +79,7 @@ export const reportCardDownloadService = {
         where: { userId: actor.userId },
         select: { id: true, schoolId: true },
       });
-      if (!student || student.id !== card.student.id || student.schoolId !== actor.schoolId) {
+      if (!student || student.id !== card.student.id || student.schoolId !== actor.schoolId || card.status !== 'PUBLISHED') {
         throw new ReportCardDownloadError("Report card not found.", 404);
       }
     } else if (actor.role === Role.PARENT) {

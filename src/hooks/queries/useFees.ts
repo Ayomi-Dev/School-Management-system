@@ -8,7 +8,7 @@ export const bursarKeys = {
   dashboard:       (termId?: string) => ['bursar-dashboard',  termId] as const,
   feeStructures:   (termId: string) => ['fee-structures',    termId] as const,
   studentStatement:(studentId: string, termId: string) => ['student-statement', studentId, termId] as const,
-  paymentHistory:  (studentId: string) => ['payment-history',   studentId] as const,
+  paymentHistory:  (studentId: string, termId?: string) => ['payment-history', studentId, termId ?? 'all'] as const,
   payments:        (filters?: { termId?: string; search?: string; page?: number }) => ['fee-payments', filters] as const,
   classFeeOverview:(classId: string, termId: string, ayId: string) => ['class-fee-overview', classId, termId, ayId] as const,
 } as const;
@@ -127,13 +127,13 @@ export const useStudentStatement = (studentId: string, termId: string, enabled =
 
 }
  
-export const usePaymentHistory = (studentId: string, enabled = true) => {
+export const usePaymentHistory = (studentId: string, enabled = true, termId?: string) => {
   const { error: showError } = useToast();
   return useQuery({
-    queryKey: bursarKeys.paymentHistory(studentId),
+    queryKey: bursarKeys.paymentHistory(studentId, termId),
     queryFn: async() => {
       try {
-        return await feeService.getPaymentHistory(studentId)
+        return await feeService.getPaymentHistory(studentId, termId)
       }
        catch (error) {
         const message = getErrorMessage(error);

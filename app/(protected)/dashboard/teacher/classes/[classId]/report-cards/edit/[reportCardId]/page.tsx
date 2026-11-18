@@ -15,12 +15,18 @@ import {
 import {
   useSingleReportCard,
   useUpdateReportCardRemark,
+  useSaveReportCardScores,
 } from '@/src/hooks/queries/useReportCard';
 import { AttendanceSummary, ScoreEntry } from '@/src/types';
 
 // ─── score table ──────────────────────────────────────────────────────────────
 
-function ScoreTable({ scores }: { scores: ScoreEntry[] }) {
+function ScoreTable({ scores, drafts, editable, onScoreChange }: {
+  scores: ScoreEntry[];
+  drafts: Record<string, { caScore: number | null; examScore: number | null }>;
+  editable: boolean;
+  onScoreChange: (subjectId: string, field: 'caScore' | 'examScore', value: number | null) => void;
+}) {
   const gradeColor = (grade: string | null) => {
     if (!grade) return 'text-gray-400';
     const map: Record<string, string> = {
@@ -54,8 +60,12 @@ function ScoreTable({ scores }: { scores: ScoreEntry[] }) {
                   <p className="text-xs text-gray-400">{s.subjectCode}</p>
                 )}
               </td>
-              <td className="py-2.5 px-3 text-center text-gray-700">{s.caScore ?? '—'}</td>
-              <td className="py-2.5 px-3 text-center text-gray-700">{s.examScore ?? '—'}</td>
+              <td className="py-2.5 px-3 text-center text-gray-700">
+                {editable && !s.isPublished ? <input type="number" min={0} value={drafts[s.subjectId]?.caScore ?? ''} onChange={(event) => onScoreChange(s.subjectId, 'caScore', event.target.value === '' ? null : Number(event.target.value))} className="w-20 rounded-md border border-gray-200 px-2 py-1 text-center" aria-label={`${s.subjectName} CA score`} /> : s.caScore ?? '—'}
+              </td>
+              <td className="py-2.5 px-3 text-center text-gray-700">
+                {editable && !s.isPublished ? <input type="number" min={0} value={drafts[s.subjectId]?.examScore ?? ''} onChange={(event) => onScoreChange(s.subjectId, 'examScore', event.target.value === '' ? null : Number(event.target.value))} className="w-20 rounded-md border border-gray-200 px-2 py-1 text-center" aria-label={`${s.subjectName} exam score`} /> : s.examScore ?? '—'}
+              </td>
               <td className="py-2.5 px-3 text-center font-semibold text-gray-900">
                 {s.totalScore ?? '—'}
               </td>
@@ -93,7 +103,7 @@ function ScoreTable({ scores }: { scores: ScoreEntry[] }) {
 
 function AttendanceBlock({ summary }: { summary: AttendanceSummary }) {
   const pct =
-    summary.total > 0 ? Math.round((summary.present / summary.total) * 100) : 0;
+    summary.total > 0 ? Math.round(((summary.present + summary.late) / summary.total) * 100) : 0;
 
   return (
     <div className="flex items-center gap-6 text-sm">
@@ -113,6 +123,10 @@ function AttendanceBlock({ summary }: { summary: AttendanceSummary }) {
         <p className="text-lg font-bold text-gray-900">{summary.total}</p>
         <p className="text-xs text-gray-500">Total Days</p>
       </div>
+      {summary.unmarked !== undefined && <div className="text-center">
+        <p className="text-lg font-bold text-gray-500">{summary.unmarked}</p>
+        <p className="text-xs text-gray-500">Unmarked</p>
+      </div>}
       <div className="text-center">
         <p className="text-lg font-bold text-blue-700">{pct}%</p>
         <p className="text-xs text-gray-500">Attendance</p>
@@ -133,15 +147,17 @@ export default function EditReportCardPage() {
   const { data: reportCardDetail , isLoading } = useSingleReportCard(classId, reportCardId);
   const { mutate: saveRemark, isPending: isSavingRemark } = 
     useUpdateReportCardRemark(classId, reportCardId);
+  const scoreMutation = useSaveReportCardScores(classId, reportCardId);
 
   const [remark, setRemark] = useState('');
+  const [scoreDrafts, setScoreDrafts] = useState<Record<string, { caScore: number | null; examScore: number | null }>>({});
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Seed remark textarea from fetched data
   useEffect(() => {
-    if (reportCardDetail?.data.reportCard.teacherRemark) {
-      setRemark(reportCardDetail.data.reportCard.teacherRemark);
-    }
+    if (!reportCardDetail?.data) return;
+    setRemark(reportCardDetail.data.reportCard.teacherRemark ?? '');
+    setScoreDrafts(Object.fromEntries(reportCardDetail.data.scores.map((score) => [score.subjectId, { caScore: score.caScore, examScore: score.examScore }])));
   }, [reportCardDetail]);
 
   const card = reportCardDetail?.data.reportCard;
@@ -149,6 +165,10 @@ export default function EditReportCardPage() {
   const scores = reportCardDetail?.data.scores ?? [];
   const attendance = reportCardDetail?.data.attendanceSummary;
   const isPublished = card?.status === 'PUBLISHED';
+  const scoreChanges = scores.some((score) => {
+    const draft = scoreDrafts[score.subjectId];
+    return !score.isPublished && draft && (draft.caScore !== score.caScore || draft.examScore !== score.examScore);
+  });
 
   const handleSaveRemark = () => {
     setMessage(null);
@@ -159,6 +179,20 @@ export default function EditReportCardPage() {
           type: 'error',
           text: err?.response?.data?.error ?? 'Could not save remark.',
         }),
+    });
+  };
+
+  const handleSaveScores = () => {
+    if (!student || !card) return;
+    scoreMutation.mutate({
+      studentId: student.id,
+      termId: card.termId,
+      scores: scores.map((score) => ({
+        ...score,
+        ...scoreDrafts[score.subjectId],
+        originalCaScore: score.caScore,
+        originalExamScore: score.examScore,
+      })),
     });
   };
 
@@ -245,10 +279,22 @@ export default function EditReportCardPage() {
 
       {/* Score breakdown */}
       <Card>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-4">
-          Academic Performance
-        </h2>
-        <ScoreTable scores={scores} />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-widest">Academic Performance</h2>
+          {!isPublished && <Button variant="primary" size="sm" onClick={handleSaveScores} disabled={!scoreChanges || scoreMutation.isPending}>
+            <Save size={14} /> {scoreMutation.isPending ? 'Saving scores…' : 'Save Scores'}
+          </Button>}
+        </div>
+        <ScoreTable
+          scores={scores}
+          drafts={scoreDrafts}
+          editable={!isPublished}
+          onScoreChange={(subjectId, field, value) => setScoreDrafts((drafts) => ({
+            ...drafts,
+            [subjectId]: { ...drafts[subjectId], [field]: value },
+          }))}
+        />
+        {scores.some((score) => score.isPublished) && !isPublished && <p className="mt-3 text-xs text-amber-700">Already-published scores stay locked; unpublish the score first to edit it.</p>}
       </Card>
 
       {/* Attendance */}
@@ -273,7 +319,7 @@ export default function EditReportCardPage() {
           placeholder={
             isPublished
               ? 'Card is published — remark is locked.'
-              : 'Write your remark for this student...'
+              : 'Optional: write a remark for this student...'
           }
           rows={4}
           className={`w-full px-3.5 py-2.5 border rounded-lg text-sm resize-none
@@ -310,7 +356,7 @@ export default function EditReportCardPage() {
             variant="outline"
             className="flex items-center gap-2 flex-1"
             onClick={handleSaveRemark}
-            disabled={isSavingRemark || !remark.trim()}
+            disabled={isSavingRemark}
           >
             <Save size={16} />
             {isSavingRemark ? 'Saving...' : 'Save Remark'}

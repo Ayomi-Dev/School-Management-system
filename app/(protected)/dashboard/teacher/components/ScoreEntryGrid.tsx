@@ -85,11 +85,7 @@ export function ScoreEntryGrid({ classId, subjectId, field, label }: ScoreEntryG
 
     save(
       { field, entries },
-      {
-        onSuccess: (res) => setSaveMessage(res.message),
-        onError: (err: any) =>
-          setSaveMessage(err?.response?.data?.error ?? `Could not save ${label} scores.`),
-      },
+      
     );
   };
 

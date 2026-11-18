@@ -7,7 +7,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export const GET = async(req: NextRequest, context: ClassParamsContext) => {
-    console.log("incokmig req")
     const auth = await requireRoleForTenant(req, [Role.TEACHER])
     if(!auth.success){
         return NextResponse.json(

@@ -1,4 +1,5 @@
 import { adminCreateUserSchema, adminUpdateUserSchema, updateStatusSchema } from "@/src/validators/adminSchema";
+import { updatePrincipalRemarkSchema } from '@/src/validators/reportCardSchema';
 import { prisma } from "@/src/lib/prisma/client";
 import{ NextRequest, NextResponse } from "next/server"
 import { buildUserPayload } from "@/src/utils/userPayloadBuilder";
@@ -586,7 +587,7 @@ export const adminServices = {
         select: {
           id:            true,
           status:        true,
-          teacherRemark: true,
+          principalRemark: true,
           student: { select: { schoolId: true } },
         },
       });
@@ -600,9 +601,9 @@ export const adminServices = {
           { status: 409 },
         );
       }
-      if (!reportCard.teacherRemark?.trim()) {
+      if (!reportCard.principalRemark?.trim()) {
         return NextResponse.json(
-          { error: 'A teacher remark must be added before publishing.' },
+          { error: 'A principal remark must be added before publishing.' },
           { status: 400 },
         );
       }
@@ -619,6 +620,29 @@ export const adminServices = {
       });
     } catch (error) {
       console.error('[adminService.adminPublishReportCard]', error);
+      return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
+    }
+  },
+  async adminUpdateReportCardRemark(req: NextRequest, schoolId: string, reportCardId: string) {
+    try {
+      const parsed = updatePrincipalRemarkSchema.safeParse(await req.json());
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten().fieldErrors }, { status: 400 });
+      }
+      const card = await prisma.reportCard.findUnique({
+        where: { id: reportCardId },
+        select: { id: true, status: true, student: { select: { schoolId: true } } },
+      });
+      if (!card || card.student.schoolId !== schoolId) return NextResponse.json({ error: 'Report card not found.' }, { status: 404 });
+      if (card.status === 'PUBLISHED') return NextResponse.json({ error: 'Unpublish this report card before editing its principal remark.' }, { status: 409 });
+      const updated = await prisma.reportCard.update({
+        where: { id: reportCardId },
+        data: { principalRemark: parsed.data.principalRemark },
+        select: { id: true, principalRemark: true, status: true },
+      });
+      return NextResponse.json({ message: 'Principal remark saved.', data: updated });
+    } catch (error) {
+      console.error('[adminService.adminUpdateReportCardRemark]', error);
       return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 });
     }
   },
@@ -873,7 +897,7 @@ export const adminServices = {
         },
         select: {
           id:            true,
-          teacherRemark: true,
+          principalRemark: true,
         },
       });
  
@@ -884,8 +908,8 @@ export const adminServices = {
         });
       }
  
-      // Split: cards with a remark are publishable; those without are skipped
-      const publishable = draftCards.filter((rc) => rc.teacherRemark?.trim());
+      // Only cards with an admin-entered principal remark can be published.
+      const publishable = draftCards.filter((rc) => rc.principalRemark?.trim());
       const skipped     = draftCards.length - publishable.length;
  
       if (publishable.length > 0) {

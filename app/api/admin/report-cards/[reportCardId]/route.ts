@@ -27,7 +27,7 @@ export const PATCH = async(req:NextRequest, context: ClassParamsContext) => {
     }
     const { schoolId } = auth
     const { reportCardId } = await context.params
-    const result = await adminServices.adminUnpublishReportCard(schoolId as string, reportCardId as string);
+    const result = await adminServices.adminUpdateReportCardRemark(req, schoolId as string, reportCardId as string);
     return result;
 }
 

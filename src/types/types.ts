@@ -94,8 +94,9 @@ export interface ScoreRosterResponse {
 export type ScoreField = 'caScore' | 'examScore';
  
 export interface SaveScoresPayload {
+  termId?: string;
   field: ScoreField;
-  entries: { studentId: string; value: number }[];
+  entries: { studentId: string; value: number | null }[];
 }
  
 export interface ScoreHistoryEntry {

@@ -54,8 +54,8 @@ export const feeService = {
     return statement;
   },
  
-  getPaymentHistory: async (studentId: string): Promise<FeePayment[]> => {
-    const res = await client.get(API_ENDPOINTS.GET_PAYMENT_HISTORY(studentId));
+  getPaymentHistory: async (studentId: string, termId?: string): Promise<FeePayment[]> => {
+    const res = await client.get(API_ENDPOINTS.GET_PAYMENT_HISTORY(studentId), { params: termId ? { termId } : undefined });
     return res.data.data;
   },
  

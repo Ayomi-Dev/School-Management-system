@@ -144,6 +144,7 @@ export const API_ENDPOINTS = {
   //Report cards
   COMPILE_REPORT_CARDS: (classId: string) => `/api/teachers/class/${classId}/report-cards/compile`,
   GET_REPORT_CARDS: (classId: string) => `/api/teachers/class/${classId}/report-cards`,
+  GET_STUDENT_REPORT_SHEET: (classId: string, studentId: string) => `/api/teachers/class/${classId}/report-cards/students/${studentId}`,
   GET_SINGLE_REPORT_CARD: (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
   UPDATE_REPORT_CARD : (classId: string, reportCardId: string) => `/api/teachers/class/${classId}/report-cards/${reportCardId}`,
 

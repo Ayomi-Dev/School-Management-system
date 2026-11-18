@@ -1,21 +1,18 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Card } from '@/src/components/ui/Card';
 import { Loader } from '@/src/components/ui/Loader';
 import { Button } from '@/src/components/ui/Button';
 import {
   CheckCircle2,
   Clock,
-  RefreshCw,
   FileText,
   Users,
   Trophy,
 } from 'lucide-react';
-import {
-  useReportCardList,
-  useCompileReportCard,
-} from '@/src/hooks/queries/useReportCard';
+import { useReportCardList } from '@/src/hooks/queries/useReportCard';
 import { CompiledCardSummary, PendingStudent } from '@/src/types';
 import { ReportCardDownloadButton } from '@/src/components/reportCards/ReportCardDownloadButton';
 
@@ -40,11 +37,9 @@ function StatusBadge({ status }: { status: 'DRAFT' | 'PUBLISHED' }) {
 interface CompiledRowProps {
   card: CompiledCardSummary;
   classId: string;
-  onRecompile: (studentId: string) => void;
-  isRecompiling: boolean;
 }
 
-function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowProps) {
+function CompiledRow({ card, classId }: CompiledRowProps) {
   const router = useRouter();
 
   return (
@@ -52,7 +47,9 @@ function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowP
       {/* Name */}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-900 truncate">
-          {card.lastName}, {card.firstName}
+          <button onClick={() => router.push(`/dashboard/teacher/classes/${classId}/report-cards/compile/${card.studentId}`)} className="text-left hover:text-blue-700 hover:underline">
+            {card.lastName}, {card.firstName}
+          </button>
         </p>
         <p className="text-xs text-gray-400">{card.studentNumber}</p>
       </div>
@@ -103,15 +100,6 @@ function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowP
         >
           <FileText size={14} /> Edit
         </Button>
-        <button
-          onClick={() => onRecompile(card.studentId)}
-          disabled={isRecompiling || card.status === "PUBLISHED"}
-          title="Recompile (recalculate scores and position)"
-          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors
-                     text-gray-400 hover:text-gray-700 disabled:opacity-40"
-        >
-          <RefreshCw size={15} className={isRecompiling ? 'animate-spin' : ''} />
-        </button>
       </div>
     </div>
   );
@@ -121,27 +109,24 @@ function CompiledRow({ card, classId, onRecompile, isRecompiling }: CompiledRowP
 
 interface PendingRowProps {
   student: PendingStudent;
-  onCompile: (studentId: string) => void;
-  isCompiling: boolean;
+  classId: string;
 }
 
-function PendingRow({ student, onCompile, isCompiling }: PendingRowProps) {
+function PendingRow({ student, classId }: PendingRowProps) {
+  const router = useRouter();
   return (
     <div className="flex items-center gap-4 px-5 py-3.5">
       <div className="flex-1 min-w-0">
         <p className="font-medium text-gray-700 truncate">
-          {student.lastName}, {student.firstName}
+          <button onClick={() => router.push(`/dashboard/teacher/classes/${classId}/report-cards/compile/${student.studentId}`)} className="text-left hover:text-blue-700 hover:underline">
+            {student.lastName}, {student.firstName}
+          </button>
         </p>
         <p className="text-xs text-gray-400">{student.studentNumber}</p>
       </div>
       <span className="text-xs text-gray-400 italic">Not compiled</span>
-      <Button
-        variant="primary"
-        size="sm"
-        onClick={() => onCompile(student.studentId)}
-        disabled={isCompiling}
-      >
-        {isCompiling ? 'Compiling...' : 'Compile'}
+      <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/teacher/classes/${classId}/report-cards/compile/${student.studentId}`)}>
+        View report sheet
       </Button>
     </div>
   );
@@ -151,14 +136,14 @@ function PendingRow({ student, onCompile, isCompiling }: PendingRowProps) {
 
 export default function CompileReportCardsPage() {
   const { classId } = useParams<{ classId: string }>();
-  const { data, isLoading, error } = useReportCardList(classId);
-
-  const { mutate: compile, isPending: isCompiling, variables: compilingId } =
-    useCompileReportCard(classId);
+  const [selectedYearId, setSelectedYearId] = useState('');
+  const [selectedTermId, setSelectedTermId] = useState('');
+  const { data, isLoading, error } = useReportCardList(classId, selectedYearId || undefined, selectedTermId || undefined);
 
   const compiled = data?.data.compiled ?? [];
   const pending = data?.data.pending ?? [];
   const meta = data?.data.meta;
+  console.log("compiled:", compiled, "pending:", pending, "meta:", meta)
 
   if (isLoading) {
     return (
@@ -184,9 +169,36 @@ export default function CompileReportCardsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Compile Report Cards</h1>
         <p className="text-gray-500 mt-1 text-sm">
-          Current term · click "Compile" to generate a student's card from their scores
+          {meta ? `${meta.termLabel} · ${meta.academicYearLabel}` : 'Choose an academic year and term'} · click "Compile" to generate a student's card from their scores
         </p>
       </div>
+
+      {meta && (
+        <Card className="p-4">
+          <div className="flex flex-wrap gap-4">
+            <label className="flex flex-col gap-1 text-xs font-medium text-gray-500">
+              Academic Year
+              <select
+                value={selectedYearId || meta.academicYearId}
+                onChange={(event) => { setSelectedYearId(event.target.value); setSelectedTermId(''); }}
+                className="min-w-44 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+              >
+                {meta.availableAcademicYears.map((year) => <option key={year.id} value={year.id}>{year.label}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-medium text-gray-500">
+              Term
+              <select
+                value={selectedTermId || meta.termId}
+                onChange={(event) => setSelectedTermId(event.target.value)}
+                className="min-w-44 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
+              >
+                {meta.availableTerms.map((term) => <option key={term.id} value={term.id}>{term.period}</option>)}
+              </select>
+            </label>
+          </div>
+        </Card>
+      )}
 
       {/* Progress summary */}
       {meta && (
@@ -229,8 +241,6 @@ export default function CompileReportCardsPage() {
                   key={card.reportCardId}
                   card={card}
                   classId={classId}
-                  onRecompile={(studentId) => compile(studentId)}
-                  isRecompiling={isCompiling && compilingId === card.studentId}
                 />
               ))}
             </div>
@@ -250,8 +260,7 @@ export default function CompileReportCardsPage() {
                 <PendingRow
                   key={student.studentId}
                   student={student}
-                  onCompile={(studentId) => compile(studentId)}
-                  isCompiling={isCompiling && compilingId === student.studentId}
+                  classId={classId}
                 />
               ))}
             </div>

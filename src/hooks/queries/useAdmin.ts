@@ -35,6 +35,7 @@ export const queryKeys = {
   teachers: () => [...queryKeys.admin, 'teachers'],
   reportCard:       (reportCardId: string) => ['admin-report-card', reportCardId] as const,
   academicSummary: (userId: string, termId?: string) => ['admin-academic-summary', userId, termId ?? 'all'] as const,
+  academicSummaryPrefix: (userId: string) => ['admin-academic-summary', userId] as const,
   classScoreSheet: (classId: string) => ['admin-class-scoresheet', classId] as const,
   parentsList: ()=> ['admin-parents-list'] as const,
   timetable:    (classId: string) => ['timetable', classId]         as const,
@@ -309,7 +310,7 @@ export const useUpdateReportCardMutation = (reportCardId: string, userId?: strin
     onSuccess: (data) => {
       if(!data) return 
       if (userId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.academicSummaryPrefix(userId) });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card updated');
@@ -334,7 +335,7 @@ export const useAdminPublishReportCardMutation = (userId: string) => {
     },
     onSuccess: (_, reportCardId) => {
       if(!_  || !reportCardId) return
-      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummaryPrefix(userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card published successfully');
     },
@@ -355,7 +356,7 @@ export const useAdminUnpublishReportCardMutation = (userId: string) => {
       }
     },
     onSuccess: (_, reportCardId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummary(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.academicSummaryPrefix(userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.reportCard(reportCardId) });
       success('Report card unpublished successfully');
     },

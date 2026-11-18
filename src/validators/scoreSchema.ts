@@ -34,12 +34,13 @@ export const publishScoresSchema = z.object({
 });
 
 export const saveScoresSchema = z.object({
+  termId: z.string().min(1).optional(),
   field: z.enum(['caScore', 'examScore']),
   entries: z
     .array(
       z.object({
         studentId: z.string().min(1),
-        value: z.number().min(0, 'Score cannot be negative.'),
+        value: z.number().min(0, 'Score cannot be negative.').nullable(),
       }),
     )
     .min(1, 'At least one score entry is required.'),

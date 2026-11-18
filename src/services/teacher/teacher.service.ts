@@ -765,7 +765,6 @@ export const teacherServices = {
     });
  
     const studentIds = enrollments.map((e) => e.student.id);
-    console.log("student ids", studentIds)
  
     const scores = await prisma.score.findMany({
       where: { studentId: { in: studentIds }, subjectId, termId: term.id },
@@ -841,15 +840,6 @@ export const teacherServices = {
           );
         }
  
-        const term = await prisma.term.findFirst({
-          where: { isCurrent: true, academicYear: { schoolId: teacher.schoolId, isCurrent: true } },
-          orderBy: { academicYear: { startDate: 'desc' } },
-          select: { id: true, academicYearId: true },
-        });
-        if (!term) {
-          return NextResponse.json({ error: 'No active term found for this school.' }, { status: 400 });
-        }
- 
         const body = await req.json();
         const parsed = saveScoresSchema.safeParse(body);
         if (!parsed.success) {
@@ -859,13 +849,21 @@ export const teacherServices = {
           );
         }
         const { field, entries } = parsed.data;
+        const term = await prisma.term.findFirst({
+          where: parsed.data.termId
+            ? { id: parsed.data.termId, academicYear: { schoolId: teacher.schoolId } }
+            : { isCurrent: true, academicYear: { schoolId: teacher.schoolId, isCurrent: true } },
+          orderBy: { academicYear: { startDate: 'desc' } },
+          select: { id: true, academicYearId: true },
+        });
+        if (!term) return NextResponse.json({ error: 'Term not found for this school.' }, { status: 404 });
       
         // Validate against the school's configured ceiling for this field
         // (CA max / Exam max) before writing anything.
         const { caMaxScore, examMaxScore } = await resolveAssessmentConfig(teacher.schoolId);
         const ceiling = field === 'caScore' ? caMaxScore : examMaxScore;
       
-        const overLimit = entries.filter((e) => e.value > ceiling);
+        const overLimit = entries.filter((e) => e.value !== null && e.value > ceiling);
         if (overLimit.length > 0) {
           return NextResponse.json(
             {
@@ -896,6 +894,14 @@ export const teacherServices = {
             { error: 'One or more students are not enrolled in this class.' },
             { status: 400 },
           );
+        }
+
+        const publishedCards = await prisma.reportCard.findMany({
+          where: { studentId: { in: entries.map((entry) => entry.studentId) }, termId: term.id, status: 'PUBLISHED' },
+          select: { studentId: true },
+        });
+        if (publishedCards.length > 0) {
+          return NextResponse.json({ error: 'Scores cannot be edited after the report card is published.' }, { status: 409 });
         }
  
         // Block edits to any score the school has already published — a

@@ -4,9 +4,13 @@ import { ReportCardDetail, ReportCardListResponse } from "@/src/types";
 
  const client = getApiClient()
 export const reportCardService = {
+  getStudentReportSheet: async (classId: string, studentId: string) => {
+    const response = await client.get(API_ENDPOINTS.GET_STUDENT_REPORT_SHEET(classId, studentId));
+    return response.data;
+  },
  
-  getReportCardList: async(classId: string): Promise<ReportCardListResponse> => {
-    const response = await  client.get(API_ENDPOINTS.GET_REPORT_CARDS(classId))
+  getReportCardList: async(classId: string, filters: { academicYearId?: string; termId?: string } = {}): Promise<ReportCardListResponse> => {
+    const response = await client.get(API_ENDPOINTS.GET_REPORT_CARDS(classId), { params: filters })
     return response.data
   },
  
@@ -21,9 +25,10 @@ export const reportCardService = {
   compileReportCard: (
     classId: string,
     studentId: string,
+    termId?: string,
   ): Promise<{ message: string; data: any }> =>
     client
-      .post(API_ENDPOINTS.COMPILE_REPORT_CARDS(classId), { studentId })
+      .post(API_ENDPOINTS.COMPILE_REPORT_CARDS(classId), { studentId, ...(termId ? { termId } : {}) })
       .then((r) => r.data),
  
   updateReportCardRemark: (

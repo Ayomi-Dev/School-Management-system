@@ -30,11 +30,8 @@ export async function resolveAssessmentConfig(schoolId: string) {
 }
 
 /**
- * Resolves grade + remark for a given total score against the school's
- * GradeScale bands. Throws if no school is configured with bands at all
- * (distinct from "score doesn't fall in any band", which can legitimately
- * happen with gappy bands and should just leave grade null rather than
- * erroring out a save).
+ * Resolves grade + remark against the school's GradeScale bands, then falls
+ * back to the application's default A–F bands when no custom band matches.
  */
 export async function resolveGrade(
   schoolId: string,
@@ -50,9 +47,14 @@ export async function resolveGrade(
   });
  
   if (!band) {
-    // No matching band — don't block the save, just leave grade unset so
-    // an admin can notice gaps in their GradeScale config and fix them.
-    return { grade: null, gradeRemark: null };
+    // Keep score records gradeable for older schools without configured bands
+    // and for gaps in a custom scale, matching the application's default A–F scale.
+    if (totalScore >= 75) return { grade: 'A', gradeRemark: 'Excellent' };
+    if (totalScore >= 65) return { grade: 'B', gradeRemark: 'Very Good' };
+    if (totalScore >= 55) return { grade: 'C', gradeRemark: 'Good' };
+    if (totalScore >= 45) return { grade: 'D', gradeRemark: 'Pass' };
+    if (totalScore >= 40) return { grade: 'E', gradeRemark: 'Below Average' };
+    return { grade: 'F', gradeRemark: 'Fail' };
   }
  
   return { grade: band.grade, gradeRemark: band.remark ?? null };

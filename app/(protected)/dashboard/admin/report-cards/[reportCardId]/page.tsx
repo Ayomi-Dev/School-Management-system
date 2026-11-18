@@ -55,13 +55,11 @@ export default function ReportCardPage() {
   const unpublishMutation = useAdminUnpublishReportCardMutation('');
 
   const [isEditing, setIsEditing] = useState(false);
-  const [teacherRemark, setTeacherRemark] = useState('');
   const [principalRemark, setPrincipalRemark] = useState('');
 
   // Sync local edit state whenever fresh data arrives
   useEffect(() => {
     if (data?.reportCard) {
-      setTeacherRemark(data.reportCard.teacherRemark ?? '');
       setPrincipalRemark(data.reportCard.principalRemark ?? '');
     }
   }, [data?.reportCard]);
@@ -82,24 +80,18 @@ export default function ReportCardPage() {
 
   const { reportCard, student, scores, attendanceSummary } = data;
   const isPublished = reportCard.status === 'PUBLISHED';
-  const isDirty =
-    teacherRemark !== (reportCard.teacherRemark ?? '') ||
-    principalRemark !== (reportCard.principalRemark ?? '');
+  const isDirty = principalRemark !== (reportCard.principalRemark ?? '');
 
   const totalScore = scores.reduce((s, r) => s + (r.totalScore ?? 0), 0);
   const average = scores.length > 0 ? totalScore / scores.length : 0;
 
   const handleSave = () => {
-    const body: { teacherRemark?: string; principalRemark?: string } = {};
-    if (teacherRemark !== (reportCard.teacherRemark ?? '')) body.teacherRemark = teacherRemark;
-    if (principalRemark !== (reportCard.principalRemark ?? '')) body.principalRemark = principalRemark;
-    updateMutation.mutate(body, {
+    updateMutation.mutate({ principalRemark }, {
       onSuccess: () => setIsEditing(false),
     });
   };
 
   const handleCancelEdit = () => {
-    setTeacherRemark(reportCard.teacherRemark ?? '');
     setPrincipalRemark(reportCard.principalRemark ?? '');
     setIsEditing(false);
   };
@@ -159,7 +151,7 @@ export default function ReportCardPage() {
                 variant="primary"
                 className="flex items-center gap-2"
                 onClick={() => publishMutation.mutate(reportCardId)}
-                disabled={publishMutation.isPending || !reportCard.teacherRemark?.trim()}
+                disabled={publishMutation.isPending || !reportCard.principalRemark?.trim()}
               >
                 <Send size={16} />
                 {publishMutation.isPending ? 'Publishing…' : 'Publish Report Card'}
@@ -168,9 +160,9 @@ export default function ReportCardPage() {
           </div>
         </div>
 
-        {!isPublished && !reportCard.teacherRemark?.trim() && (
+        {!isPublished && !reportCard.principalRemark?.trim() && (
           <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg mt-4">
-            Add a teacher remark before this card can be published.
+            Add and save a principal remark before publishing this report card.
           </p>
         )}
       </Card>
@@ -279,19 +271,9 @@ export default function ReportCardPage() {
           {/* Teacher remark */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">Teacher Remark</label>
-            {isEditing ? (
-              <textarea
-                value={teacherRemark}
-                onChange={(e) => setTeacherRemark(e.target.value)}
-                rows={3}
-                placeholder="e.g. Shows consistent improvement in core subjects…"
-                className="w-full text-sm border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            ) : (
-              <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 min-h-10">
-                {reportCard.teacherRemark || <span className="text-gray-400 italic">No remark yet</span>}
-              </p>
-            )}
+            <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 min-h-10">
+              {reportCard.teacherRemark || <span className="text-gray-400 italic">No teacher remark provided (optional)</span>}
+            </p>
           </div>
 
           {/* Principal remark */}
@@ -302,7 +284,7 @@ export default function ReportCardPage() {
                 value={principalRemark}
                 onChange={(e) => setPrincipalRemark(e.target.value)}
                 rows={2}
-                placeholder="Optional — overall school-level comment"
+                placeholder="Required before publishing — enter the principal’s remark"
                 className="w-full text-sm border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             ) : (
